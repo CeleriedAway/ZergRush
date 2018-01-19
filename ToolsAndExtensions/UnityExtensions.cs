@@ -342,11 +342,39 @@ public static class UnityExtensions
     {
         return val.Bind(v => text.text = v.ToString());
     }
+
+    public static IDisposable SetFill(this Image image, ICell<float> val)
+    {
+        return val.Bind(v => image.fillAmount = v);
+    }
+    
+    public static IDisposable SetActive(this MonoBehaviour go, ICell<bool> val)
+    {
+        return val.Bind(go.SetActiveSafe);
+    }
+    
+    public static IDisposable SetOpacity(this Image image, ICell<float> val)
+    {
+        return val.Bind(v =>
+        {
+            var c = image.color;
+            c.a = v;
+            image.color = c;
+        });
+    }
+    
     public static IDisposable SetVisibility(this MonoBehaviour obj, ICell<bool> val)
     {
         return val.Bind(obj.SetActiveSafe);
     }
-    
+
+    // Return true if object is stopped
+    public static bool StopObject(this Rigidbody rb, float breakForcePower, float velocityLimit)
+    {
+        if (rb.velocity.magnitude < velocityLimit) return true;
+        rb.AddForce(-rb.velocity.normalized * breakForcePower);
+        return false;
+    }
 }
 
 #endif

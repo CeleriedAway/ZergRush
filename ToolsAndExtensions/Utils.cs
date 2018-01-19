@@ -127,10 +127,17 @@ public static partial class Utils
     {
         cell.value = (uint)Math.Max(0, cell.value - val);
     }
+    
+    public static void SafeSubstract(this Cell<float> cell, float val)
+    {
+        cell.value = (uint)Math.Max(0, cell.value - val);
+    }
+    
     public static void SafeSubstract(this Cell<ushort> cell, int val)
     {
         cell.value = (ushort)Math.Max(0, cell.value - val);
     }
+    
     public static void SafeSubstract(this Cell<byte> cell, int val)
     {
         cell.value = (byte)Math.Max(0, cell.value - val);
