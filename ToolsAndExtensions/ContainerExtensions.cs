@@ -189,5 +189,17 @@ namespace ZergRush
         {
             return Enum.GetValues(typeof(T)).Cast<T>();
         }
+
+        public static void Resize<T>(this List<T> list, int count, Func<T> create, Action<T> destroy)
+        {
+            while (list.Count > count)
+            {
+                destroy(list.TakeLast());
+            }
+            while (list.Count < count)
+            {
+                list.Add(create());
+            }
+        }
     }
 }
