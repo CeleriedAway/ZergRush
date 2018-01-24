@@ -353,6 +353,11 @@ public static class UnityExtensions
         return val.Bind(go.SetActiveSafe);
     }
     
+    public static IDisposable SetActive(this GameObject go, ICell<bool> val)
+    {
+        return val.Bind(go.SetActiveSafe);
+    }
+    
     public static IDisposable SetOpacity(this Image image, ICell<float> val)
     {
         return val.Bind(v =>
@@ -375,6 +380,10 @@ public static class UnityExtensions
         rb.AddForce(-rb.velocity.normalized * breakForcePower);
         return false;
     }
+	public static Vector3 ProjVec(this Vector3 planeNormal, Vector3 vec)
+	{
+		return vec - planeNormal.normalized * (Vector3.Dot(vec, planeNormal) / planeNormal.magnitude);
+	}
 }
 
 #endif
