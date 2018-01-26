@@ -22,7 +22,10 @@ namespace ZergRush.ReactiveCore
 
     public class ReactiveCollectionEvent<T> : ReactiveCollectionEvent
     {
-        public T item;
+        public T newItem;
+        public T oldItem;
+        public IEnumerable<T> oldData;
+        public IEnumerable<T> newData;
     }
     
     /*
@@ -75,7 +78,7 @@ namespace ZergRush.ReactiveCore
                 up.Send(new ReactiveCollectionEvent<T>
                 {
                     type = ReactiveCollectionEventType.Insert,
-                    item = item,
+                    newItem = item,
                     position = data.Count - 1,
                 });
         }
@@ -87,7 +90,7 @@ namespace ZergRush.ReactiveCore
                 up.Send(new ReactiveCollectionEvent<T>
                 {
                     type = ReactiveCollectionEventType.Insert,
-                    item = item,
+                    newItem = item,
                     position = index
                 });
         }
@@ -99,34 +102,42 @@ namespace ZergRush.ReactiveCore
 
         public void RemoveAt(int index)
         {
+            var item = data[index];
             data.RemoveAt(index);
             if (up != null)
                 up.Send(new ReactiveCollectionEvent<T>
                 {
                     type = ReactiveCollectionEventType.Remove,
-                    position = index
+                    position = index,
+                    oldItem = item
                 });
         }
 
         public void Reset(List<T> newData)
         {
+            var oldData = data;
             data = newData;
             if (up != null)
                 up.Send(new ReactiveCollectionEvent<T>
                 {
                     type = ReactiveCollectionEventType.Reset,
+                    oldData = oldData,
+                    newData = data
                 });
         }
 
         public void Reset(IEnumerable<T> val = null)
         {
-            data.Clear();
-            if (val != null)
-                data.AddRange(val);
+            var oldData = data;
+            data = val != null ? new List<T>(val) : new List<T>();
+            if (oldData.Count == 0 && data.Count == 0) return;
+            
             if (up != null)
                 up.Send(new ReactiveCollectionEvent<T>
                 {
                     type = ReactiveCollectionEventType.Reset,
+                    oldData = oldData,
+                    newData = val
                 });
         }
 
@@ -135,14 +146,17 @@ namespace ZergRush.ReactiveCore
             get { return data[index]; }
             set
             {
+                var oldItem = data[index];
                 data[index] = value;
                 if (up != null)
-                    up.Send(new ReactiveCollectionEvent<T>
-                    {
+                {
+                    up.Send(new ReactiveCollectionEvent<T> {
                         type = ReactiveCollectionEventType.Set,
                         position = index,
-                        item = value
+                        newItem = value,
+                        oldItem = oldItem
                     });
+                }
             }
         }
 
@@ -172,8 +186,7 @@ namespace ZergRush.ReactiveCore
         int connectionCounter = 0;
         IDisposable collectionConnection;
         
-        protected EventStream<ReactiveCollectionEvent<T>> up = new EventStream<ReactiveCollectionEvent<T>>();
-        protected readonly List<T> buffer = new List<T>();
+        protected readonly ReactiveCollection<T> buffer = new ReactiveCollection<T>();
         
         bool connected
         {
@@ -205,12 +218,11 @@ namespace ZergRush.ReactiveCore
 
         void ClearBuffer()
         {
-            buffer.Clear();
+            buffer.Reset();
         }
 
         protected void RefillBuffer()
         {
-            buffer.Clear();
             Refill();
         }
         
@@ -235,8 +247,7 @@ namespace ZergRush.ReactiveCore
                 return updateWrapp ?? (updateWrapp = new AnonymousEventStream<ReactiveCollectionEvent<T>>(act =>
                 {
                     OnConnect();
-                    if (up == null) up = new EventStream<ReactiveCollectionEvent<T>>();
-                    var connection = up.Listen(act);
+                    var connection = buffer.update.Listen(act);
                     return new AnonymousDisposable(() =>
                     {
                         OnDisconnect();
@@ -250,9 +261,8 @@ namespace ZergRush.ReactiveCore
         {
             get 
             { 
-                if (connected) return buffer;
-                RefillBuffer();
-                return buffer;
+                if (!connected) RefillBuffer();
+                return buffer.current;
             }
         }
 
@@ -262,172 +272,6 @@ namespace ZergRush.ReactiveCore
         }
     }
     
-    [DebuggerDisplay("{this.ToString()}")]
-    public class MappedCollection<T, TMapped> : AbstractCollectionTransform<TMapped>
-    {
-        readonly Func<T, TMapped> mapFunc;
-        readonly IReactiveCollection<T> collection;
-        
-        public MappedCollection(IReactiveCollection<T> collection, Func<T, TMapped> mapFunc)
-        {
-            this.collection = collection;
-            this.mapFunc = mapFunc;
-        }
-
-        void Process(ReactiveCollectionEvent<T> e)
-        {
-            switch (e.type)
-            {
-                case ReactiveCollectionEventType.Reset:
-                    RefillBuffer();
-                    up.Send(new ReactiveCollectionEvent<TMapped>
-                    {
-                        type = ReactiveCollectionEventType.Reset
-                    });
-                    break;
-                case ReactiveCollectionEventType.Insert:
-                    var item = mapFunc(e.item);
-                    buffer.Insert(e.position, item);
-                    up.Send(new ReactiveCollectionEvent<TMapped>
-                    {
-                        type = ReactiveCollectionEventType.Insert,
-                        item = item,
-                        position = e.position
-                    });
-                    break;
-                case ReactiveCollectionEventType.Remove:
-                    buffer.RemoveAt(e.position);
-                    up.Send(new ReactiveCollectionEvent<TMapped>
-                    {
-                        type = ReactiveCollectionEventType.Remove,
-                        position = e.position
-                    });
-                    break;
-                case ReactiveCollectionEventType.Set:
-                    var newItem = mapFunc(e.item);
-                    buffer[e.position] = newItem;
-                    up.Send(new ReactiveCollectionEvent<TMapped>
-                    {
-                        type = ReactiveCollectionEventType.Set,
-                        item = newItem,
-                        position = e.position
-                    });
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-        }
-
-        protected override IDisposable StartListen()
-        {
-            return collection.update.Listen(Process);
-        }
-
-        protected override void Refill()
-        {
-            buffer.AddRange(collection.current.Select(mapFunc));
-        }
-    }
-    
-    [DebuggerDisplay("{this.ToString()}")]
-    public class FilteredCollection<T> : AbstractCollectionTransform<T>
-    {
-        readonly Func<T, bool> predicate;
-        readonly IReactiveCollection<T> collection;
-        List<int> realIndexes = new List<int>();
-        
-        public FilteredCollection(IReactiveCollection<T> collection, Func<T, bool> predicate)
-        {
-            this.collection = collection;
-            this.predicate = predicate;
-        }
-
-        void Insert(int realIndex, T item)
-        {
-            int newIndex = 0;
-            if (realIndexes.Count > 0)
-            {
-                newIndex = realIndexes.UpperBound(realIndex);
-                for (var i = newIndex; i < realIndexes.Count; ++i)
-                {
-                    realIndexes[i]++;
-                }
-            }
-            if (predicate(item) == false) return;
-            realIndexes.Insert(newIndex, realIndex);
-            buffer.Insert(newIndex, item);
-            up.Send(new ReactiveCollectionEvent<T>
-            {
-                type = ReactiveCollectionEventType.Insert,
-                item = item,
-                position = newIndex
-            });
-        }
-
-        void Remove(int realIndex)
-        {
-            if (realIndexes.Count == 0) return;
-            var oldIndex = realIndexes.BinarySearch(realIndex);
-            for (var i = oldIndex >= 0 ? oldIndex : ~oldIndex; i < realIndexes.Count; ++i)
-            {
-                realIndexes[i]--;
-            }
-            if (oldIndex < 0) return;
-            realIndexes.RemoveAt(oldIndex);
-            buffer.RemoveAt(oldIndex);
-            up.Send(new ReactiveCollectionEvent<T>
-            {
-                type = ReactiveCollectionEventType.Remove,
-                position = oldIndex
-            });
-        }
-
-        void Process(ReactiveCollectionEvent<T> e)
-        {
-            switch (e.type)
-            {
-                case ReactiveCollectionEventType.Reset:
-                    RefillBuffer();
-                    up.Send(new ReactiveCollectionEvent<T> {
-                        type = ReactiveCollectionEventType.Reset
-                    });
-                    break;
-                case ReactiveCollectionEventType.Insert:
-                    Insert(e.position, e.item);
-                    break;
-                case ReactiveCollectionEventType.Remove:
-                    Remove(e.position);
-                    break;
-                case ReactiveCollectionEventType.Set:
-                    //TODO make proper set event resolve if needed
-                    Remove(e.position); 
-                    Insert(e.position, e.item);
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-        }
-
-        protected override IDisposable StartListen()
-        {
-            return collection.update.Listen(Process);
-        }
-
-        protected override void Refill()
-        {
-            realIndexes.Clear();
-            var coll= collection.current;
-            for (int i = 0; i < coll.Count; i++)
-            {
-                var item = coll[i];
-                if (predicate(item))
-                {
-                    realIndexes.Add(i);
-                    buffer.Add(item);
-                }
-            }
-        }
-    }
 
     public static class ReactiveCollectionExtensions
     {
@@ -497,7 +341,7 @@ namespace ZergRush.ReactiveCore
                 {
                     case ReactiveCollectionEventType.Insert:
                     case ReactiveCollectionEventType.Set:
-                        action(rce.item);
+                        action(rce.newItem);
                         break;
                     case ReactiveCollectionEventType.Reset:
                         foreach (var item in collection)
@@ -508,7 +352,41 @@ namespace ZergRush.ReactiveCore
                 }
             });
         }
-
+        
+        public static IDisposable BindEach<T>(this IReactiveCollection<T> collection, Action<T> onInsert, Action<T> onRemove)
+        {
+            foreach (var item in collection)
+            {
+                onInsert(item);
+            }
+            return collection.update.Listen(rce =>
+            {
+                switch (rce.type)
+                {
+                    case ReactiveCollectionEventType.Insert:
+                        onInsert(rce.newItem);
+                        break;
+                    case ReactiveCollectionEventType.Set:
+                        onInsert(rce.newItem);
+                        onRemove(rce.oldItem);
+                        break;
+                    case ReactiveCollectionEventType.Remove:
+                        onRemove(rce.oldItem);
+                        break;
+                    case ReactiveCollectionEventType.Reset:
+                        foreach (var item in rce.oldData)
+                        {
+                            onRemove(item);
+                        }
+                        foreach (var item in rce.newData)
+                        {
+                            onInsert(item);
+                        }
+                        break;
+                }
+            });
+        }
+        
         public static IEventStream<T> MergeCollectionOfStreams<T>(this IReactiveCollection<IEventStream<T>> collection)
         {
             return new AnonymousEventStream<T>(action =>
@@ -549,6 +427,179 @@ namespace ZergRush.ReactiveCore
             {
                 return collection.update.Listen(_ => { action(collection.current); });
             }, () => collection.current);
+        }
+
+        public static IReactiveCollection<T> ToReactiveCollection<T>(this ICell<IEnumerable<T>> cell)
+        {
+            return new ReactiveCollectionFromCellOfArray<T>{cell = cell};    
+        }
+        
+        [DebuggerDisplay("{this.ToString()}")]
+        public class MappedCollection<T, TMapped> : AbstractCollectionTransform<TMapped>
+        {
+            readonly Func<T, TMapped> mapFunc;
+            readonly IReactiveCollection<T> collection;
+            
+            public MappedCollection(IReactiveCollection<T> collection, Func<T, TMapped> mapFunc)
+            {
+                this.collection = collection;
+                this.mapFunc = mapFunc;
+            }
+
+            void Process(ReactiveCollectionEvent<T> e)
+            {
+                switch (e.type)
+                {
+                    case ReactiveCollectionEventType.Reset:
+                        RefillBuffer();
+                        break;
+                    case ReactiveCollectionEventType.Insert:
+                        var item = mapFunc(e.newItem);
+                        buffer.Insert(e.position, item);
+                        break;
+                    case ReactiveCollectionEventType.Remove:
+                        buffer.RemoveAt(e.position);
+                        break;
+                    case ReactiveCollectionEventType.Set:
+                        var newItem = mapFunc(e.newItem);
+                        buffer[e.position] = newItem;
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+            }
+
+            protected override IDisposable StartListen()
+            {
+                return collection.update.Listen(Process);
+            }
+
+            protected override void Refill()
+            {
+                buffer.Reset(collection.current.Select(mapFunc));
+            }
+        }
+        
+        [DebuggerDisplay("{this.ToString()}")]
+        public class FilteredCollection<T> : AbstractCollectionTransform<T>
+        {
+            readonly Func<T, bool> predicate;
+            readonly IReactiveCollection<T> collection;
+            List<int> realIndexes = new List<int>();
+            
+            public FilteredCollection(IReactiveCollection<T> collection, Func<T, bool> predicate)
+            {
+                this.collection = collection;
+                this.predicate = predicate;
+            }
+
+            void Insert(int realIndex, T item)
+            {
+                int newIndex = 0;
+                if (realIndexes.Count > 0)
+                {
+                    newIndex = realIndexes.UpperBound(realIndex);
+                    for (var i = newIndex; i < realIndexes.Count; ++i)
+                    {
+                        realIndexes[i]++;
+                    }
+                }
+                if (predicate(item) == false) return;
+                realIndexes.Insert(newIndex, realIndex);
+                buffer.Insert(newIndex, item);
+            }
+
+            void Remove(int realIndex)
+            {
+                if (realIndexes.Count == 0) return;
+                var oldIndex = realIndexes.BinarySearch(realIndex);
+                for (var i = oldIndex >= 0 ? oldIndex : ~oldIndex; i < realIndexes.Count; ++i)
+                {
+                    realIndexes[i]--;
+                }
+                if (oldIndex < 0) return;
+                realIndexes.RemoveAt(oldIndex);
+                buffer.RemoveAt(oldIndex);
+            }
+
+            void Process(ReactiveCollectionEvent<T> e)
+            {
+                switch (e.type)
+                {
+                    case ReactiveCollectionEventType.Reset:
+                        RefillBuffer();
+                        break;
+                    case ReactiveCollectionEventType.Insert:
+                        Insert(e.position, e.newItem);
+                        break;
+                    case ReactiveCollectionEventType.Remove:
+                        Remove(e.position);
+                        break;
+                    case ReactiveCollectionEventType.Set:
+                        //TODO make proper set event resolve if needed
+                        Remove(e.position); 
+                        Insert(e.position, e.newItem);
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+            }
+
+            protected override IDisposable StartListen()
+            {
+                return collection.update.Listen(Process);
+            }
+
+            protected override void Refill()
+            {
+                realIndexes.Clear();
+                var coll = collection.current;
+                for (int i = 0; i < coll.Count; i++)
+                {
+                    var item = coll[i];
+                    if (predicate(item))
+                    {
+                        realIndexes.Add(i);
+                    }
+                }
+                buffer.Reset(coll.Where(predicate));
+            }
+        }
+
+        class ReactiveCollectionFromCellOfArray<T> : AbstractCollectionTransform<T>
+        {
+            public ICell<IEnumerable<T>> cell;
+            protected override IDisposable StartListen()
+            {
+                return cell.ListenUpdates(coll =>
+                {
+                    if (coll == null)
+                    {
+                        buffer.Reset();
+                        return;
+                    }
+
+                    var newItems = coll as T[] ?? coll.ToArray();
+                    for (var index = 0; index < newItems.Length; index++)
+                    {
+                        var item = newItems[index];
+                        if (buffer.Contains(item)) continue;
+                        buffer.Add(item);
+                    }
+
+                    for (var index = buffer.Count - 1; index >= 0; index--)
+                    {
+                        var oldItem = buffer[index];
+                        if (newItems.Contains(oldItem)) continue;
+                        buffer.RemoveAt(index);
+                    }
+                });
+            }
+
+            protected override void Refill()
+            {
+                buffer.Reset(cell.value);
+            }
         }
     }
 }
