@@ -129,6 +129,15 @@ public static class UnityExtensions
 	    }
 	    return component;
     }
+    
+    static public void RemoveComponent<T>(this GameObject obj) where T : Component
+    {
+	    var component = obj.GetComponent<T>();
+	    if (component != null)
+	    {
+		    GameObject.Destroy(component);
+	    }
+    }
 
 
 	public static ICell<bool> IsPressed(this GameObject go)

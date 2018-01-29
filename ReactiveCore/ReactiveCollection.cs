@@ -442,11 +442,13 @@ namespace ZergRush.ReactiveCore
 
         public IEnumerator<T> GetEnumerator()
         {
+            if (value == null) yield break;
             yield return value;
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
+            if (value == null) yield break;
             yield return value;
         }
 
@@ -455,7 +457,15 @@ namespace ZergRush.ReactiveCore
             get { return up ?? (up = new EventStream<ReactiveCollectionEvent<T>>()); }
         }
 
-        public List<T> current { get {return new List<T>{value};} }
+        public List<T> current
+        {
+            get
+            {
+                var list = new List<T>();
+                if (val != null) list.Add(val);
+                return list;
+            }
+        }
     }
 
     public static class ReactiveCollectionExtensions
@@ -488,6 +498,11 @@ namespace ZergRush.ReactiveCore
         public static IReactiveCollection<T> ToStaticReactiveCollection<T>(this List<T> coll)
         {
             return new StaticCollection<T> {list = coll};
+        }
+        
+        public static IReactiveCollection<T> ToStaticReactiveCollection<T>(this IEnumerable<T> coll)
+        {
+            return new StaticCollection<T> {list = coll.ToList()};
         }
 
         public static ICell<int> CountCell<T>(this IReactiveCollection<T> coll)
@@ -618,7 +633,45 @@ namespace ZergRush.ReactiveCore
         {
             return new ReactiveCollectionFromCellOfArray<T>{cell = cell};    
         }
-        
+
+        public static IReactiveCollection<T> Join<T>(this ICell<IReactiveCollection<T>> cellOfCollection)
+        {
+            return new JoinCellOfCollection<T> {cellOfCollection = cellOfCollection};
+        }
+
+        class JoinCellOfCollection<T> : IReactiveCollection<T>
+        {
+            public ICell<IReactiveCollection<T>> cellOfCollection;
+            public IEnumerator<T> GetEnumerator()
+            {
+                return cellOfCollection.value.GetEnumerator();
+            }
+
+            IEnumerator IEnumerable.GetEnumerator()
+            {
+                return GetEnumerator();
+            }
+
+            public IEventStream<ReactiveCollectionEvent<T>> update
+            {
+                get
+                {
+                    var cellUpdates = cellOfCollection.BufferPreviousValue().Map(tuple => new ReactiveCollectionEvent<T>
+                    {
+                        type = ReactiveCollectionEventType.Reset,
+                        newData = tuple.Item1,
+                        oldData = tuple.Item2
+                    });
+                    return cellOfCollection.Map(coll => coll.update).Join().MergeWith(cellUpdates);
+                }
+            }
+
+            public List<T> current
+            {
+                get { return cellOfCollection.value.current; }
+            }
+        }
+
         [DebuggerDisplay("{this.ToString()}")]
         public class MappedCollection<T, TMapped> : AbstractCollectionTransform<TMapped>
         {
@@ -754,6 +807,42 @@ namespace ZergRush.ReactiveCore
         class ReactiveCollectionFromCellOfArray<T> : AbstractCollectionTransform<T>
         {
             public ICell<IEnumerable<T>> cell;
+            protected override IDisposable StartListen()
+            {
+                return cell.ListenUpdates(coll =>
+                {
+                    if (coll == null)
+                    {
+                        buffer.Reset();
+                        return;
+                    }
+
+                    var newItems = coll as T[] ?? coll.ToArray();
+                    for (var index = 0; index < newItems.Length; index++)
+                    {
+                        var item = newItems[index];
+                        if (buffer.Contains(item)) continue;
+                        buffer.Add(item);
+                    }
+
+                    for (var index = buffer.Count - 1; index >= 0; index--)
+                    {
+                        var oldItem = buffer[index];
+                        if (newItems.Contains(oldItem)) continue;
+                        buffer.RemoveAt(index);
+                    }
+                });
+            }
+
+            protected override void Refill()
+            {
+                buffer.Reset(cell.value);
+            }
+        }
+        
+        class ReactiveCollectionFromCellOfCollection<T> : AbstractCollectionTransform<T>
+        {
+            public ICell<IReactiveCollection<T>> cell;
             protected override IDisposable StartListen()
             {
                 return cell.ListenUpdates(coll =>

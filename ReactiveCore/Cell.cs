@@ -214,6 +214,12 @@ namespace ZergRush.ReactiveCore
             return cell.ListenUpdates(action);
         }
 
+        public static IEventStream<T> UpdateStream<T>(this ICell<T> cell)
+        {
+            if (cell is Cell<T>) return (cell as Cell<T>).updates;
+            return new AnonymousEventStream<T>(cell.ListenUpdates);
+        }
+
         sealed class MappedCell<T, T2> : ICell<T2>
         {
             public ICell<T> cell;
