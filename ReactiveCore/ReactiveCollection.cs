@@ -4,6 +4,12 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
+#if UNITY_5_3_OR_NEWER
+using UnityEngine;
+#else
+class SerializeField : Attribute {}
+#endif
+
 namespace ZergRush.ReactiveCore
 {
     public enum ReactiveCollectionEventType : byte
@@ -271,7 +277,186 @@ namespace ZergRush.ReactiveCore
             return current.PrintCollection();
         }
     }
+
+    public class SingleElementCollection<T> : ICell<T>, IReactiveCollection<T>
+    {
+        [SerializeField] private T val;
+        [NonSerialized] private EventStream<T> upVal;
+        [NonSerialized] EventStream<ReactiveCollectionEvent<T>> up;
+
+        public SingleElementCollection(T t)
+        {
+            val = t;
+        }
+
+        public SingleElementCollection()
+        {
+        }
+
+        public T value
+        {
+            get { return val; }
+            set
+            {
+                if (EqualityComparer<T>.Default.Equals(value, val) == false)
+                {
+                    var oldval = val;
+                    val = value;
+                    if (upVal != null) upVal.Send(val);
+                    if (up != null) up.Send(new ReactiveCollectionEvent<T>
+                    {
+                        type = ReactiveCollectionEventType.Set,
+                        oldItem = oldval,
+                        newItem = value
+                    });
+                }
+            }
+        }
+
+        public EventStream<T> updates
+        {
+            get { return upVal = upVal ?? new EventStream<T>(); }
+        }
+
+        public IDisposable ListenUpdates(Action<T> callback)
+        {
+            if (upVal == null) upVal = new EventStream<T>();
+            return upVal.Listen(callback);
+        }
+
+        public IDisposable OnChanged(Action action)
+        {
+            if (upVal == null) upVal = new EventStream<T>();
+            return upVal.Listen(_ => action());
+        }
+
+        public override string ToString()
+        {
+            return value.ToString();
+        }
+
+        public void SetValue(T v)
+        {
+            this.value = v;
+        }
+        
+
+        public IEnumerator<T> GetEnumerator()
+        {
+            yield return value;
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            yield return value;
+        }
+
+        public IEventStream<ReactiveCollectionEvent<T>> update
+        {
+            get { return up ?? (up = new EventStream<ReactiveCollectionEvent<T>>()); }
+        }
+
+        public List<T> current { get {return new List<T>{value};} }
+    }
     
+    public class SingleNullableElementCollection<T> : ICell<T>, IReactiveCollection<T> where T : class
+    {
+        [SerializeField] private T val;
+        [NonSerialized] private EventStream<T> upVal;
+        [NonSerialized] EventStream<ReactiveCollectionEvent<T>> up;
+
+        public SingleNullableElementCollection(T t)
+        {
+            val = t;
+        }
+
+        public SingleNullableElementCollection()
+        {
+        }
+
+        public T value
+        {
+            get { return val; }
+            set
+            {
+                if (object.ReferenceEquals(value, val) == false)
+                {
+                    var oldval = val;
+                    val = value;
+                    if (upVal != null) upVal.Send(val);
+                    if (up != null) {
+                        if (oldval == null)
+                        {
+                            up.Send(new ReactiveCollectionEvent<T> {
+                                type = ReactiveCollectionEventType.Insert,
+                                newItem = val
+                            });
+                        }
+                        else if (val == null)
+                        {
+                            up.Send(new ReactiveCollectionEvent<T> {
+                                type = ReactiveCollectionEventType.Remove,
+                                oldItem = oldval,
+                            });
+                        }
+                        else
+                        {
+                            up.Send(new ReactiveCollectionEvent<T> {
+                                type = ReactiveCollectionEventType.Set,
+                                oldItem = oldval,
+                                newItem = val
+                            });
+                        }
+                    }
+                }
+            }
+        }
+
+        public EventStream<T> updates
+        {
+            get { return upVal = upVal ?? new EventStream<T>(); }
+        }
+
+        public IDisposable ListenUpdates(Action<T> callback)
+        {
+            if (upVal == null) upVal = new EventStream<T>();
+            return upVal.Listen(callback);
+        }
+
+        public IDisposable OnChanged(Action action)
+        {
+            if (upVal == null) upVal = new EventStream<T>();
+            return upVal.Listen(_ => action());
+        }
+
+        public override string ToString()
+        {
+            return value.ToString();
+        }
+
+        public void SetValue(T v)
+        {
+            this.value = v;
+        }
+        
+
+        public IEnumerator<T> GetEnumerator()
+        {
+            yield return value;
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            yield return value;
+        }
+
+        public IEventStream<ReactiveCollectionEvent<T>> update
+        {
+            get { return up ?? (up = new EventStream<ReactiveCollectionEvent<T>>()); }
+        }
+
+        public List<T> current { get {return new List<T>{value};} }
+    }
 
     public static class ReactiveCollectionExtensions
     {

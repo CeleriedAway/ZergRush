@@ -141,10 +141,10 @@ public static class UnityExtensions
 		return cell;
 	}
 
-    public static IDisposable RunCoroutineWhile(this MonoBehaviour self, Func<IEnumerator> coro, ICell<bool> value)
+    public static IDisposable RunCoroutineWhile(this MonoBehaviour self, Func<IEnumerator> coro, ICell<bool> condition)
     {
         Coroutine currentCoro = null;
-        return value.Bind(val =>
+        return condition.Bind(val =>
         {
             if (val) currentCoro = self.StartCoroutine(coro());
             else if (currentCoro != null)
