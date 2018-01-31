@@ -116,7 +116,7 @@ namespace ZergRush
             connectionSink(e.Listen(cell.Reset));
             return cell;
         }
-
+        
         public static IEventStream Interval(float timeInterval)
         {
             return UnityExecuter.instance.TickStream(timeInterval);

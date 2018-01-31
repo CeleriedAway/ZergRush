@@ -399,6 +399,11 @@ public static class UnityExtensions
 	{
 		return vec - planeNormal.normalized * (Vector3.Dot(vec, planeNormal) / planeNormal.magnitude);
 	}
+    
+	public static Vector3 HeightVec(this Vector3 planeNormal, Vector3 vec)
+	{
+		return planeNormal.normalized * (Vector3.Dot(vec, planeNormal) / planeNormal.magnitude);
+	}
 }
 
 #endif
