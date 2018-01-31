@@ -283,6 +283,17 @@ namespace ZergRush.ReactiveCore
                 });
             });
         }
+        
+        public static IEventStream Filter(this IEventStream eventStream, Func<bool> filter)
+        {
+            return new AnonymousEventStream(reaction =>
+            {
+                return eventStream.Listen(() =>
+                {
+                    if (filter()) reaction();
+                });
+            });
+        }
 
         public static IEventStream<T> Where<T>(this IEventStream<T> stream, Func<T, bool> predicate)
         {

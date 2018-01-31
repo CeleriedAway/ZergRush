@@ -92,6 +92,7 @@ namespace ZergRush.ReactiveCore
 
     // Does not do equation check on value assignment
     [Serializable]
+    [DebuggerDisplay("{value}")]
     public sealed class UncheckedCell<T> : ISinkCell<T>
     {
         [SerializeField] private T val;
@@ -124,6 +125,7 @@ namespace ZergRush.ReactiveCore
     }
 
     [Serializable]
+    [DebuggerDisplay("{value}")]
     public sealed class StaticCell<T> : ICell<T>
     {
         public StaticCell()
@@ -161,6 +163,7 @@ namespace ZergRush.ReactiveCore
     }
 
 
+    [DebuggerDisplay("{value}")]
     public class AnonymousCell<T> : ICell<T>
     {
         public Func<Action<T>, IDisposable> listen;
@@ -220,6 +223,7 @@ namespace ZergRush.ReactiveCore
             return new AnonymousEventStream<T>(cell.ListenUpdates);
         }
 
+        [DebuggerDisplay("{value}")]
         sealed class MappedCell<T, T2> : ICell<T2>
         {
             public ICell<T> cell;
@@ -252,6 +256,7 @@ namespace ZergRush.ReactiveCore
             return new MappedCell<T,T2>{cell = cell, map = map};
         }
 
+        [DebuggerDisplay("{value}")]
         sealed class FlatMapCell<T, T2> : ICell<T2>
         {
             public ICell<T> cell;
@@ -299,6 +304,7 @@ namespace ZergRush.ReactiveCore
             return new FlatMapCell<T,T2>{cell = cell, map = map};
         }
         
+        [DebuggerDisplay("{value}")]
         sealed class JoinCell<T> : ICell<T>
         {
             public ICell<ICell<T>> cell;
@@ -582,7 +588,15 @@ namespace ZergRush.ReactiveCore
 
         public static ICell<bool> Not(this ICell<bool> value)
         {
-            return value.Select(val => !val);
+            return value.Map(val => !val);
+        }
+        public static ICell<bool> And(this ICell<bool> value, ICell<bool> other)
+        {
+            return value.Merge(other, (b, b1) => b && b1);
+        }
+        public static ICell<bool> Or(this ICell<bool> value, ICell<bool> other)
+        {
+            return value.Merge(other, (b, b1) => b || b1);
         }
 
         // Maps cell value to object

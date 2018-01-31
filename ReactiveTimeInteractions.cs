@@ -18,6 +18,25 @@ namespace ZergRush
             static UnityExecuter instance_val;
             
             List<IUpdatable> updatables = new List<IUpdatable>();
+            
+            Dictionary<float, Tick> intervalTicks = new Dictionary<float, Tick>();
+            class Tick
+            {
+                public float current;
+                public EventStream stream;
+            }
+
+            public EventStream TickStream(float delay)
+            {
+                Tick val;
+                if (!intervalTicks.TryGetValue(delay, out val))
+                {
+                    val = new Tick();
+                    val.stream = new EventStream();
+                    intervalTicks[delay] = val;
+                }
+                return val.stream;
+            }
 
             public void RegisterUpdatable(IUpdatable updatable)
             {
@@ -49,6 +68,16 @@ namespace ZergRush
                 {
                     updatables[i].Update(dt);
                 }
+
+                foreach (var tick in intervalTicks)
+                {
+                    tick.Value.current += dt;
+                    if (tick.Value.current > tick.Key)
+                    {
+                        tick.Value.current -= tick.Key;
+                        tick.Value.stream.Send();
+                    }
+                }
             }
 
             public static UnityExecuter instance
@@ -69,9 +98,13 @@ namespace ZergRush
         class TriggerCell : Cell<float>, IUpdatable
         {
             public float decay;
+            public void Reset()
+            {
+                value = decay;
+            }
             public void Update(float dt)
             {
-                value = value *= Mathf.Pow(decay, dt);
+                value = Mathf.Max(value - dt, 0);
             }
         }
         
@@ -80,8 +113,13 @@ namespace ZergRush
         {
             TriggerCell cell = new TriggerCell{decay = decayTime};
             connectionSink(UnityExecuter.instance.AddUpdatable(cell));
-            connectionSink(e.Listen(() => cell.value = 1));
+            connectionSink(e.Listen(cell.Reset));
             return cell;
+        }
+
+        public static IEventStream Interval(float timeInterval)
+        {
+            return UnityExecuter.instance.TickStream(timeInterval);
         }
     }
 }

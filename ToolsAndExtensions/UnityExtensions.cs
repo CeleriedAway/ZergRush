@@ -163,6 +163,12 @@ public static class UnityExtensions
             }
         });
     }
+
+    public static Color WithAlpha(this Color c, float alpha)
+    {
+        c.a = alpha;
+        return c;
+    }
 	
     public static void MakeUniqueMaterial(this Image img)
     {

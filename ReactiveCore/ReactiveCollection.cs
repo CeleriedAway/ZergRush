@@ -143,7 +143,7 @@ namespace ZergRush.ReactiveCore
                 {
                     type = ReactiveCollectionEventType.Reset,
                     oldData = oldData,
-                    newData = val
+                    newData = data
                 });
         }
 
