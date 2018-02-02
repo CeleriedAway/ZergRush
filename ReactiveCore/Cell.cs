@@ -353,7 +353,12 @@ namespace ZergRush.ReactiveCore
                 }
             }
         }
-
+        
+        public static IEventStream<T2> FlatMap<T, T2>(this ICell<T> cell, Func<T, IEventStream<T2>> map)
+        {
+            return cell.Map(v => map(v)).Join();
+        }
+        
         // Creates a cell from a cell of cell.
         // It simplyfies complex data dependancies.
         // For example if you have a dynamic value inside of an object that is also dynamic.
