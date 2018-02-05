@@ -304,6 +304,12 @@ namespace ZergRush.ReactiveCore
             return new FlatMapCell<T,T2>{cell = cell, map = map};
         }
         
+        public static ICell<T2> FlatMapWithDefaultOnNull<T, T2>(this ICell<T> cell, Func<T, ICell<T2>> map) 
+            where T : class
+        {
+            return cell.FlatMap(v => v != null ? map(v) : StaticCell<T2>.Default());
+        }
+        
         [DebuggerDisplay("{value}")]
         sealed class JoinCell<T> : ICell<T>
         {
@@ -357,6 +363,12 @@ namespace ZergRush.ReactiveCore
         public static IEventStream<T2> FlatMap<T, T2>(this ICell<T> cell, Func<T, IEventStream<T2>> map)
         {
             return cell.Map(v => map(v)).Join();
+        }
+        
+        public static IEventStream<T2> FlatMapWithDefaultOnNull<T, T2>(this ICell<T> cell, Func<T, IEventStream<T2>> map)
+            where T : class
+        {
+            return cell.FlatMap(v => v != null ? map(v) : AbandonedStream<T2>.value);
         }
         
         // Creates a cell from a cell of cell.
