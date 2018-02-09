@@ -103,7 +103,8 @@ namespace ZergRush.ReactiveCore
 
         public void Remove(T item)
         {
-            RemoveAt(data.IndexOf(item));
+            var index = data.IndexOf(item);
+            if (index >= 0) RemoveAt(index);
         }
 
         public void RemoveAt(int index)
@@ -467,33 +468,40 @@ namespace ZergRush.ReactiveCore
             }
         }
     }
+    
+    class StaticCollection<T> : IReactiveCollection<T>
+    {
+        public List<T> list;
+
+        public IEnumerator<T> GetEnumerator()
+        {
+            return list.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        public IEventStream<ReactiveCollectionEvent<T>> update
+        {
+            get { return AbandonedStream<ReactiveCollectionEvent<T>>.value; }
+        }
+
+        public List<T> current
+        {
+            get { return list; }
+        }
+
+        static readonly StaticCollection<T> def = new StaticCollection<T>{list = new List<T>()};
+        public static IReactiveCollection<T> Empty()
+        {
+            return def;
+        }
+    }
 
     public static class ReactiveCollectionExtensions
     {
-        class StaticCollection<T> : IReactiveCollection<T>
-        {
-            public List<T> list;
-
-            public IEnumerator<T> GetEnumerator()
-            {
-                return list.GetEnumerator();
-            }
-
-            IEnumerator IEnumerable.GetEnumerator()
-            {
-                return GetEnumerator();
-            }
-
-            public IEventStream<ReactiveCollectionEvent<T>> update
-            {
-                get { return AbandonedStream<ReactiveCollectionEvent<T>>.value; }
-            }
-
-            public List<T> current
-            {
-                get { return list; }
-            }
-        }
 
         public static IReactiveCollection<T> ToStaticReactiveCollection<T>(this List<T> coll)
         {

@@ -255,6 +255,11 @@ namespace ZergRush.ReactiveCore
         {
             return new MappedCell<T,T2>{cell = cell, map = map};
         }
+        
+        public static ICell<T2> MapWithDefaultIfNull<T, T2>(this ICell<T> cell, Func<T, T2> map, T2 def) where T : class
+        {
+            return cell.Map(v => v == null ? def : map(v));
+        }
 
         [DebuggerDisplay("{value}")]
         sealed class FlatMapCell<T, T2> : ICell<T2>
@@ -417,7 +422,7 @@ namespace ZergRush.ReactiveCore
         {
             return cell.Map(v => EqualityComparer<T>.Default.Equals(value, v) == false);
         }
-
+        
         // An experimental concept some kink of abstract lens.
         public static ISinkCell<T2> SinkMap<T, T2>(this ISinkCell<T> cell, Func<T, T2> map, Func<T2, T> mapBack)
         {
@@ -716,6 +721,11 @@ namespace ZergRush.ReactiveCore
         public static IEventStream When(this ICell<bool> cell)
         {
             return cell.When(i => i);
+        }
+        
+        public static IEventStream WhenUpdatedToTrue(this ICell<bool> cell)
+        {
+            return cell.WhenUpdatedToSatisfy(i => i);
         }
         
         public class JoinNullCellException : System.Exception
