@@ -45,7 +45,7 @@ namespace ZergRush
 
     public class WaitForEvent<T> : CustomYieldInstruction
     {
-        private IDisposable connection;
+        IDisposable connection;
         bool ready;
         public WaitForEvent(IEventStream<T> eventStream, WaitResult<T> result)
         {
@@ -60,8 +60,6 @@ namespace ZergRush
         }
         public override bool keepWaiting { get { return ready == false; } }
     }
-    
-    
 
     public class DoForSomeTime : IEnumerator
     {

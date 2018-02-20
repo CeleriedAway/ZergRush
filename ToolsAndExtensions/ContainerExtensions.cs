@@ -18,6 +18,12 @@ namespace ZergRush
             return val;
         }
 
+        public static void Check<TK, TV>(this Dictionary<TK, TV> dict, TK key)
+            where TV : new()
+        {
+            if (dict.ContainsKey(key) == false) dict[key] = new TV();
+        }
+
         public static TV AtOrDefault<TK, TV>(this Dictionary<TK, TV> dict, TK key)
             where TV : new()
         {
