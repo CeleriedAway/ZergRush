@@ -395,7 +395,7 @@ public static class UnityExtensions
         rb.AddForce(-rb.velocity.normalized * breakForcePower);
         return false;
     }
-	public static Vector3 ProjVec(this Vector3 planeNormal, Vector3 vec)
+	public static Vector3 ProjectVectorOnPlane(this Vector3 planeNormal, Vector3 vec)
 	{
 		return vec - planeNormal.normalized * (Vector3.Dot(vec, planeNormal) / planeNormal.magnitude);
 	}
