@@ -722,6 +722,16 @@ namespace ZergRush.ReactiveCore
         {
             return cell.When(i => i);
         }
+
+        public static IEventStream WhenMoreOrEqual(this ICell<float> cell, float value)
+        {
+            return cell.When(v => v >= value);
+        }
+        
+        public static IEventStream WhenMoreOrEqual(this ICell<int> cell, int value)
+        {
+            return cell.When(v => v >= value);
+        }
         
         public static IEventStream WhenUpdatedToTrue(this ICell<bool> cell)
         {

@@ -18,26 +18,20 @@ namespace ZergRush
             return list;
         }
 
-        public static T WeightedRandomElement<T>(this IEnumerable<T> coll, Func<T, float> weightFunc, System.Random generator)
-        {
-            if (coll.Any())
-                return coll.ElementAt(GetRandomIndexFromWeghts(coll.Select(weightFunc), generator));
-            else
-                return default(T);
-        }
-
-        public static T WeightedRandomElement<T>(this IEnumerable<T> coll, System.Random generator,
-            Func<T, float> weightFunc)
+        public static T WeightedRandomElement<T>(this IEnumerable<T> coll, Func<T, float> weightFunc,
+            System.Random generator = null)
         {
             var list = coll.ToList();
             if (list.Count > 0)
-                return list.ElementAt(GetRandomIndexFromWeghts(list.Select(weightFunc), generator));
+                return list[GetRandomIndexFromWeghts(list.Select(weightFunc), generator)];
             else
                 return default(T);
         }
 
         public static int GetRandomIndexFromWeghts(this IEnumerable<float> probabilities, System.Random generator)
         {
+            if (generator == null) generator = new System.Random();
+            
             var tempProb = NormalizeFloatRange(probabilities);
 
             double diceRoll = generator.NextDouble();
