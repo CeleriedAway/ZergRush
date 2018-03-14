@@ -106,6 +106,22 @@ namespace ZergRush.ReactiveCore
             var index = data.IndexOf(item);
             if (index >= 0) RemoveAt(index);
         }
+        
+        public int RemoveAll(Func<T, bool> predicate)
+        {
+            int removedCounter = 0;
+            for (int i = data.Count - 1; i >= 0; i--)
+            {
+                var item = data[i];
+                if (predicate(item))
+                {
+                    removedCounter++;
+                    RemoveAt(i);
+                }
+            }
+
+            return removedCounter;
+        }
 
         public void RemoveAt(int index)
         {

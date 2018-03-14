@@ -63,6 +63,51 @@ namespace ZergRush.ReactiveUI
         }
     }
 
+    public class SimpleViewStorage<TData, TView> where TView : ReusableView
+    {
+        public SimpleViewStorage(Transform parent, TView prefab)
+        {
+            pool = new ViewPool<TView>(parent, prefab);
+        }
+        
+        ViewPool<TView> pool;
+        Dictionary<TData, TView> loadedView = new Dictionary<TData, TView>();
+
+        public void LoadAll(IEnumerable<TData> dataCollection, Action<TData, TView> onLoad = null)
+        {
+            foreach (var data in dataCollection)
+            {
+                var view = pool.Get();
+                if (onLoad != null) onLoad(data, view);
+                loadedView[data] = view;
+            }
+        }
+        public TView LoadView(TData data, Action<TData, TView> onLoad = null)
+        {
+            var view = pool.Get();
+            if (onLoad != null) onLoad(data, view);
+            loadedView[data] = view;
+            return view;
+        }
+
+        public void UnloadView(TData data, Action<TData, TView> unload = null)
+        {
+            if (unload != null) unload(data, loadedView[data]);
+            pool.Recycle(loadedView[data]);
+            loadedView.Remove(data);
+        }
+
+        public void UnloadAll(Action<TData, TView> unload = null)
+        {
+            foreach (var dv in loadedView)
+            {
+                if (unload != null) unload?.Invoke(dv.Key, dv.Value);
+                pool.Recycle(dv.Value);
+            }
+            loadedView.Clear();
+        }
+    }
+
     public class LinearViewStorage<TView> where TView : ReusableView
     {
         public ViewPool<TView> pool;

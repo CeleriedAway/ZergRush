@@ -1,6 +1,7 @@
 ﻿#if UNITY_5_3_OR_NEWER
 
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using ZergRush.ReactiveCore;
@@ -243,6 +244,50 @@ namespace ZergRush.ReactiveUI
             }
         }
 
+        public static IDisposable ShowSmth<T, TView>(
+            IReactiveCollection<T> coll,
+            TView prefab,
+            Action<T, TView> show,
+            Transform parent = null,
+            Func<T, IEventStream> updater = null) where TView : ReusableView
+        {
+            var viewStorage = new SimpleViewStorage<T, TView>(parent, prefab);
+            var connections = new Connections();
+
+            if (updater != null)
+            {
+                var showCopy = show;
+                Action<T, TView> showAndSubscribe = (data, view) =>
+                {
+                    showCopy(data, view);
+                    view.addConnection = updater(data).Listen(() => showCopy(data, view));
+                };
+                show = showAndSubscribe;
+            }
+            
+            connections.addConnection = coll.update.Listen(e =>
+            {
+                switch (e.type)
+                {
+                    case ReactiveCollectionEventType.Reset:
+                        viewStorage.UnloadAll();
+                        viewStorage.LoadAll(e.newData, show);
+                        break;
+                    case ReactiveCollectionEventType.Insert:
+                        viewStorage.LoadView(e.newItem, show);
+                        break;
+                    case ReactiveCollectionEventType.Remove:
+                        viewStorage.UnloadView(e.oldItem);
+                        break;
+                    case ReactiveCollectionEventType.Set:
+                        viewStorage.UnloadView(e.oldItem);
+                        viewStorage.LoadView(e.newItem, show);
+                        break;
+                }
+            });
+            viewStorage.LoadAll(coll.current, show);
+            return connections;
+        }
     }
 }
 #endif
