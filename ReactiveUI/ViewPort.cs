@@ -8,13 +8,13 @@ namespace ZergRush.ReactiveUI
 {
     public interface IViewPort
     {
-        void CalculateVisibleIndexes(ITableViewLayout layout, out int first, out int last);
+        void CalculateVisibleIndexes(IScrollViewLayout layout, out int first, out int last);
         IEventStream needRecalcVisibility { get; }
     }
 
     public class AllVisibleViewPort : IViewPort
     {
-        public void CalculateVisibleIndexes(ITableViewLayout layout, out int first, out int last)
+        public void CalculateVisibleIndexes(IScrollViewLayout layout, out int first, out int last)
         {
             first = 0;
             last = Int32.MaxValue;
@@ -27,7 +27,7 @@ namespace ZergRush.ReactiveUI
     {
         ReactiveScrollRect rect;
 
-        public ScrollRectViewPort(ReactiveScrollRect rect, ITableViewLayout layout, Action<IDisposable> connectionSink)
+        public ScrollRectViewPort(ReactiveScrollRect rect, IScrollViewLayout layout, Action<IDisposable> connectionSink)
         {
             this.rect = rect;
             connectionSink(layout.boundingSize.Bind(r =>
@@ -36,7 +36,7 @@ namespace ZergRush.ReactiveUI
             }));
         }
 
-        public void CalculateVisibleIndexes(ITableViewLayout layout, out int first, out int last)
+        public void CalculateVisibleIndexes(IScrollViewLayout layout, out int first, out int last)
         {
             bool horizontal = rect.scroll.horizontal;
             var viewPortCorrection = horizontal

@@ -9,22 +9,23 @@ using ZergRush.ReactiveCore;
 
 namespace ZergRush.ReactiveUI
 {
-    public interface ITableViewLayout
+    public interface IScrollViewLayout
     {
+        Vector2 AncoredPositionForIndex(int index);
         int FirstVisibleIndexFromShift(float shift);
         int LastVisibleIndexFromShift(float shift);
-        Vector2 AncoredPositionForIndex(int index);
+        
         ICell<Rect> boundingSize { get; }
         IEventStream updatePositionsRequest { get; }
     }
 
-    class LinearTableLayout : ITableViewLayout
+    class LinearLayout : IScrollViewLayout
     {
         TableLayoutSettings settings;
         ICell<int> count;
         int directionSign;
 
-        public LinearTableLayout(ICell<int> itemCount, TableLayoutSettings settigns)
+        public LinearLayout(ICell<int> itemCount, TableLayoutSettings settigns)
         {
             settings = settigns;
             count = itemCount;
@@ -68,7 +69,7 @@ namespace ZergRush.ReactiveUI
         }
     }
 
-    class GridTableLayout : ITableViewLayout
+    class GridLayout : IScrollViewLayout
     {
         TableLayoutSettings settings;
         ICell<int> count;
@@ -76,7 +77,7 @@ namespace ZergRush.ReactiveUI
         int directionSubSign;
         int gridSize;
 
-        public GridTableLayout(ICell<int> itemCount, TableLayoutSettings settigns, int gridCellCount)
+        public GridLayout(ICell<int> itemCount, TableLayoutSettings settigns, int gridCellCount)
         {
             settings = settigns;
             count = itemCount;
@@ -126,19 +127,19 @@ namespace ZergRush.ReactiveUI
         }
     }
 
-    class LinearVariableTableLayout : ITableViewLayout
+    class LinearVariableSizeLayout : IScrollViewLayout
     {
         TableLayoutSettings settings;
         int directionSign;
         List<float> endPoints = new List<float>();
         Cell<Rect> boundingSizeCell = new Cell<Rect>();
         
-        LinearVariableTableLayout() {}
+        LinearVariableSizeLayout() {}
 
-        public static LinearVariableTableLayout Create<TData>(IReactiveCollection<TData> data,
+        public static LinearVariableSizeLayout Create<TData>(IReactiveCollection<TData> data,
             Func<TData, float> viewSizeFactory, TableLayoutSettings settigns, Action<IDisposable> connectionSink)
         {
-            var layout = new LinearVariableTableLayout();
+            var layout = new LinearVariableSizeLayout();
             layout.settings = settigns;
             layout.directionSign = settigns.direction == LayoutDirection.Horizontal ? 1 : -1;
             Action<int> refillFromPos = i =>

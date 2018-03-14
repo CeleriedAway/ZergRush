@@ -14,7 +14,7 @@ namespace ZergRush.ReactiveUI
     {
         public LinearViewStorage<TView> viewStorage;
         public IViewPort viewPort;
-        public ITableViewLayout layout;
+        public IScrollViewLayout layout;
         public ITableContentProvider<TView> content; 
         public TableDelegates<TView> delegates;
     }
@@ -115,7 +115,7 @@ namespace ZergRush.ReactiveUI
             return connectionsAndComponents;
         }
         
-        public static TableConnectionsAndComponents<TView> PresentInScrollWithReusableViews<TView>(
+        public static TableConnectionsAndComponents<TView> PresentInScroll<TView>(
             TableConnectionsAndComponents<TView> connectionsAndComponents,
             ReactiveScrollRect scroll)
             where TView : ReusableView
@@ -131,8 +131,8 @@ namespace ZergRush.ReactiveUI
             IReactiveCollection<TData> data,
             TView prefab,
             TableLayoutSettings settings,
-            Action<TData, TView> fillFactory,
-            ITableViewLayout layout = null, // Linear layout is default
+            Action<TData, TView> show,
+            IScrollViewLayout layout = null, // Linear layout is default
             TableDelegates<TView> delegates = null) where TView : ReusableView
         {
             var components = new TableConnectionsAndComponents<TView>();
@@ -144,23 +144,23 @@ namespace ZergRush.ReactiveUI
             
             if (layout == null) layout = LinearTableLayout(data.CountCell(), settings);
             components.layout = layout;
-            components.content = ContentProvider(data, fillFactory);
+            components.content = ContentProvider(data, show);
             
             return components;
         }
         
-        public static TableConnectionsAndComponents<TView> PresentInScrollWithReusableViews<TData, TView>(
+        public static TableConnectionsAndComponents<TView> PresentInScroll<TData, TView>(
             ReactiveScrollRect scroll,
             IReactiveCollection<TData> data,
             TView prefab,
             TableLayoutSettings settings,
-            Action<TData, TView> fillFactory,
-            ITableViewLayout layout = null, // Linear layout is default
+            Action<TData, TView> show,
+            IScrollViewLayout layout = null, // Linear layout is default
             TableDelegates<TView> delegates = null) where TView : ReusableView
         {
-            var components = CreateBasicTableComponents(scroll.scroll.content, data, prefab, settings, fillFactory,
+            var components = CreateBasicTableComponents(scroll.scroll.content, data, prefab, settings, show,
                 layout, delegates);   
-            return PresentInScrollWithReusableViews(components, scroll);
+            return PresentInScroll(components, scroll);
         }
 
         public static TableConnectionsAndComponents<TView> PresentInRect<TData, TView>(
@@ -169,7 +169,7 @@ namespace ZergRush.ReactiveUI
             TView prefab,
             TableLayoutSettings settings,
             Action<TData, TView> fillFactory,
-            ITableViewLayout layout = null, // Linear layout is default
+            IScrollViewLayout layout = null, // Linear layout is default
             TableDelegates<TView> delegates = null) where TView : ReusableView
         {
             var components = CreateBasicTableComponents(rect, data, prefab, settings, fillFactory,
@@ -178,23 +178,23 @@ namespace ZergRush.ReactiveUI
             return ControlItemVisibilityAndRecycle(components);
         }
 
-        public static ITableViewLayout LinearTableLayout(ICell<int> count, TableLayoutSettings settings)
+        public static IScrollViewLayout LinearTableLayout(ICell<int> count, TableLayoutSettings settings)
         {
-            return new LinearTableLayout(count, settings);
+            return new LinearLayout(count, settings);
         }
 
-        public static ITableViewLayout GridTableLayout(ICell<int> count, TableLayoutSettings settings, int gridSize)
+        public static IScrollViewLayout GridTableLayout(ICell<int> count, TableLayoutSettings settings, int gridSize)
         {
-            return new GridTableLayout(count, settings, gridSize);
+            return new GridLayout(count, settings, gridSize);
         }
 
-        public static ITableViewLayout VariableViewSizeLayout<TData>(
+        public static IScrollViewLayout VariableViewSizeLayout<TData>(
             IReactiveCollection<TData> data, 
             Func<TData, float> viewSizeFactory,
             TableLayoutSettings settings,
             Action<IDisposable> connectionsSink)
         {
-            return LinearVariableTableLayout.Create(data, viewSizeFactory, settings, connectionsSink);
+            return LinearVariableSizeLayout.Create(data, viewSizeFactory, settings, connectionsSink);
         }
 
         public static ITableContentProvider<TView> ContentProvider<TData, TView> (IReactiveCollection<TData> data, Action<TData, TView> fillFactory)
@@ -244,7 +244,7 @@ namespace ZergRush.ReactiveUI
             }
         }
 
-        public static IDisposable ShowSmth<T, TView>(
+        public static IDisposable PresentData<T, TView>(
             IReactiveCollection<T> coll,
             TView prefab,
             Action<T, TView> show,
