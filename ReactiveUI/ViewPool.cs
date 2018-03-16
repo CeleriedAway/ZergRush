@@ -32,7 +32,12 @@ namespace ZergRush.ReactiveUI
 
         public TView Get()
         {
-            if (pool.Count > 0) return pool.TakeLast();
+            if (pool.Count > 0)
+            {
+                var view = pool.TakeLast();
+                view.SetActiveSafe(false);
+                return view;
+            }
             var obj = GameObject.Instantiate(prefab, parent, false);
             if (instantiateAction != null)
             {
@@ -61,6 +66,8 @@ namespace ZergRush.ReactiveUI
                 view.rectTransform.localScale = Vector3.one;
                 view.rectTransform.anchoredPosition = new Vector2(0xffff, 0xffff);
             }
+            else
+                view.gameObject.SetActive(false);
             if (recycleAction != null) recycleAction(view);
             pool.Add(view);
         }
