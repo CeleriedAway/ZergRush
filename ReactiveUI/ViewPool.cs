@@ -56,8 +56,11 @@ namespace ZergRush.ReactiveUI
         {
             view.DisconnectAll();
             view.currentMoveAnimation.DisconnectSafe();
-            view.rectTransform.localScale = Vector3.one;
-            view.rectTransform.anchoredPosition = new Vector2(0xffff, 0xffff);
+            if (view.rectTransform != null)
+            {
+                view.rectTransform.localScale = Vector3.one;
+                view.rectTransform.anchoredPosition = new Vector2(0xffff, 0xffff);
+            }
             if (recycleAction != null) recycleAction(view);
             pool.Add(view);
         }
