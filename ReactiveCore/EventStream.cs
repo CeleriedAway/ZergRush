@@ -1,24 +1,27 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
+using JetBrains.Annotations;
 
 namespace ZergRush.ReactiveCore
 {
-#if NET_4_6
     public interface IEventStream<out T> : IEventStream
-#else
-    public interface IEventStream<T> : IEventStream
-#endif
     {
-        IDisposable Listen(Action<T> action);
+        IDisposable Subscribe(Action<T> action);
     }
 
-    public interface IEventStream
+    public interface IEventWriter<in T>
     {
-        IDisposable Listen(Action action);
+        void Send(T val);
     }
 
-    public class EventStream<T> : IEventStream<T>
+    public interface IEventRW<T> : IEventStream<T>, IEventWriter<T>
+    {
+    }
+
+    public class EventStream<T> : IEventRW<T>, IConnectable
     {
         List<Action<T>> callbacks;
         bool iterating;
@@ -33,15 +36,15 @@ namespace ZergRush.ReactiveCore
 
         class Disconnect : IDisposable
         {
-            public EventStream<T> stream;
+            public EventStream<T> reader;
             public Action<T> action;
 
             public void Dispose()
             {
-                if (stream != null)
+                if (reader != null)
                 {
-                    stream.RemoveListener(action);
-                    stream = null;
+                    reader.RemoveListener(action);
+                    reader = null;
                     action = null;
                 }
             }
@@ -56,12 +59,13 @@ namespace ZergRush.ReactiveCore
             callbacks.Remove(action);
         }
 
-        public IDisposable Listen(Action<T> action)
+        [MustUseReturnValue("In most cases you should use returned value to disconnect from cell later")]
+        public IDisposable Subscribe(Action<T> action)
         {
             if (callbacks == null) callbacks = new List<Action<T>>();
-            else if (iterating) callbacks = callbacks.ToList();
+            else if (iterating) { callbacks = callbacks.ToList(); }
             callbacks.Add(action);
-            return new Disconnect {stream = this, action = action};
+            return new Disconnect { reader = this, action = action };
         }
 
         public void Send(T t)
@@ -110,22 +114,44 @@ namespace ZergRush.ReactiveCore
             iterating = false;
         }
 
-        public IDisposable Listen(Action action)
+        public IDisposable Subscribe(Action action)
         {
             if (callbacks == null) callbacks = new List<Action<T>>();
             Action<T> wrapper = _ => action();
             callbacks.Add(wrapper);
-            return new Disconnect {stream = this, action = wrapper};
+            return new Disconnect { reader = this, action = wrapper };
         }
 
         public int ConnectionsCount()
         {
             return callbacks != null ? callbacks.Count : 0;
         }
+
+        public int getConnectionCount => callbacks == null ? 0 : callbacks.Count;
+        public bool anybody => callbacks != null && callbacks.Count > 0;
+    }
+
+    /// Parametless variant of IEventStream
+    public interface IEventStream
+    {
+        IDisposable Subscribe(Action action);
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public interface IEventWriter
+    {
+        void Send();
     }
     
-    // Parametless variant of event stream.
-    public class EventStream : IEventStream
+    /// <summary>
+    /// Event that can be sent and observed
+    /// </summary>
+    public interface IEventRW : IEventStream, IEventWriter {}
+    
+    /// Parametless variant of Event
+    public class EventStream : IEventStream, IEventWriter, IConnectable
     {
         List<Action> callbacks;
         bool iterating;
@@ -162,12 +188,28 @@ namespace ZergRush.ReactiveCore
             callbacks.Remove(action);
         }
 
-        public IDisposable Listen(Action action)
+        public void ClearCallbacks()
+        {
+            if (callbacks == null) return;
+            if (iterating)
+            {
+                callbacks = callbacks.ToList();
+            }
+            callbacks.Clear();
+        }
+
+        [MustUseReturnValue("In most cases you should use returned value to disconnect from cell later")]
+        public IDisposable Subscribe(Action action)
         {
             if (callbacks == null) callbacks = new List<Action>();
             else if (iterating) callbacks = callbacks.ToList();
             callbacks.Add(action);
             return new Disconnect {stream = this, action = action};
+        }
+        
+        public static IDisposable operator+(EventStream stream, Action act)
+        {
+            return stream.Subscribe(act);
         }
 
         public void Send()
@@ -209,11 +251,13 @@ namespace ZergRush.ReactiveCore
 
             iterating = false;
         }
+
+        public int getConnectionCount => callbacks == null ? 0 : callbacks.Count;
     }
 
-    class AbandonedStream : IEventStream
+    public class AbandonedStream : IEventStream
     {
-        public IDisposable Listen(Action action)
+        public IDisposable Subscribe(Action action)
         {
             return EmptyDisposable.value;
         }
@@ -221,14 +265,14 @@ namespace ZergRush.ReactiveCore
         public static AbandonedStream value = new AbandonedStream();
     }
 
-    class AbandonedStream<T> : IEventStream<T>
+    public class AbandonedStream<T> : IEventStream<T>
     {
-        public IDisposable Listen(Action<T> action)
+        public IDisposable Subscribe(Action<T> action)
         {
             return EmptyDisposable.value;
         }
 
-        public IDisposable Listen(Action action)
+        public IDisposable Subscribe(Action action)
         {
             return EmptyDisposable.value;
         }
@@ -245,7 +289,7 @@ namespace ZergRush.ReactiveCore
             this.listen = subscribe;
         }
 
-        public IDisposable Listen(Action observer)
+        public IDisposable Subscribe(Action observer)
         {
             return listen(observer);
         }
@@ -260,12 +304,12 @@ namespace ZergRush.ReactiveCore
             this.listen = subscribe;
         }
 
-        public IDisposable Listen(Action<T> observer)
+        public IDisposable Subscribe(Action<T> observer)
         {
             return listen(observer);
         }
 
-        public IDisposable Listen(Action observer)
+        public IDisposable Subscribe(Action observer)
         {
             return listen(_ => observer());
         }
@@ -273,13 +317,32 @@ namespace ZergRush.ReactiveCore
 
     public static class StreamApi
     {
+        public static void Subscribe<T>(this IEventStream<T> stream, IConnectionSink connectionSink, Action<T> action)
+        {
+            connectionSink.AddConnection(stream.Subscribe(action));
+        }
+        public static void Subscribe(this IEventStream e, IConnectionSink connectionSink, Action action)
+        {
+            connectionSink.AddConnection(e.Subscribe(action));
+        }
         public static IEventStream<T> Filter<T>(this IEventStream<T> eventStream, Func<T, bool> filter)
         {
             return new AnonymousEventStream<T>(reaction =>
             {
-                return eventStream.Listen(val =>
+                return eventStream.Subscribe(val =>
                 {
                     if (filter(val)) reaction(val);
+                });
+            });
+        }
+        
+        public static IEventStream Filter(this IEventStream eventStream, Func<bool> filter)
+        {
+            return new AnonymousEventStream(reaction =>
+            {
+                return eventStream.Subscribe(() =>
+                {
+                    if (filter()) reaction();
                 });
             });
         }
@@ -293,7 +356,7 @@ namespace ZergRush.ReactiveCore
         {
             return new AnonymousEventStream(reaction =>
             {
-                return stream.Listen(v =>
+                return stream.Subscribe(v =>
                 {
                     if (v) reaction();
                 });
@@ -303,7 +366,12 @@ namespace ZergRush.ReactiveCore
         // Transforms stream value with a function.
         public static IEventStream<T2> Map<T, T2>(this IEventStream<T> eventStream, Func<T, T2> map)
         {
-            return new AnonymousEventStream<T2>(reaction => { return eventStream.Listen(val => reaction(map(val))); });
+            return new AnonymousEventStream<T2>(reaction => { return eventStream.Subscribe(val => reaction(map(val))); });
+        }
+        // Transforms stream value with a function.
+        public static IEventStream<T2> Map<T2>(this IEventStream eventStream, Func<T2> map)
+        {
+            return new AnonymousEventStream<T2>(reaction => { return eventStream.Subscribe(() => reaction(map())); });
         }
 
         // Result stream is called only once, then the connection is disposed.
@@ -312,7 +380,7 @@ namespace ZergRush.ReactiveCore
             return new AnonymousEventStream<T>((Action<T> reaction) =>
             {
                 var disp = new SingleDisposable();
-                disp.Disposable = eventStream.Listen(val =>
+                disp.Disposable = eventStream.Subscribe(val =>
                 {
                     reaction(val);
                     disp.Dispose();
@@ -320,13 +388,36 @@ namespace ZergRush.ReactiveCore
                 return disp;
             });
         }
+        
+        public static IDisposable ListenWhile<T>(this IEventStream<T> stream, ICell<bool> listenCondition, Action<T> act)
+        {
+            var disp = new DoubleDisposable();
+            disp.first = listenCondition.Bind(val =>
+            {
+                if (val)
+                {
+                    if (disp.disposed) return;
+                    if (disp.second != null)
+                    {
+                        throw new ZergRushException();
+                    }
+                    disp.second = stream.Subscribe(act);
+                }
+                else if (disp.second != null)
+                {
+                    disp.second.Dispose();
+                    disp.second = null;
+                }
+            });
+            return disp;
+        }
 
         public static IEventStream Once(this IEventStream stream)
         {
             return new AnonymousEventStream((Action reaction) =>
             {
                 var disp = new SingleDisposable();
-                disp.Disposable = stream.Listen(() =>
+                disp.Disposable = stream.Subscribe(() =>
                 {
                     reaction();
                     disp.Dispose();
@@ -345,13 +436,29 @@ namespace ZergRush.ReactiveCore
 
                 foreach (var other in others)
                 {
-                    disp.Add(other.Listen(reaction));
+                    disp.Add(other.Subscribe(reaction));
                 }
 
                 return disp;
             });
         }
-        public static IEventStream Merge(params IEventStream[] others)
+        public static IEventStream Merge(this IEnumerable<IEventStream> others)
+        {
+            return MergeSome(others.ToArray());
+        }
+        public static IEventStream<T> Merge<T>(this IEnumerable<IEventStream<T>> events)
+        {
+            return new AnonymousEventStream<T>(reaction =>
+            {
+                var disp = new Connections();
+                foreach (var other in events)
+                {
+                    disp.Add(other.Subscribe(reaction));
+                }
+                return disp;
+            });
+        }
+        public static IEventStream MergeSome(params IEventStream[] others)
         {
             return new AnonymousEventStream((reaction) =>
             {
@@ -360,7 +467,7 @@ namespace ZergRush.ReactiveCore
                 for (var i = 0; i < others.Length; i++)
                 {
                     var other = others[i];
-                    disp.Add(other.Listen(reaction));
+                    disp.Add(other.Subscribe(reaction));
                 }
 
                 return disp;
@@ -373,11 +480,11 @@ namespace ZergRush.ReactiveCore
             return new AnonymousEventStream<T>((Action<T> reaction) =>
             {
                 var disp = new Connections(others.Length + 1);
-                disp.Add(stream.Listen(reaction));
+                disp.Add(stream.Subscribe(reaction));
 
                 foreach (var other in others)
                 {
-                    disp.Add(other.Listen(reaction));
+                    disp.Add(other.Subscribe(reaction));
                 }
 
                 return disp;
@@ -390,14 +497,31 @@ namespace ZergRush.ReactiveCore
             return new AnonymousEventStream(reaction =>
             {
                 var disp = new Connections(others.Length + 1);
-                disp.Add(stream.Listen(reaction));
+                disp.Add(stream.Subscribe(reaction));
                 foreach (var other in others)
                 {
-                    disp.Add(other.Listen(reaction));
+                    disp.Add(other.Subscribe(reaction));
                 }
 
                 return disp;
             });
+        }
+        static YieldAwaitable frame => Task.Yield();
+        public static async Task<T> SingleMessageAsync<T>(this IEventStream<T> stream)
+        {
+            T result = default(T);
+            bool finished = false;
+            var waiting = stream.Subscribe(res => { result = res; finished = true; });
+            while (!finished)
+                await frame;
+            return result;
+        }
+        public static async Task SingleMessageAsync(this IEventStream stream)
+        {
+            bool finished = false;
+            var waiting = stream.Subscribe(() => { finished = true; });
+            while (!finished)
+                await frame;
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿#if UNITY_5_3_OR_NEWER
 
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -10,8 +11,8 @@ namespace ZergRush
         public static float RectMainSize(this ScrollRect scroll)
         {
             return scroll.horizontal
-                ? scroll.GetComponent<RectTransform>().sizeDelta.x
-                : scroll.GetComponent<RectTransform>().sizeDelta.y;
+                ? scroll.GetComponent<RectTransform>().rect.width
+                : scroll.GetComponent<RectTransform>().rect.height;
         }
 
         public static void SetRectMainSize(this ScrollRect scroll, float value)
@@ -50,6 +51,7 @@ namespace ZergRush
                     ? scroll.viewport.rect.width
                     : scroll.viewport.rect.height;
             }
+
             return result;
         }
 
@@ -62,13 +64,19 @@ namespace ZergRush
 
         public static void SetNormalizedPosition(this ScrollRect scroll, float normPos)
         {
-            if (scroll.horizontal)
+            try
             {
-                scroll.horizontalNormalizedPosition = normPos;
+                if (scroll.horizontal)
+                {
+                    scroll.horizontalNormalizedPosition = normPos;
+                }
+                else
+                {
+                    scroll.verticalNormalizedPosition = normPos;
+                }
             }
-            else
+            catch (Exception e)
             {
-                scroll.verticalNormalizedPosition = normPos;
             }
         }
     }

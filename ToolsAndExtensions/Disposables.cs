@@ -12,7 +12,7 @@ namespace ZergRush
         }
     }
 
-    class AnonymousDisposable : IDisposable
+    public class AnonymousDisposable : IDisposable
     {
         Action dispose;
 
@@ -70,15 +70,56 @@ namespace ZergRush
         public IDisposable first;
         public IDisposable second;
 
+        public bool disposed = false;
+
+        void AlertIfDisposed() {if (disposed) throw new ZergRushException("double disposable is disposed");}
+        public IDisposable First
+        {
+            get { AlertIfDisposed(); return first; }
+            set { first = value;AlertIfDisposed(); }
+        }
+
+        public IDisposable Second
+        {
+            get { AlertIfDisposed(); return second; }
+            set { AlertIfDisposed(); second = value; }
+        }
+
         public void Dispose()
         {
-            first.Dispose();
-            second.Dispose();
+            if (First != null) First.Dispose();
+            if (Second != null) Second.Dispose();
+            disposed = true;
+        }
+    }
+    public class MultipleDisposable : IDisposable
+    {
+        List<IDisposable> items = new List<IDisposable>();
+        public bool disposed;
+
+        public void Add(IDisposable disposable)
+        {
+            if (disposed) throw new ZergRushException("add on disposed object");
+            items.Add(disposable);
+        }
+        public void Dispose()
+        {
+            for (int i = 0; i < items.Count; i++)
+            {
+                if (items[i] != null)
+                {
+                    items[i].Dispose();
+                }
+            }
+            items.Clear();
+            disposed = true;
         }
     }
 
-    public class Connections : List<IDisposable>, IDisposable
+    public class Connections : List<IDisposable>, IDisposable, IConnectionSink
     {
+        public string tag;
+        
         public Connections()
         {
         }
@@ -89,10 +130,39 @@ namespace ZergRush
 
         public IDisposable addConnection
         {
-            set { Add(value); }
+            set => Add(value);
         }
 
-        public void Dispose()
+        public static Connections operator +(Connections connections, IDisposable connection)
+        {
+            if (connection == null)
+                return connections;
+            if (connections == null)
+                connections = new Connections();
+            connections.Add(connection);
+            return connections;
+        }
+
+        public static Connections operator +(Connections connections, Action disposeAction)
+        {
+            if (disposeAction == null)
+                return connections;
+            if (connections == null)
+                connections = new Connections();
+            connections.Add(new AnonymousDisposable(disposeAction));
+            return connections;
+        }
+        
+        public void RemoveAndDisposeConnection(IDisposable item)
+        {
+            item.Dispose();
+            if (!Remove(item))
+            {
+                UnityEngine.Debug.LogError("this connection not found");
+            }
+        }
+
+        public virtual void Dispose()
         {
             this.DisconnectAll();
         }
@@ -101,18 +171,10 @@ namespace ZergRush
         {
             get { return disp => addConnection = disp; }
         }
-    }
 
-    public class ListJoinDisposable<T> : Connections
-    {
-        public T lastValue;
-
-        public ListJoinDisposable()
+        public void AddConnection(IDisposable connection)
         {
-        }
-
-        public ListJoinDisposable(int capacity) : base(capacity)
-        {
+            Add(connection);
         }
     }
 
@@ -128,15 +190,29 @@ namespace ZergRush
             connections.Clear();
         }
 
+        public static void DisposeSafe(this IDisposable connection) { 
+            DisconnectSafe(connection);
+        }
+
         public static void DisconnectSafe(this IDisposable connection)
         {
             if (connection == null) return;
             connection.Dispose();
         }
+
+        public static void AddTo(this IDisposable connection, List<IDisposable> connectionList)
+        {
+            connectionList.Add(connection);
+        }
     }
 
     public class CellJoinDisposable<T> : DoubleDisposable
     {
+        public T lastValue;
+    }
+    public class CellMergeMultipleDisposable<T> : MultipleDisposable
+    {
+        public CellMergeMultipleDisposable() : base() { }
         public T lastValue;
     }
 }

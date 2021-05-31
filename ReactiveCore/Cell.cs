@@ -2,43 +2,59 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Runtime.InteropServices.ComTypes;
-
-#if UNITY_5_3_OR_NEWER
-using UnityEngine;
-#else
-class SerializeField : Attribute {}
-#endif
+using System.Reflection;
+using JetBrains.Annotations;
 
 namespace ZergRush.ReactiveCore
 {
-    /*
-         Main reactive library abstraction 
-         Cell<T>
-         It presents a value that is changed over time.
-         In any point of time it has current value and you can always listen for its updates.
-         It's name comes from anologue of cells in spreadsheets, where cell's value can depend on other cells.
-    */
-#if NET_4_6
+    /// <summary>
+    ///     ICellReader
+    ///     Represents a value that is changed over time.
+    ///     In any point of time it has current value and you can always listen for its updates.
+    ///     It's name comes from anologue of cells in spreadsheets, where cell's value can depend on other cells.
+    /// </summary>
     public interface ICell<out T> 
-#else
-    public interface ICell<T> 
-#endif
     {
         IDisposable ListenUpdates(Action<T> reaction);
         T value { get; }
     }
 
-    public interface ISinkCell<T> : ICell<T>
+    /// <summary>
+    /// Represents a consumer of a value
+    /// </summary>
+    public interface ICellWriter<in T>
+    {
+        T value { set; }
+    }
+    
+    /// A value that can be readed, written
+    public interface IValueRW<T>
+    {
+        T value { get; set; }
+    }
+
+    /// A value that can be readed, observed and written
+    public interface ICellRW<T> : ICell<T>, ICellWriter<T>, IValueRW<T>
     {
         new T value { get; set; }
     }
-
-    [Serializable, DebuggerDisplay("{value}")]
-    public class Cell<T> : ISinkCell<T>
+    
+    public interface IConnectable
     {
-        [SerializeField] private T val;
-        [NonSerialized] private EventStream<T> up;
+        int getConnectionCount { get; }
+    }
+
+    /// <summary>
+    ///     Cell presents a reactive value that is changed over time.
+    ///     In any point of time it has current value and you can always listen for its updates.
+    ///     It's name comes from anologue of cells in spreadsheets, where cell's value can depend on other cells.
+    /// </summary>
+    [Serializable, DebuggerDisplay("content: {value}")]
+    public class Cell<T> : ICellRW<T>, IConnectable
+    {
+        //[SerializeField]
+        private T val;
+        [NonSerialized] protected EventStream<T> up;
 
         public Cell(T t)
         {
@@ -49,19 +65,28 @@ namespace ZergRush.ReactiveCore
         {
         }
 
+
+        public ref T valueRef => ref val;
+
         public T value
         {
             get { return val; }
             set
             {
-                if (EqualityComparer<T>.Default.Equals(value, val) == false)
+                if (up != null && EqualityComparer<T>.Default.Equals(value, val) == false)
                 {
                     val = value;
-                    if (up != null) up.Send(val);
+                    up.Send(val);
+                }
+                else
+                {
+                    val = value;
                 }
             }
         }
 
+        public IEventStream changed => updates;
+        
         public EventStream<T> updates
         {
             get { return up = up ?? new EventStream<T>(); }
@@ -70,13 +95,13 @@ namespace ZergRush.ReactiveCore
         public IDisposable ListenUpdates(Action<T> callback)
         {
             if (up == null) up = new EventStream<T>();
-            return up.Listen(callback);
+            return up.Subscribe(callback);
         }
 
         public IDisposable OnChanged(Action action)
         {
             if (up == null) up = new EventStream<T>();
-            return this.up.Listen(_ => action());
+            return this.up.Subscribe(_ => action());
         }
 
         public override string ToString()
@@ -88,13 +113,69 @@ namespace ZergRush.ReactiveCore
         {
             this.value = v;
         }
+
+        public int getConnectionCount => up == null ? 0 : up.getConnectionCount;
+    }
+    
+    [Serializable, DebuggerDisplay("content: {value}")]
+    // Normal cell but compares values as references without equals operator
+    public class ReferenceEqualityCell<T> : ICellRW<T>, IConnectable where T : class
+    {
+        private T val;
+        [NonSerialized] protected EventStream<T> up;
+
+        public ReferenceEqualityCell(T t) { val = t; } 
+        public ReferenceEqualityCell() {}
+
+        public T value
+        {
+            get { return val; }
+            set
+            {
+                if (up != null && ReferenceEquals(value, val) == false)
+                {
+                    val = value;
+                    up.Send(val);
+                }
+                else
+                {
+                    val = value;
+                }
+            }
+        }
+        
+        public EventStream<T> updates { get { return up = up ?? new EventStream<T>(); } }
+
+        public IDisposable ListenUpdates(Action<T> callback)
+        {
+            if (up == null) up = new EventStream<T>();
+            return up.Subscribe(callback);
+        }
+
+        public override string ToString()
+        {
+            return value.ToString();
+        }
+
+        public int getConnectionCount => up == null ? 0 : up.getConnectionCount;
+    }
+
+    [Serializable, DebuggerDisplay("content: {value}")]
+    public class CellWithExternalUpdates<T> : Cell<T>
+    {
+        public void ExternalUpdate()
+        {
+            up.Send(value);
+        }
     }
 
     // Does not do equation check on value assignment
     [Serializable]
-    public sealed class UncheckedCell<T> : ISinkCell<T>
+    [DebuggerDisplay("{value}")]
+    public sealed class UncheckedCell<T> : ICellRW<T>
     {
-        [SerializeField] private T val;
+        //[SerializeField]
+        private T val;
         [NonSerialized] private EventStream<T> up;
 
         public UncheckedCell(T t)
@@ -119,11 +200,17 @@ namespace ZergRush.ReactiveCore
         public IDisposable ListenUpdates(Action<T> callback)
         {
             if (up == null) up = new EventStream<T>();
-            return up.Listen(callback);
+            return up.Subscribe(callback);
         }
     }
 
+    public static class StaticCell
+    {
+        public static ICell<bool> False = new StaticCell<bool>(false);
+        public static ICell<bool> True = new StaticCell<bool>(true);
+    }
     [Serializable]
+    [DebuggerDisplay("{value}")]
     public sealed class StaticCell<T> : ICell<T>
     {
         public StaticCell()
@@ -135,7 +222,8 @@ namespace ZergRush.ReactiveCore
             val = initial;
         }
 
-        [SerializeField] readonly T val = default(T);
+        //[SerializeField]
+        readonly T val = default(T);
 
         public T value
         {
@@ -154,13 +242,11 @@ namespace ZergRush.ReactiveCore
 
         static StaticCell<T> def = new StaticCell<T>();
 
-        public static StaticCell<T> Default()
-        {
-            return def;
-        }
+        public static ICell<T> Default() => def;
     }
 
 
+    [DebuggerDisplay("{value}")]
     public class AnonymousCell<T> : ICell<T>
     {
         public Func<Action<T>, IDisposable> listen;
@@ -188,11 +274,11 @@ namespace ZergRush.ReactiveCore
         }
     }
     
-    public class AnonymousSinkCell<T> : AnonymousCell<T>, ISinkCell<T>
+    public class AnonymousRWCell<T> : AnonymousCell<T>, ICellRW<T>
     {
         readonly Action<T> sink;
 
-        public AnonymousSinkCell(Func<Action<T>, IDisposable> subscribe, Func<T> current, Action<T> sink) :
+        public AnonymousRWCell(Func<Action<T>, IDisposable> subscribe, Func<T> current, Action<T> sink) :
             base(subscribe, current)
         {
             this.sink = sink;
@@ -205,15 +291,50 @@ namespace ZergRush.ReactiveCore
         }
     }
 
+    public static class CollectionReactiveApi
+    {
+        // Calls actionConfig with current value of and subscribes to its updates with that actionConfig.
+        public static IDisposable Bind<T>(this IReactiveCollection<T> list, Action<IReadOnlyList<T>> action)
+        {
+            action(list);
+            return list.update.Subscribe(_ => action(list));
+        }
+        
+        public static IDisposable BindCollection<T>(this IReactiveCollection<T> list, Action<ReactiveCollectionEvent<T>> action)
+        {
+            action(new ReactiveCollectionEvent<T>{type = ReactiveCollectionEventType.Reset, newData = list});
+            return list.update.Subscribe(action);
+        }
+    }
+
     public static class CellReactiveApi
     {
-        // Calls action with current value of a cell and subscribes to its updates with that action.
+        // Calls actionConfig with current value of a cell and subscribes to its updates with that actionConfig.
+        [MustUseReturnValue("In most cases you should use returned value to disconnect from cell later")]
         public static IDisposable Bind<T>(this ICell<T> cell, Action<T> action)
         {
             action(cell.value);
             return cell.ListenUpdates(action);
         }
+        
+        public static void Bind<T>(this ICell<T> cell, IConnectionSink connectionSink, Action<T> action)
+        {
+            connectionSink.AddConnection(cell.ListenUpdates(action));
+            action(cell.value);
+        }
+        
+        public static void ListenUpdates<T>(this ICell<T> cell, IConnectionSink connectionSink, Action<T> action)
+        {
+            connectionSink.AddConnection(cell.ListenUpdates(action));
+        }
 
+        public static IEventStream<T> UpdateStream<T>(this ICell<T> cell)
+        {
+            if (cell is Cell<T>) return (cell as Cell<T>).updates;
+            return new AnonymousEventStream<T>(cell.ListenUpdates);
+        }
+
+        [DebuggerDisplay("{value}")]
         sealed class MappedCell<T, T2> : ICell<T2>
         {
             public ICell<T> cell;
@@ -243,9 +364,21 @@ namespace ZergRush.ReactiveCore
         // Transforms type of cell with function.
         public static ICell<T2> Map<T, T2>(this ICell<T> cell, Func<T, T2> map)
         {
+            if (cell == null) throw new ZergRushException($"Map cell of type {typeof(T)} is null");
             return new MappedCell<T,T2>{cell = cell, map = map};
         }
+        
+        public static ICell<T2> MapWithDefaultIfNull<T, T2>(this ICell<T> cell, Func<T, T2> map, T2 def) where T : class
+        {
+            return cell.Map(v => v == null ? def : map(v));
+        }
 
+//        public static void Bind<T>(this ICell<T> e, IConnectionSink connectionSink, Action<T> action)
+//        {
+//            connectionSink.AddConnection(e.Bind(action));
+//        }
+
+        [DebuggerDisplay("{value}")]
         sealed class FlatMapCell<T, T2> : ICell<T2>
         {
             public ICell<T> cell;
@@ -257,9 +390,9 @@ namespace ZergRush.ReactiveCore
 
                 Action<T> func = iVal =>
                 {
+                    if (group.disposed) return;
                     var innerCell = map(iVal);
-
-                    if (group.second != null)
+                    if (@group.Second != null)
                     {
                         var innerVal = innerCell.value;
                         if (!EqualityComparer<T2>.Default.Equals(group.lastValue, innerVal))
@@ -267,17 +400,17 @@ namespace ZergRush.ReactiveCore
                             reaction(innerVal);
                             group.lastValue = innerVal;
                         }
-                        group.second.Dispose();
+                        @group.Second.Dispose();
                     }
 
-                    group.second = innerCell.ListenUpdates(val =>
+                    @group.Second = innerCell.ListenUpdates(val =>
                     {
                         reaction(val);
                         group.lastValue = val;
                     });
                 };
 
-                group.first = cell.Bind(func);
+                @group.First = cell.Bind(func);
                 return group;
             }
 
@@ -290,9 +423,33 @@ namespace ZergRush.ReactiveCore
         // Google it for detailes. its famous function.
         public static ICell<T2> FlatMap<T, T2>(this ICell<T> cell, Func<T, ICell<T2>> map)
         {
+            if (cell == null) throw new ZergRushException($"Map cell of type {typeof(T)} is null");
             return new FlatMapCell<T,T2>{cell = cell, map = map};
         }
         
+        public static ICell<T2> FlatMapWithDefaultOnNull<T, T2>(this ICell<T> cell, Func<T, ICell<T2>> map) 
+            where T : class
+        {
+            return cell.FlatMap(v => v != null ? map(v) : StaticCell<T2>.Default());
+        }
+        
+        public static ICell<T2> FlatMapWithDefaultOnNull<T, T2>(this ICell<T> cell, Func<T, ICell<T2>> map, T2 defaultValue) 
+            where T : class
+        {
+            return cell.FlatMap(v => v != null ? map(v) : new StaticCell<T2>(defaultValue));
+        }
+
+        public static IReactiveCollection<T2> FlatMapCollection<T, T2>(this ICell<T> cell, Func<T, IReactiveCollection<T2>> map)
+        {
+            return cell.Map(v => map(v)).Join();
+        }
+
+        public static IReactiveCollection<T2> FlatMapCollectionWithDefaultOnNull<T, T2>(this ICell<T> cell, Func<T, IReactiveCollection<T2>> map)
+        {
+            return cell.FlatMapCollection(v => v != null ? map(v) : StaticCollection<T2>.Empty());
+        }
+
+        [DebuggerDisplay("{value}")]
         sealed class JoinCell<T> : ICell<T>
         {
             public ICell<ICell<T>> cell;
@@ -305,9 +462,11 @@ namespace ZergRush.ReactiveCore
 
                 Action<ICell<T>> func = innerCell =>
                 {
+                    if (group.disposed) return;
+                    
                     CheckInnerCell(innerCell);
 
-                    if (group.second != null)
+                    if (group.Second != null)
                     {
                         var innerVal = innerCell.value;
                         if (!EqualityComparer<T>.Default.Equals(group.lastValue, innerVal))
@@ -315,10 +474,10 @@ namespace ZergRush.ReactiveCore
                             reaction(innerVal);
                             group.lastValue = innerVal;
                         }
-                        group.second.Dispose();
+                        group.Second.Dispose();
                     }
 
-                    group.second = innerCell.ListenUpdates(val =>
+                    group.Second = innerCell.ListenUpdates(val =>
                     {
                         reaction(val);
                         group.lastValue = val;
@@ -327,7 +486,7 @@ namespace ZergRush.ReactiveCore
 
                 group.lastValue = currInnerCell.value;
                 func(cell.value);
-                group.first = cell.ListenUpdates(func);
+                group.First = cell.ListenUpdates(func);
                 return group;
             }
 
@@ -341,20 +500,31 @@ namespace ZergRush.ReactiveCore
                 }
             }
         }
-
+        
+        public static IEventStream<T2> FlatMap<T, T2>(this ICell<T> cell, Func<T, IEventStream<T2>> map)
+        {
+            return cell.Map(v => map(v)).Join();
+        }
+        
+        public static IEventStream<T2> FlatMapWithDefaultOnNull<T, T2>(this ICell<T> cell, Func<T, IEventStream<T2>> map)
+            where T : class
+        {
+            return cell.FlatMap(v => v != null ? map(v) : AbandonedStream<T2>.value);
+        }
+        
         // Creates a cell from a cell of cell.
         // It simplyfies complex data dependancies.
         // For example if you have a dynamic value inside of an object that is also dynamic.
         public static ICell<T> Join<T>(this ICell<ICell<T>> cell)
         {
-            if (cell.value == null) throw new JoinNullCellException();
+            if (cell.value == null) throw new ZergRushException($"Join cell of type {typeof(T)} is null");
             return new JoinCell<T>{cell = cell};
         }
 
         static void CheckInnerCell(object cell)
         {
             if (cell == null)
-                throw new JoinNullCellException("Attempt to join null inner cell");
+                throw new ZergRushException("Attempt to join null inner cell");
         }
 
         // Makes a simple event stream in a case when event source is changed dynamicaly in time.
@@ -365,12 +535,31 @@ namespace ZergRush.ReactiveCore
                 var group = new DoubleDisposable();
                 Action<IEventStream<T>> func = (IEventStream<T> innerStream) =>
                 {
-                    if (group.second != null) group.second.Dispose();
+                    if (group.disposed) return;
+                    
+                    if (@group.Second != null) @group.Second.Dispose();
                     if (innerStream != null)
-                        group.second = innerStream.Listen(reaction);
+                        @group.Second = innerStream.Subscribe(reaction);
                 };
 
-                group.first = cell.Bind(func);
+                @group.First = cell.Bind(func);
+                return group;
+            });
+        }
+        public static IEventStream Join(this ICell<IEventStream> cell)
+        {
+            return new AnonymousEventStream(reaction =>
+            {
+                var group = new DoubleDisposable();
+                Action<IEventStream> func = (IEventStream innerStream) =>
+                {
+                    if (group.disposed) return;
+                    if (@group.Second != null) @group.Second.Dispose();
+                    if (innerStream != null)
+                        @group.Second = innerStream.Subscribe(reaction);
+                };
+
+                @group.First = cell.Bind(func);
                 return group;
             });
         }
@@ -388,11 +577,11 @@ namespace ZergRush.ReactiveCore
         {
             return cell.Map(v => EqualityComparer<T>.Default.Equals(value, v) == false);
         }
-
-        // An experimental concept some kink of abstract lens.
-        public static ISinkCell<T2> SinkMap<T, T2>(this ISinkCell<T> cell, Func<T, T2> map, Func<T2, T> mapBack)
+        
+        /// An experimental concept some kink of abstract lens.
+        public static ICellRW<T2> MapRW<T, T2>(this ICellRW<T> cell, Func<T, T2> map, Func<T2, T> mapBack)
         {
-            return new AnonymousSinkCell<T2>((Action<T2> reaction) =>
+            return new AnonymousRWCell<T2>((Action<T2> reaction) =>
             {
                 var disp = new MapDisposable<T2>();
                 disp.last = map(cell.value);
@@ -408,6 +597,70 @@ namespace ZergRush.ReactiveCore
                 return disp;
             }, () => map(cell.value), v => cell.value = mapBack(v));
         }
+        
+        public static ICellRW<string> MapRWEnumToString<T>(this ICellRW<T> cell) 
+        {
+            return new AnonymousRWCell<string>((Action<string> reaction) =>
+            {
+                var disp = new MapDisposable<string>();
+                disp.last = cell.value.ToString();
+                disp.Disposable = cell.ListenUpdates(val =>
+                {
+                    var newCurr = val.ToString();
+                    if (newCurr != disp.last)
+                    {
+                        disp.last = newCurr;
+                        reaction(newCurr);
+                    }
+                });
+                return disp;
+            }, () => cell.value.ToString(), v => cell.value = (T) Enum.Parse(typeof(T), v));
+        }
+
+        public static ICellRW<T2> MapRWConvert<T, T2>(this ICellRW<T> cell) 
+        {
+            return new AnonymousRWCell<T2>((Action<T2> reaction) =>
+            {
+                var disp = new MapDisposable<T2>();
+                disp.last = (T2) Convert.ChangeType(cell.value, typeof(T2));
+                disp.Disposable = cell.ListenUpdates(val =>
+                {
+                    var newCurr = (T2) Convert.ChangeType(cell.value, typeof(T2));
+                    if (!EqualityComparer<T2>.Default.Equals(newCurr, disp.last))
+                    {
+                        disp.last = newCurr;
+                        reaction(newCurr);
+                    }
+                });
+                return disp;
+            }, () => (T2) Convert.ChangeType(cell.value, typeof(T2)), v => cell.value = (T) Convert.ChangeType(v, typeof(T)));
+        }
+
+        public static ICellRW<T> ReflectionFieldToRW<T>(this object obj, string fieldName)
+        {
+            var f = obj.GetType().GetField(fieldName);
+            if (f == null) {UnityEngine.Debug.LogError($"field {fieldName} is not found in obj {obj}"); return null;}
+            return obj.ReflectionFieldToRW<T>(f);
+        }
+        public static IValueRW<float> ToFloat(this IValueRW<int> val)
+        {
+            return val.MapValue(i => (float) i, f => (int) f);
+        }
+        public static ICellRW<T> ToCellWrapp<T>(this IValueRW<T> val)
+        {
+            Cell<T> c = new Cell<T>(val.value);
+            c.ListenUpdates(v => val.value = v);
+            return c;
+        }
+        public static ICellRW<T> ReflectionFieldToRW<T>(this object obj, FieldInfo f)
+        {
+            return new AnonymousValue<T>(v => f.SetValue(obj, v), () => (T)f.GetValue(obj)).ToCellWrapp();
+        }
+
+        public static ICellRW<string> MapToString<T>(this ICellRW<T> cell, Func<string, T> parseFunc)
+        {
+            return cell.MapRW(v => v.ToString(), parseFunc);
+        }
 
         // Creates a cell of collection from collection of cells. Useful when you need to agrigate collections of dynamic data.
         public static ICell<IEnumerable<T>> ToCellOfCollection<T>(this IEnumerable<ICell<T>> cells)
@@ -415,10 +668,14 @@ namespace ZergRush.ReactiveCore
             Func<IEnumerable<T>> values = () => cells.Select(cell => cell.value);
             return new AnonymousCell<IEnumerable<T>>((Action<IEnumerable<T>> reaction) =>
             {
-                var group = new ListJoinDisposable<T>();
+                var group = new MultipleDisposable();
                 foreach (var cell in cells)
                 {
-                    group.Add(cell.OnChanged(() => reaction(values())));
+                    group.Add(cell.OnChanged(() =>
+                    {
+                        if (group.disposed) return;
+                        reaction(values());
+                    }));
                 }
                 return group;
             }, values);
@@ -435,6 +692,7 @@ namespace ZergRush.ReactiveCore
                 prevVal = v;
             });
         }
+        
 
         // With this function you receive previous cell value as second argument
         public static IDisposable BufferListenUpdates<T>(this ICell<T> cell, Action<T, T> action)
@@ -449,18 +707,65 @@ namespace ZergRush.ReactiveCore
         }
 
         // Useful when you need previous value of a cell, it comes as a second item in the tuple.
-        public static IEventStream<Tuple<T, T>> BufferPreviousValue<T>(this ICell<T> cell)
+        public static IEventStream<(T, T)> BufferPreviousValue<T>(this ICell<T> cell)
         {
             // Implicit lambda boxing used as a prev val storage here
             var prevVal = cell.value;
-            return new AnonymousEventStream<Tuple<T, T>>(action =>
+            return new AnonymousEventStream<(T, T)>(action =>
             {
                 return cell.ListenUpdates(v =>
                 {
-                    action(Tuple.Create(v, prevVal));
+                    action((v, prevVal));
                     prevVal = v;
                 });
             });
+        }
+
+        public static IEventStream<int> Delta(this ICell<int> cell)
+        {
+            return cell.BufferPreviousValue().Map(i => i.Item1 - i.Item2);
+        }
+        public static IEventStream<float> Delta(this ICell<float> cell)
+        {
+            return cell.BufferPreviousValue().Map(i => i.Item1 - i.Item2);
+        }
+
+        // Creates a new cell that is updated from previous cell unless gate is closed (false),
+        // if that is so it waits gate to be true, to update its value from initial cell
+        public static ICell<T> Gate<T>(this ICell<T> cell, ICell<bool> gate, IConnectionSink connectionSink)
+        {
+            var result = new Cell<T>(cell.value);
+            connectionSink.AddConnection(cell.ListenUpdates(v =>
+            {
+                if (gate.value) result.value = v;
+            }));
+            connectionSink.AddConnection(gate.ListenUpdates(v =>
+            {
+                if (v) result.value = cell.value;
+            }));
+            return result;
+        }
+        
+        // Creates a new event that is updated from previous event unless gate is closed (false),
+        // when gate opens (true), all blocked events are instantly fired 
+        public static IEventStream<T> Gate<T>(this IEventStream<T> e, ICell<bool> gate, IConnectionSink connectionSink)
+        {
+            var events = new List<T>();
+            var newE = new EventStream<T>();
+            connectionSink.AddConnection(e.Subscribe(v =>
+            {
+                if (gate.value) newE.Send(v);
+                else events.Add(v);
+            }));
+            connectionSink.AddConnection(gate.ListenUpdates(v =>
+            {
+                if (!v) return;
+                foreach (var @event in events)
+                {
+                    newE.Send(@event);
+                }
+            }));
+            return newE;
         }
 
         // Merge two dynamic values into a tuple.
@@ -468,36 +773,139 @@ namespace ZergRush.ReactiveCore
         {
             return Merge(cell, cell2, Tuple.Create);
         }
+        
+        // Merge three dynamic values into a tuple.
+        public static ICell<Tuple<T, T2, T3>> Merge<T, T2, T3>(this ICell<T> cell, ICell<T2> cell2, ICell<T3> cell3)
+        {
+            return Merge(cell, cell2, cell3, Tuple.Create);
+        }
+
+        public static ICell<Tuple<T, T2, T3, T4>> Merge<T, T2, T3, T4>(this ICell<T> cell, ICell<T2> cell2, ICell<T3> cell3, ICell<T4> cell4)
+        {
+            return Merge(cell, cell2, cell3, cell4, Tuple.Create);
+        }
+
+        public static ICell<Tuple<T, T2, T3, T4, T5>> Merge<T, T2, T3, T4, T5>(this ICell<T> cell, ICell<T2> cell2, ICell<T3> cell3, ICell<T4> cell4, ICell<T5> cell5)
+        {
+            return Merge(cell, cell2, cell3, cell4, cell5, Tuple.Create);
+        }
 
         // Merge two dynamic values in new dynamic value with transformation function.
-        public static ICell<T3> Merge<T, T2, T3>(this ICell<T> cell, ICell<T2> cell2, Func<T, T2, T3> func)
+        public static ICell<TRes> Merge<T1, T2, TRes>(this ICell<T1> cell1, ICell<T2> cell2, Func<T1, T2, TRes> func)
         {
-            Func<T3> curr = () => func(cell.value, cell2.value);
-            return new AnonymousCell<T3>((Action<T3> reaction) =>
+            Func<TRes> curr = () => func(cell1.value, cell2.value);
+            return new AnonymousCell<TRes>((Action<TRes> reaction) =>
             {
-                var disp = new CellJoinDisposable<T3>();
-                disp.lastValue = func(cell.value, cell2.value);
-                disp.first = cell.ListenUpdates(val =>
-                {
-                    T3 newCurr = curr();
-                    if (!EqualityComparer<T3>.Default.Equals(newCurr, disp.lastValue))
-                    {
-                        disp.lastValue = newCurr;
-                        reaction(newCurr);
-                    }
-                });
-                disp.second = cell2.ListenUpdates(val =>
-                {
-                    T3 newCurr = curr();
-                    if (!EqualityComparer<T3>.Default.Equals(newCurr, disp.lastValue))
-                    {
-                        disp.lastValue = newCurr;
-                        reaction(newCurr);
-                    }
-                });
+                var disp = new CellMergeMultipleDisposable<TRes>();
+                disp.lastValue = curr();
+                disp.Add(ListenUpdates(cell1, curr, disp, reaction));
+                disp.Add(ListenUpdates(cell2, curr, disp, reaction));
                 return disp;
             }, curr);
         }
+        public static ICell<TRes> Merge<T1, T2, T3, TRes>(this ICell<T1> cell1, ICell<T2> cell2, ICell<T3> cell3, Func<T1, T2, T3, TRes> func)
+        {
+            Func<TRes> curr = () => func(cell1.value, cell2.value, cell3.value);
+            return new AnonymousCell<TRes>((Action<TRes> reaction) =>
+            {
+                var disp = new CellMergeMultipleDisposable<TRes>();
+                disp.lastValue = curr();
+                disp.Add(ListenUpdates(cell1, curr, disp, reaction));
+                disp.Add(ListenUpdates(cell2, curr, disp, reaction));
+                disp.Add(ListenUpdates(cell3, curr, disp, reaction));
+                return disp;
+            }, curr);
+        }
+        public static ICell<TRes> Merge<T1, T2, T3, T4, TRes>(this ICell<T1> cell1, ICell<T2> cell2, ICell<T3> cell3, ICell<T4> cell4, Func<T1, T2, T3, T4, TRes> func)
+        {
+            Func<TRes> curr = () => func(cell1.value, cell2.value, cell3.value, cell4.value);
+            return new AnonymousCell<TRes>((Action<TRes> reaction) =>
+            {
+                var disp = new CellMergeMultipleDisposable<TRes>();
+                disp.lastValue = curr();
+                disp.Add(ListenUpdates(cell1, curr, disp, reaction));
+                disp.Add(ListenUpdates(cell2, curr, disp, reaction));
+                disp.Add(ListenUpdates(cell3, curr, disp, reaction));
+                disp.Add(ListenUpdates(cell4, curr, disp, reaction));
+                return disp;
+            }, curr);
+        }
+        public static ICell<TRes> Merge<T1, T2, T3, T4, T5, TRes>(this ICell<T1> cell1, ICell<T2> cell2, ICell<T3> cell3, ICell<T4> cell4, ICell<T5> cell5, Func<T1, T2, T3, T4, T5, TRes> func)
+        {
+            Func<TRes> curr = () => func(cell1.value, cell2.value, cell3.value, cell4.value, cell5.value);
+            return new AnonymousCell<TRes>((Action<TRes> reaction) =>
+            {
+                var disp = new CellMergeMultipleDisposable<TRes>();
+                disp.lastValue = curr();
+                disp.Add(ListenUpdates(cell1, curr, disp, reaction));
+                disp.Add(ListenUpdates(cell2, curr, disp, reaction));
+                disp.Add(ListenUpdates(cell3, curr, disp, reaction));
+                disp.Add(ListenUpdates(cell4, curr, disp, reaction));
+                disp.Add(ListenUpdates(cell5, curr, disp, reaction));
+                return disp;
+            }, curr);
+        }
+
+        public static ICell<bool> AllTrue(this IEnumerable<ICell<bool>> cells)
+        {
+            return cells.ToCellOfCollection().Map(coll =>
+            {
+                foreach (var b in coll)
+                {
+                    if (!b) return false;
+                }
+                return true;
+            });
+        }
+
+        public static ICell<TRes> Merge<T, TRes>(this IReactiveCollection<ICell<T>> cells, Func<IEnumerable<T>, TRes> func)
+        {
+            return cells.AsCell().Map(v => v.ToCellOfCollection()).Join().Map(func);
+
+            // TODO fix this impl, now it leak connections 
+//            Func<TRes> curr = () => func(cells.current.Select(cell=>cell.value));
+//            return new AnonymousCell<TRes>((Action<TRes> reaction) =>
+//            {
+//                var disp = new CellMergeMultipleDisposable<TRes>();
+//                disp.lastValue = curr();
+//                Dictionary<ICell<T>, IDisposable> connections = new Dictionary<ICell<T>, IDisposable>();
+//     leak ----> cells.BindEach(addedCell =>
+//                {
+//                    var itemConnection = addedCell.Bind(currCellVal =>
+//                    {
+//                        var currRes = curr();
+//                        if (!EqualityComparer<TRes>.Default.Equals(currRes, disp.lastValue))
+//                        {
+//                            disp.lastValue = currRes;
+//                            reaction(curr());                            
+//                        }
+//                    });
+//                    connections.Add(addedCell, itemConnection);
+//                    disp.Add(itemConnection);
+//                }, (removedCell) => {
+//                    var itemConnection = connections[removedCell];
+//                    disp.Remove(itemConnection);
+//                    itemConnection.Dispose();                    
+//                    connections.Remove(removedCell);
+//                });
+//                return disp;
+//            }, curr);
+        }
+
+        static IDisposable ListenUpdates<T, TRes>(ICell<T> cell, Func<TRes> curr, CellMergeMultipleDisposable<TRes> disp, Action<TRes> reaction)
+        {
+            return cell.ListenUpdates(val =>
+            {
+                if (disp.disposed) return;
+                TRes newCurr = curr();
+                if (!EqualityComparer<TRes>.Default.Equals(newCurr, disp.lastValue))
+                {
+                    disp.lastValue = newCurr;
+                    reaction(newCurr);
+                }
+            });
+        }
+
 
         // Unfortunately I didn't found a good way to implement Hold in anonimous cell style yet
         // If implement it in usual way then if eventStream is fired before subscribtion then its value is lost
@@ -505,7 +913,7 @@ namespace ZergRush.ReactiveCore
         public static ICell<T> Hold<T>(this IEventStream<T> eventStream, T initial, Action<IDisposable> connectionSink)
         {
             var cell = new Cell<T>(initial);
-            connectionSink(eventStream.Listen(val => cell.value = val));
+            connectionSink(eventStream.Subscribe(val => cell.value = val));
             return cell;
         }
 
@@ -515,40 +923,35 @@ namespace ZergRush.ReactiveCore
             return Merge(cell, cell2, Tuple.Create).Bind(val => func(val.Item1, val.Item2));
         }
 
+        // Bind with three cells in one call
+        public static IDisposable MergeBind<T1, T2, T3>(this ICell<T1> cell1, ICell<T2> cell2, ICell<T3> cell3, Action<T1, T2, T3> func)
+        {
+            return Merge(cell1, cell2, cell3, Tuple.Create).Bind(val => func(val.Item1, val.Item2, val.Item3));
+        }
+
+        public static IDisposable MergeBind<T1, T2, T3, T4>(this ICell<T1> cell1, ICell<T2> cell2, ICell<T3> cell3, ICell<T4> cell4, Action<T1, T2, T3, T4> func)
+        {
+            return Merge(cell1, cell2, cell3, cell4, Tuple.Create).Bind(val => func(val.Item1, val.Item2, val.Item3, val.Item4));
+        }
+        
+        public static IDisposable MergeBind<T1, T2, T3, T4, T5>(this ICell<T1> cell1, ICell<T2> cell2,
+            ICell<T3> cell3, ICell<T4> cell4, ICell<T5> cell5, Action<T1, T2, T3, T4, T5> func)
+        {
+            return Merge(cell1, cell2, cell3, cell4, cell5, Tuple.Create)
+                .Bind(val => func(val.Item1, val.Item2, val.Item3, val.Item4, val.Item5));
+        }
+
 
         // Makes connection to cell and creates another cell as intermidiate buffer.
         // It can be used for optimization purposes when you need multiple connections to complex cell
         // you can materialize it to travers inner complex cell structure only once.
-        public static Cell<T> Materialize<T>(this ICell<T> cell, Action<IDisposable> connectionSink)
+        public static Cell<T> Materialize<T>(this ICell<T> cell, IConnectionSink connectionSink)
         {
             var materializedCell = new Cell<T>();
-            connectionSink(cell.Bind(val => materializedCell.value = val));
+            connectionSink.AddConnection(cell.Bind(val => materializedCell.value = val));
             return materializedCell;
         }
-
-        // Since cell is not covariant in old .net we need some handy overloads
-#if !NET_4_6
-        public static ICell<T> Join<T>(this ICell<Cell<T>> cell)
-        {
-            return Join(cell.Map(c => c as ICell<T>));
-        }
-
-        public static IEventStream<T> Join<T>(this ICell<EventStream<T>> cell)
-        {
-            return Join(cell.Map(val => val as IEventStream<T>));
-        }
         
-        public static ICell<IEnumerable<T>> ToCellOfCollection<T>(this Cell<T>[] cells)
-        {
-            return cells.Select(val => (ICell<T>) val).ToCellOfCollection();
-        }
-
-        public static ICell<IEnumerable<T>> ToCellOfCollection<T>(this IEnumerable<Cell<T>> cells)
-        {
-            return cells.Select(val => (ICell<T>) val).ToCellOfCollection();
-        }
-#endif
-
         // Linq support
         public static ICell<T2> Select<T, T2>(this ICell<T> cell, Func<T, T2> selector)
         {
@@ -576,7 +979,23 @@ namespace ZergRush.ReactiveCore
 
         public static ICell<bool> Not(this ICell<bool> value)
         {
-            return value.Select(val => !val);
+            return value.Map(val => !val);
+        }
+        public static ICell<bool> And(this ICell<bool> value, ICell<bool> other)
+        {
+            return value.Merge(other, (b, b1) => b && b1);
+        }
+        public static ICell<bool> And(this ICell<bool> value, bool other)
+        {
+            return value.Map(b => b && other);
+        }
+        public static ICell<bool> Or(this ICell<bool> value, ICell<bool> other)
+        {
+            return value.Merge(other, (b, b1) => b || b1);
+        }
+        public static ICell<bool> ReactiveEquals<T>(this ICell<T> value, ICell<T> other)
+        {
+            return value.Merge(other, (b, b1) => EqualityComparer<T>.Default.Equals(b, b1));
         }
 
         // Maps cell value to object
@@ -640,6 +1059,7 @@ namespace ZergRush.ReactiveCore
             });
         }
 
+
         // Result stream will be called when cell value satisfy the predicate,
         // next call will be when value changed to not satisfy predicate and then to satisfy predicate again.
         public static IEventStream When<T>(this ICell<T> cell, Func<T, bool> filter)
@@ -662,6 +1082,12 @@ namespace ZergRush.ReactiveCore
                 return disp;
             });
         }
+        
+        public static IEventStream WhenEqualsOnce<T>(this ICell<T> cell, T value)
+        {
+            return cell.WhenOnce(v => v.Equals(value));
+        }
+
 
         // Result stream will be calles each time cell value updates and satisfy predicate.
         public static IEventStream WhenUpdatedToSatisfy<T>(this ICell<T> cell, Func<T, bool> filter)
@@ -680,20 +1106,105 @@ namespace ZergRush.ReactiveCore
         {
             return cell.When(i => i);
         }
-        
-        public class JoinNullCellException : System.Exception
+
+        public static IEventStream WhenMoreOrEqual(this ICell<float> cell, float value)
         {
-            public JoinNullCellException() : base()
-            {
-            }
+            return cell.When(v => v >= value);
+        }
+        
+        public static IEventStream WhenMoreOrEqual(this ICell<int> cell, int value)
+        {
+            return cell.When(v => v >= value);
+        }
+        
+        public static IEventStream WhenUpdatedToTrue(this ICell<bool> cell)
+        {
+            return cell.WhenUpdatedToSatisfy(i => i);
+        }
 
-            public JoinNullCellException(string message) : base(message)
+        public static IValueRW<T2> MapValue<T1, T2>(this IValueRW<T1> val, Func<T1, T2> map, Func<T2, T1> mapBack)
+        {
+            return new AnonymousValue<T2>(v => val.value = mapBack(v), () => map(val.value));
+        }
+        
+        public static IValueRW<T2> ValueCast<T1, T2>(this IValueRW<T1> val)
+        {
+            return new AnonymousValue<T2>(v => val.value = (T1)(object)v, () => (T2)(object)val.value);
+        }
+        
+        public static IDisposable DoWhenTrue(this ICell<bool> condition, Func<IDisposable> disposableAction)
+        {
+            var disp = new DoubleDisposable();
+            disp.Second = condition.Bind(v =>
             {
-            }
+                if (v)
+                {
+                    disp.First = disposableAction();
+                }
+                else
+                {
+                    disp.First.DisconnectSafe();
+                    disp.First = null;
+                }
+            });
+            return disp;
+        }
 
-            public JoinNullCellException(string message, Exception innerException) : base(message, innerException)
+        // Value is difference bhetween current and next value.
+        public static IDisposable BindDiff(this ICell<float> cell, Action<float> action)
+        {
+            // Implicit lambda boxing used as a prev val storage here
+            float prevVal = cell.value;
+            return cell.Bind(v =>
             {
-            }
+                action(v - prevVal);
+                prevVal = v;
+            });
+        }
+
+        // Value is difference bhetween current and next value.
+        public static ICell<float> Diff(this ICell<float> cell)
+        {
+            // Implicit lambda boxing used as a prev val storage here
+            float prevVal = cell.value;
+            return new AnonymousCell<float>(action =>
+            {
+                return cell.Bind(v =>
+                {
+                    action(v - prevVal);
+                    prevVal = v;
+                });
+            }, () => cell.value - prevVal);
+        }
+    }
+
+    public class AnonymousValue<T> : IValueRW<T>
+    {
+        Action<T> write;
+        Func<T> read;
+
+        public AnonymousValue(Action<T> write, Func<T> read)
+        {
+            this.write = write;
+            this.read = read;
+        }
+
+        public T value
+        {
+            get { return read(); }
+            set { write(value); }
+        }
+    }
+
+
+    public class NullableCell<T> : Cell<T> where T : class
+    {
+        public NullableCell(T t) : base(t)
+        {
+        }
+
+        public NullableCell()
+        {
         }
     }
     

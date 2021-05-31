@@ -2,227 +2,208 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices.WindowsRuntime;
 using UnityEngine;
+using UnityEngine.Assertions;
 
 namespace ZergRush.ReactiveUI
 {
-    public class ViewPool<TView> where TView : ReusableView
+    public interface IViewPool<TView, TData>
+    {
+        TView Get(TData data);
+        void Recycle(TView view, float delay);
+        void AddRecycleAction(Func<TView, float> act);
+        void AddInstantiateAction(Action<TView> act);
+        void EnsurePreloadedViewInstance(TView prefab, int count);
+        void AddViewToUse(TView prefab, TView view);
+        Vector2 sampleViewSize(TData data);
+    }
+
+    public class ViewPoolProxyMap<TView, TData, TData2> : IViewPool<TView, TData>
+    {
+        public IViewPool<TView, TData2> viewPoolImplementation;
+        public Func<TData, TData2> map;
+        public TView Get(TData data)
+        {
+            return viewPoolImplementation.Get(map(data));
+        }
+
+        public void Recycle(TView view, float delay)
+        {
+            viewPoolImplementation.Recycle(view, delay);
+        }
+
+        public void AddRecycleAction(Func<TView, float> act)
+        {
+            viewPoolImplementation.AddRecycleAction(act);
+        }
+
+        public void AddInstantiateAction(Action<TView> act)
+        {
+            viewPoolImplementation.AddInstantiateAction(act);
+        }
+
+        public void EnsurePreloadedViewInstance(TView prefab, int count)
+        {
+            viewPoolImplementation.EnsurePreloadedViewInstance(prefab, count);
+        }
+
+        public void AddViewToUse(TView prefab, TView view)
+        {
+            viewPoolImplementation.AddViewToUse(prefab, view);
+        }
+
+        public Vector2 sampleViewSize(TData data)
+        {
+            return viewPoolImplementation.sampleViewSize(map(data));
+        }
+    }
+
+    public class SimpleViewPool<TView> : ViewPool<TView, int> where TView : ReusableView
+    {
+        public TView Get() => Get(0);
+
+        public SimpleViewPool(Transform parent, TView prefab) : base(parent, prefab)
+        {
+        }
+
+        public SimpleViewPool(Transform parent, PrefabRef<TView> prefab, PresentOptions options) : base(parent, prefab, options)
+        {
+        }
+    }
+
+    public class ViewPool<TView, TData> : IViewPool<TView, TData>
+        where TView : ReusableView
     {
         readonly List<TView> pool;
         readonly Transform parent;
         readonly TView prefab;
         Action<TView> instantiateAction;
-        Action<TView> recycleAction;
+        List<Func<TView, float>> recycleAction = new List<Func<TView, float>>();
 
         public ViewPool(Transform parent, TView prefab)
         {
+            if (prefab == null) throw new ZergRushException($"prefab is null");
             this.parent = parent;
             this.prefab = prefab;
             pool = new List<TView>();
+        }
+
+        public ViewPool(Transform parent, PrefabRef<TView> prefab, PresentOptions options) : this(parent, prefab.ExtractPrefab(parent))
+        {
+            if ((options & PresentOptions.UseLoadedViews) != 0) Rui.FillPoolWithChildrenViews(this, parent, prefab, this.prefab, options);
+        }
+
+        public int Count => pool.Count;
+
+        public void Clear()
+        {
+            pool.ForEach(v => GameObject.Destroy(v.gameObject));
+            pool.Clear();
+        }
+
+        public void HideAll()
+        {
+            pool.ForEach(v => v.gameObject.SetActiveSafe(false));
         }
 
         public void AddInstantiateAction(Action<TView> action)
         {
             instantiateAction += action;
         }
-        public void AddRecycleAction(Action<TView> action)
+
+        public void EnsurePreloadedViewInstance(TView prefab1, int count)
         {
-            recycleAction += action;
+            Assert.IsTrue(prefab1 == this.prefab);
+            while (pool.Count < count)
+            {
+                pool.Add(Instantiate());
+            }
         }
 
-        public TView Get()
+        public void AddViewToUse(TView p, TView view)
         {
-            if (pool.Count > 0) return pool.TakeLast();
+            view.prefabRef = p;
+            Recycle(view);
+            //pool.Add(view);
+        }
+
+        public Vector2 sampleViewSize(TData data)
+        {
+            return prefab.rectTransform.rect.size;
+        }
+
+        public void AddRecycleAction(Func<TView, float> action)
+        {
+            recycleAction.Add(action);
+        }
+
+        protected TView Instantiate()
+        {
             var obj = GameObject.Instantiate(prefab, parent, false);
             if (instantiateAction != null)
             {
                 instantiateAction(obj);
             }
-            return obj.GetComponent<TView>();
+            var view = obj.GetComponent<TView>();
+            view.prefabRef = prefab;
+            return view;
+        }
+
+        public TView Get(TData data)
+        {
+            TView view;
+            if (pool.Count > 0)
+            {
+                view = pool.TakeLast();
+            }
+            else
+            {
+                view = Instantiate();
+            }
+            view.OnBeforeUsed();
+            if (view.autoDisableOnRecycle)
+                view.gameObject.SetActive(true);
+            return view;
         }
 
         public void Recycle(TView view, float delay)
         {
+            if (recycleAction != null)
+            {
+                foreach (var func in recycleAction)
+                {
+                    var value = func(view);
+                    delay = Mathf.Max(delay, value);
+                }
+            }
             if (delay == 0)
             {
                 Recycle(view);
                 return;
             }
-            view.DisconnectAll();
-            view.ExecuteWithDelay(delay, () => Recycle(view));
-        }
-
-        public void Recycle(TView view)
-        {
-            view.DisconnectAll();
-            view.currentMoveAnimation.DisconnectSafe();
-            view.rectTransform.localScale = Vector3.one;
-            view.rectTransform.anchoredPosition = new Vector2(0xffff, 0xffff);
-            if (recycleAction != null) recycleAction(view);
-            pool.Add(view);
-        }
-    }
-
-    public class LinearViewStorage<TView> where TView : ReusableView
-    {
-        public ViewPool<TView> pool;
-        List<TView> loadedViews = new List<TView>();
-        int firstLoadedIndex;
-
-        int lastLoadedIndex { get { return firstLoadedIndex + loadedViews.Count - 1; } }
-
-        public void EnsureLoadedInterval(int indexStart, int indexFinish, Action<TView, int> onViewLoaded, Func<TView, float> onViewUnload)
-        {
-            int indexUsedFirst = firstLoadedIndex;
-            int indexUsedLast = lastLoadedIndex;
-
-            /* Loaded cells completely out of sight. */
-            if (loadedViews.Count == 0 || indexStart > indexUsedLast || indexFinish < indexUsedFirst)
-            {
-                ReloadAll(indexStart, indexFinish, onViewLoaded, onViewUnload);
-                return;
-            }
-
-            if (indexStart == indexUsedFirst && indexFinish == indexUsedLast) return;
-
-            /* Dealing with left side. */
-            if (indexUsedFirst < indexStart)
-            {
-                for (int i = indexUsedFirst; i < indexStart; i++)
-                {
-                    RecycleAtLoadedIndex(0, onViewUnload);
-                }
-            }
-            else if (indexUsedFirst > indexStart)
-            {
-                for (int i = indexStart; i < indexUsedFirst; i++)
-                {
-                    var view = pool.Get();
-                    loadedViews.Insert(i - indexStart, view);
-                    onViewLoaded(view, i);
-                }
-            }
-            firstLoadedIndex = indexStart;
-
-            /* Dealing with right side. */
-            if (indexUsedLast > indexFinish)
-            {
-                for (int i = indexUsedLast; i > indexFinish; i--)
-                {
-                    RecycleAtLoadedIndex(loadedViews.Count - 1, onViewUnload);
-                }
-            }
-            else if (indexFinish > indexUsedLast)
-            {
-                for (int i = indexUsedLast + 1; i <= indexFinish; i++)
-                {
-                    var view = pool.Get();
-                    loadedViews.Add(view);
-                    onViewLoaded(view, i);
-                }
-            }
-        }
-
-        void RecycleAtLoadedIndex(int index, Func<TView, float> onRecycle)
-        {
-            var view = loadedViews[index];
-            if (onRecycle == null) pool.Recycle(view);
-            else pool.Recycle(view, onRecycle(view));
-            loadedViews.RemoveAt(index);
-        }
-
-        void ReloadAll(int indexStart, int indexFinish, Action<TView, int> onViewLoaded, Func<TView, float> onViewUnloaded)
-        {
-            UnloadAll(onViewUnloaded);
-            firstLoadedIndex = indexStart;
-            for (int i = indexStart; i <= indexFinish; i++)
-            {
-                var view = pool.Get();
-                onViewLoaded(view, i);
-                loadedViews.Add(view); 
-            }
-        }
-
-        public bool IsLoaded(int index)
-        {
-            return loadedViews.Count != 0 && index >= firstLoadedIndex && index <= lastLoadedIndex;
-        }
-
-        public TView ViewAt(int index)
-        {
-            return loadedViews[index - firstLoadedIndex];
-        }
-
-        public void UnloadAll(Func<TView, float> onRecycle)
-        {
-            if (onRecycle != null)
-            {
-                foreach (var loadedView in loadedViews)
-                {
-                    pool.Recycle(loadedView, onRecycle(loadedView));
-                }
-            }
             else
             {
-                foreach (var loadedView in loadedViews)
+                view.ExecuteWithDelay(delay, () =>
                 {
-                    pool.Recycle(loadedView);
-                }
-            }
-            loadedViews.Clear();
-        }
-
-        public void PierceIndex(int index, Func<TView, float> onUnload)
-        {
-            if (index < firstLoadedIndex) firstLoadedIndex--;
-            else if (index <= lastLoadedIndex)
-            {
-                RecycleAtLoadedIndex(index - firstLoadedIndex, onUnload);
+                    view.DisconnectAll();
+                    Recycle(view);
+                });
             }
         }
 
-        public void ReplaceIndex(int index, Action<TView, int> onViewCreate, Func<TView, float> onUnload)
+        void Recycle(TView view)
         {
-            if (index >= firstLoadedIndex && index <= lastLoadedIndex)
-            {
-                var view = loadedViews[index - firstLoadedIndex];
-                if (onUnload != null)
-                    pool.Recycle(view, onUnload(view));
-                else
-                    pool.Recycle(view);
-                view = pool.Get();
-                loadedViews[index - firstLoadedIndex] = view;
-                if (onViewCreate != null)
-                    onViewCreate(view, index);
-            }
-        }
-
-        public void InjectAtIndex(int index, Action<TView, int> onViewCreate)
-        {
-            if (index < firstLoadedIndex) firstLoadedIndex++;
-            else if (index <= lastLoadedIndex)
-            {
-                var view = pool.Get();
-                if (onViewCreate != null)
-                    onViewCreate(view, index);
-                loadedViews.Insert(index - firstLoadedIndex, view);
-            }
-        }
-
-        public void ForEachViewAfterIndex(int index, Action<TView, int> action)
-        {
-            for (int i = Mathf.Max(firstLoadedIndex, index); i <= lastLoadedIndex; i++)
-            {
-                action(ViewAt(i), i);
-            }
-        }
-
-        public void ForEachLoadedView(Action<TView, int> action)
-        {
-            for (int i = 0; i < loadedViews.Count; i++)
-            {
-                action(loadedViews[i], i + firstLoadedIndex);
-            }
+            if (view == null) return;
+            
+            view.OnRecycle();
+            view.DisconnectAll();
+            view.currentMoveAnimation.DisconnectSafe();            
+            if (view.autoDisableOnRecycle)
+                view.gameObject.SetActive(false);
+            if (view.setImpossiblePositionOnRecycle)
+                view.rectTransform.anchoredPosition = new Vector2(0xffff, 0xffff);
+            pool.Add(view);
         }
     }
 }

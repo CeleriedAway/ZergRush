@@ -20,7 +20,7 @@ namespace ZergRush
         public WaitForEvent(IEventStream stream, float timeout = -1)
         {
             this.timeout = timeout;
-            connection = stream.Listen(() =>
+            connection = stream.Subscribe(() =>
             {
                 connection.DisconnectSafe();
                 ready = true;
@@ -45,11 +45,11 @@ namespace ZergRush
 
     public class WaitForEvent<T> : CustomYieldInstruction
     {
-        private IDisposable connection;
+        IDisposable connection;
         bool ready;
         public WaitForEvent(IEventStream<T> eventStream, WaitResult<T> result)
         {
-            connection = eventStream.Listen(t =>
+            connection = eventStream.Subscribe(t =>
             {
                 ready = true;
                 result.value = t;
@@ -60,8 +60,6 @@ namespace ZergRush
         }
         public override bool keepWaiting { get { return ready == false; } }
     }
-    
-    
 
     public class DoForSomeTime : IEnumerator
     {
