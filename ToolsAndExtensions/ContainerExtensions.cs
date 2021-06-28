@@ -233,6 +233,18 @@ namespace ZergRush
             return list;
         }
 
+        public static (List<T1>, List<T1>) SplitByPredicate<T1>(this IEnumerable<T1> coll1, Func<T1, bool> func)
+        {
+            var lTrue = new List<T1>();
+            var lFalse = new List<T1>();
+            foreach (var x1 in coll1)
+            {
+                if (func(x1)) lTrue.Add(x1);
+                else lFalse.Add(x1);
+            }
+            return (lTrue, lFalse);
+        }
+        
         public static void ZipIterate<T1, T2>(this IEnumerable<T1> coll1, IEnumerable<T2> coll2, Action<T1, T2> func)
         {
             var it1 = coll1.GetEnumerator();
