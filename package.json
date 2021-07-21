@@ -1,0 +1,49 @@
+{
+  "name": "com.celeriedaway.zergrush",
+  "version": "1.0.0",
+  "displayName": "Zerg Rush",
+  "description": "Reactive library and code generation tools",
+  "unity": "2019.1",
+  "documentationUrl": "https://github.com/CeleriedAway/ZergRush",
+  "licensesUrl": "https://github.com/CeleriedAway/ZergRush",
+  "dependencies": {
+    "jillejr.newtonsoft.json-for-unity": "https://github.com/jilleJr/Newtonsoft.Json-for-Unity.git#upm"
+ },
+ "keywords": [
+    "reactive",
+    "code generation",
+    "tools"
+  ],
+  "author": {
+    "name": "Alexandr Pyatkov",
+    "email": "myinkmonster@gmail.com",
+    "url": "https://github.com/CeleriedAway"
+  },
+  "samples": [
+    {
+      "displayName": "Reactive basics",
+      "description": "API and basic usacases for reactive library",
+      "path": "Samples~/ReactiveBasics"
+    },
+    {
+      "displayName": "CodeGen basics",
+      "description": "Basic guide on how to use codegen",
+      "path": "Samples~/CodeGenBasics"
+    },
+    {
+      "displayName": "Reactive game data",
+      "description": "Demo of using reactive game data model with showing it with ui tools",
+      "path": "Samples~/CellDemo"
+    },
+    {
+      "displayName": "ReactiveCollection and transformations",
+      "description": "Shows how to use reactive collections and how to transform them",
+      "path": "Samples~/ReactiveCollectionTransformations"
+    },
+    {
+      "displayName": "Scroll layouts with reusable cells",
+      "description": "Variout table layouts for representing reactive collections data",
+      "path": "Samples~/TablesAndLayouts"
+    }
+  ]
+}
