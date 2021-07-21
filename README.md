@@ -20,6 +20,7 @@ This toolset consists of several parts:
 
 3. ZergRush.Utils collections of variuos tools for common gamedev tasks and extensions for above libraries.
 
+# ZergRush.Reactive
 
 The first part of ZergRush.Reactive is EventStream
 ```c#
@@ -66,7 +67,7 @@ IEventStream<int> streamOfOddNumbers = streamOfNumbers.Filter(i => IsOdd(i));
 // Here you will receive strings created from numbers
 IEventStream<string> streamOfSomeStrings = streamOfEvenNumbers.Map(i => i.ToString());
 // Here you will receive events from both streams
-IEventStream<string> mergedStreamOfNumbers = streamOfEvenNumbers.MergeWith(streamOfOddNumbers);
+IEventStream<int> mergedStreamOfNumbers = streamOfEvenNumbers.MergeWith(streamOfOddNumbers);
 ```
 
 But the most usefull part of the library in game development is Cell<T>
@@ -92,16 +93,50 @@ var imRich = moneyCount.Select(m => m > 100);
 
 It represents a value that is changing in time. And a perfect fit for representing game data.
 ```c#
-class PlayerData
-{
-	public Cell<int> money;
-	public Cell<int> hp;
-	public Cell<int> maxHp;
-	// you can use transform api to make additional
-	public ICell<float> relativeHp => hp.Merge(maxHp, (hp, maxHp) => hp / (float)maxHp);
-	public ICell<bool> isWounded => relativeHp.Select(value => value < 0.5f);
-}
+        class Item
+        {
+            public Cell<int> hpBonus;
+            public void Upgrade() => hpBonus.value++;
+        }
+
+        class Weapon
+        {
+            public Cell<int> damage;
+        }
+
+        partial class PlayerData
+        {
+            public Cell<int> money;
+            public Cell<int> hp;
+            public Cell<int> baseMaxHp;
+
+            public void LevelUp()
+            {
+                baseMaxHp.value++;
+                hp.value = maxHpTotal.value;
+            }
+
+            public ReactiveCollection<Item> items;
+            public Cell<Weapon> selectedWeapon;
+            public void EquipWeapon(Weapon w) => selectedWeapon.value = w; 
+            
+            // Join is the most important operator that transforms ICell<ICell<T>> to just ICell<T>
+            // That is the core mechanic of cell transformation and
+            // the one that allows to collapse all dependency layers into one
+            public ICell<int> damage => selectedWeapon.Map(w => w.damage).Join();
+
+            // you can use transform api to compose new properties without loosing of its dependancies
+            // Look how total maxHp is calculated 
+            public ICell<int> maxHpFromItems => items.Map(i => i.hpBonus).ToCellOfCollection().Map(itemBuffs => itemBuffs.Sum());
+            public ICell<int> maxHpTotal => baseMaxHp.Merge(maxHpFromItems, (hp1, hp2) => hp1 + hp2);
+            public ICell<float> relativeHp => hp.Merge(maxHpTotal, (hp, maxHp) => hp / (float) maxHp);
+            public ICell<bool> isWounded => relativeHp.Select(value => value < 0.5f);
+            
+        }
+
 ```
+
+## Look package samples for more code examples
 
 
 
