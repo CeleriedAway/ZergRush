@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using Demo.TablesAndLayouts;
 using UnityEngine;
 using UnityEngine.UI;
 using ZergRush.ReactiveCore;
@@ -13,7 +12,7 @@ namespace Demo.ReactiveCollectionTransformations
     {
         ReactiveCollection<int> data = new ReactiveCollection<int>();
 
-        public SimpleView prefab;
+        public SimpleView2 prefab;
 
         public ReactiveScrollRect initial;
         public ReactiveScrollRect mapped;
@@ -40,20 +39,20 @@ namespace Demo.ReactiveCollectionTransformations
                 bottomShift = 30,
             };
 
-            Action<int, SimpleView> factory = (i, view) => { view.name.text = i.ToString(); };
+            Action<int, SimpleView2> factory = (i, view) => { view.name.text = i.ToString(); };
 
             connections += data.PresentInScrollWithLayout(initial, prefab, factory, layout: Rui.LinearLayout(settings),
-                delegates: Animations.Default<SimpleView>());
+                delegates: Animations.Default<SimpleView2>());
 
             var mappedData = data.Map(val => (val * 3 + 5) % 10);
 
             connections += mappedData.PresentInScrollWithLayout(mapped, prefab, factory,
-                layout: Rui.LinearLayout(settings), delegates: Animations.Default<SimpleView>());
+                layout: Rui.LinearLayout(settings), delegates: Animations.Default<SimpleView2>());
 
             var filteredData = mappedData.Filter(val => val % 2 == 0);
 
             connections += filteredData.PresentInScrollWithLayout(filtered, prefab, factory,
-                layout: Rui.LinearLayout(settings), delegates: Animations.Default<SimpleView>());
+                layout: Rui.LinearLayout(settings), delegates: Animations.Default<SimpleView2>());
         }
     }
 }
