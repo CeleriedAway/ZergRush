@@ -185,13 +185,11 @@ namespace ZergRush.Samples
         {
             public Cell<int> hpBonus;
             public void Upgrade() => hpBonus.value++;
-            //...
         }
 
         class Weapon
         {
             public Cell<int> damage;
-            //...
         }
 
         partial class PlayerData

@@ -10,7 +10,7 @@ using ZergRush.ReactiveUI;
 
 namespace Demo.CellDemo
 {
-	public class CellDemo : ConnectableObject
+	public class CellDemo : ConnectableMonoBehaviour
 	{
 		GameData gameData;
 		UiState uiState;

@@ -29,7 +29,7 @@ namespace ZergRush.Samples
     )]
     // All generated code will be placed into "x_generated" folder
     [GenInLocalFolder]
-    public partial class CodeGenSamples
+    public partial class CodeGenSamples : ISerializable
     {
         // All fields are automatically included
         int intField;
@@ -105,7 +105,6 @@ namespace ZergRush.Samples
             // polymorphic construction example
             var ancestor = CreatePolymorphic((ushort)Types.Ancestor);
         }
-
     }
 
     // All class tags are inhereted, so its handy to create one base class for you model classes with all tags you want 

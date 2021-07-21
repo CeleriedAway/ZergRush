@@ -9,7 +9,7 @@ using Random = UnityEngine.Random;
 
 namespace Demo.ReactiveCollectionTransformations
 {
-    public class ReactiveCollectionTransformations : ConnectableObject
+    public class ReactiveCollectionTransformations : ConnectableMonoBehaviour
     {
         ReactiveCollection<int> data = new ReactiveCollection<int>();
 

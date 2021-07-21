@@ -5,7 +5,7 @@ using ZergRush.ReactiveUI;
 
 namespace Demo.TablesAndLayouts
 {
-    class TablesAndLayouts : ConnectableObject
+    class TablesAndLayouts : ConnectableMonoBehaviour
     {
         public SimpleView prefab;
     
