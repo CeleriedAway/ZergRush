@@ -20,6 +20,23 @@ This toolset consists of several parts:
 
 3. ZergRush.Utils collections of variuos tools for common gamedev tasks and extensions for above libraries.
 
+# Installation
+
+For now installation process is the following:
+
+Use Package Manager > + (button) > Add package from git URL...
+
+If you do not have Newtonsoft.Json-for-Unity in your project first install this:
+```
+https://github.com/jilleJr/Newtonsoft.Json-for-Unity.git#upm
+```
+
+Then install this package with url:
+```
+https://github.com/CeleriedAway/ZergRush.git
+```
+
+
 # ZergRush.Reactive
 
 The first part of ZergRush.Reactive is EventStream
