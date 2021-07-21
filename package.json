@@ -1,13 +1,13 @@
 {
   "name": "com.celeriedaway.zergrush",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "displayName": "Zerg Rush",
   "description": "Reactive library and code generation tools",
   "unity": "2019.1",
   "documentationUrl": "https://github.com/CeleriedAway/ZergRush",
   "licensesUrl": "https://github.com/CeleriedAway/ZergRush",
   "dependencies": {
-    "jillejr.newtonsoft.json-for-unity": "12.0.101"
+    "jillejr.newtonsoft.json-for-unity": "13.0.102"
  },
  "keywords": [
     "reactive",
@@ -19,6 +19,15 @@
     "email": "myinkmonster@gmail.com",
     "url": "https://github.com/CeleriedAway"
   },
+  "scopedRegistries": [
+    {
+      "name": "Packages from jillejr",
+      "url": "https://npm.cloudsmith.io/jillejr/newtonsoft-json-for-unity/",
+      "scopes": [
+        "jillejr"
+      ]
+    }
+  ],
   "samples": [
     {
       "displayName": "Reactive basics",
