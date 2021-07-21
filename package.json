@@ -7,7 +7,7 @@
   "documentationUrl": "https://github.com/CeleriedAway/ZergRush",
   "licensesUrl": "https://github.com/CeleriedAway/ZergRush",
   "dependencies": {
-    "jillejr.newtonsoft.json-for-unity": "https://github.com/jilleJr/Newtonsoft.Json-for-Unity.git#12.0.302"
+    "jillejr.newtonsoft.json-for-unity": "12.0.101"
  },
  "keywords": [
     "reactive",
