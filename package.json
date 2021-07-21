@@ -46,12 +46,12 @@
     },
     {
       "displayName": "ReactiveCollection and transformations",
-      "description": "Shows how to use reactive collections and how to transform them",
+      "description": "Shows how to use reactive collections and how to transform them. Need DoTween installed!",
       "path": "Samples~/ReactiveCollectionTransformations"
     },
     {
       "displayName": "Scroll layouts with reusable cells",
-      "description": "Variout table layouts for representing reactive collections data",
+      "description": "Variout table layouts for representing reactive collections data. Need DoTween installed!",
       "path": "Samples~/TablesAndLayouts"
     }
   ]
