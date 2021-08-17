@@ -1,0 +1,19 @@
+{
+    "name": "CodeGen.Editor",
+    "rootNamespace": "",
+    "references": [
+        "ZergRush.CodeGen",
+        "ZergRush.Reactive"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

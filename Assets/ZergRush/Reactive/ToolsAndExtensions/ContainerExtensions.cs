@@ -9,6 +9,11 @@ namespace ZergRush
 {
     public static partial class Utils
     {
+        public static bool Valid(this string str)
+        {
+            return !String.IsNullOrEmpty(str);
+        }
+        
         public static TV TryGetOrNew<TK, TV>(this Dictionary<TK, TV> dict, TK key)
             where TV : new()
         {
