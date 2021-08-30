@@ -2,8 +2,8 @@
     "name": "ZergRush.Utils",
     "rootNamespace": "",
     "references": [
-        "GUID:d21c8a193969395438ac8ef84ac02c26",
-        "GUID:e4e6e469da3666042bb4d5464b965b64"
+        "ZergRush.Reactive",
+        "ZergRush.CodeGen"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

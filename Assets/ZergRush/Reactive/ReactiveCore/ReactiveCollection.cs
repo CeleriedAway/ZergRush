@@ -25,8 +25,8 @@ namespace ZergRush.ReactiveCore
     {
         public T newItem;
         public T oldItem;
-        public IEnumerable<T> oldData;
-        public IEnumerable<T> newData;
+        public IReadOnlyList<T> oldData;
+        public IReadOnlyList<T> newData;
     }
     
     /*
@@ -252,6 +252,15 @@ namespace ZergRush.ReactiveCore
                     oldItem = oldItem
                 });
             }
+        }
+
+        // Due to optimization reasons AsCell method send same collection during update process
+        // In reality it should copy collection each time
+        // So this hack allows this collection to look like new each time and prevent some unexpected behaviour in cases 
+        // like coll.AsCell().Map(x => x) not sending update events
+        public override bool Equals(object obj)
+        {
+            return false;
         }
     }
 
@@ -769,6 +778,11 @@ namespace ZergRush.ReactiveCore
                 return coll.Count > index ? coll[index] : default(T);
             });
         }
+        
+        public static ICell<T> AtIndex<T>(this IReactiveCollection<T> collection, ICell<int> index)
+        {
+            return index.FlatMap(collection.AtIndex);
+        }
 
         public static ICell<IReadOnlyList<T>> AsCell<T>(this IReactiveCollection<T> collection)
         {
@@ -799,6 +813,93 @@ namespace ZergRush.ReactiveCore
         public static IReactiveCollection<T> EnumerateRange<T>(this ICell<int> cellOfElemCount, Func<int, T> fill)
         {
             return new ReactiveRange<T> {fill = fill, cellOfCount = cellOfElemCount};
+        }
+
+        [DebuggerDisplay("{this.ToString()}")]
+        internal class ConcatCollection<T> : AbstractCollectionTransform<T>
+        {
+            readonly IReactiveCollection<T> collection;
+            readonly IReactiveCollection<T> collection2;
+            
+            public ConcatCollection(IReactiveCollection<T> collection, IReactiveCollection<T> collection2)
+            {
+                this.collection = collection;
+                this.collection2 = collection2;
+            }
+
+            int countFirst => collection.Count;
+
+            void Process(ReactiveCollectionEvent<T> e)
+            {
+                switch (e.type)
+                {
+                    case ReactiveCollectionEventType.Reset:
+                        buffer.RemoveRange(countFirst, buffer.Count - e.oldData.Count);
+                        var newDataCount = e.newData.Count;
+                        for (var i = 0; i < newDataCount; i++)
+                        {
+                            buffer.Insert(i, e.newData[i]);
+                        }
+                        break;
+                    case ReactiveCollectionEventType.Insert:
+                        buffer.Insert(e.position, e.newItem);
+                        break;
+                    case ReactiveCollectionEventType.Remove:
+                        buffer.RemoveAt(e.position);
+                        break;
+                    case ReactiveCollectionEventType.Set:
+                        buffer[e.position] = e.newItem;
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+            }
+            void Process2(ReactiveCollectionEvent<T> e)
+            {
+                switch (e.type)
+                {
+                    case ReactiveCollectionEventType.Reset:
+                        buffer.RemoveRange(countFirst, e.oldData.Count);
+                        var newDataCount = e.newData.Count;
+                        for (var i = 0; i < newDataCount; i++)
+                        {
+                            buffer.Add(e.newData[i]);
+                        }
+                        break;
+                    case ReactiveCollectionEventType.Insert:
+                        buffer.Insert(e.position + countFirst, e.newItem);
+                        break;
+                    case ReactiveCollectionEventType.Remove:
+                        buffer.RemoveAt(e.position + countFirst);
+                        break;
+                    case ReactiveCollectionEventType.Set:
+                        buffer[e.position + countFirst] = e.newItem;
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+            }
+
+            protected override IDisposable StartListenAndRefill()
+            {
+                RefillBuffer();
+                var disp = new DoubleDisposable();
+                disp.first = collection.update.Subscribe(Process);
+                disp.second = collection2.update.Subscribe(Process2);
+                return disp;
+            }
+
+            protected override void RefillRaw()
+            {
+                buffer.Reset(collection);
+                buffer.AddRange(collection2);
+            }
+        }
+        
+        // cheap version of concat
+        public static IReactiveCollection<T> ConcatReactive<T>(this IReactiveCollection<T> collection, IReactiveCollection<T> collection2)
+        {
+            return new ConcatCollection<T>(collection, collection2);
         }
 
         class ReactiveRange<T> : AbstractCollectionTransform<T>

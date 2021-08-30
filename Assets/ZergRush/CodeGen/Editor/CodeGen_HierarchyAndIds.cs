@@ -162,7 +162,7 @@ namespace ZergRush.CodeGen
             {
                 foreach (var methodInfo in type.GetMethods(constructorMethodFlags))
                 {
-                    if (methodInfo.Name.StartsWith("Prepare") && (methodInfo.IsVirtual || methodInfo.IsAbstract))
+                    if (methodInfo.Name.StartsWith("Ctor") && (methodInfo.IsVirtual || methodInfo.IsAbstract))
                     {
                         var sig = methodInfo.GetParameters().Select(p => $"{p.ParameterType.RealName(true)} {p.Name}")
                             .PrintCollection();

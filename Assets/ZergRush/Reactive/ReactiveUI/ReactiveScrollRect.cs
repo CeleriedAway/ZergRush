@@ -17,7 +17,6 @@ public class ReactiveScrollRect : MonoBehaviour
 		scrollPos.value = scroll.horizontal
 			? scroll.content.anchoredPosition.x
 			: scroll.content.anchoredPosition.y;
-		
 	}
 
 	public IViewPort CreateViewPort()

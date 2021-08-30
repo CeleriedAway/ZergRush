@@ -150,6 +150,22 @@ public static class ParseTools
 
         return (TEnum) Enum.ToObject(typeof(TEnum), val);
     }
+    
+    public static List<TEnum> ParseEnumListStrict<TEnum>(this string str) where TEnum : struct
+    {
+        var result = new List<TEnum>();
+        if (str.IsNullOrEmpty() == false)
+        {
+            foreach (var s in str.Split(' ', ','))
+            {
+                if (s.IsNullOrWhitespace()) continue;
+                result.Add(s.ParseEnumStrict<TEnum>());
+            }
+        }
+
+        return result;
+    }
+
 
     public static TEnum ParseEnumStrict<TEnum>(this string str) where TEnum : struct
     {
@@ -162,14 +178,13 @@ public static class ParseTools
         return val;
     }
 
-    public static TEnum ParseEnum<TEnum>(this string str) where TEnum : struct
+    public static TEnum ParseEnum<TEnum>(this string str, TEnum def = default) where TEnum : struct
     {
         TEnum val;
         if (Enum.TryParse(str.TextToCamelCase(), true, out val) == false)
         {
-            return default(TEnum);
+            return def;
         }
-
         return val;
     }
 

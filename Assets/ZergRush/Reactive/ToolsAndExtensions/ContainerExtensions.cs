@@ -805,9 +805,10 @@ namespace ZergRush
             return t;
         }
 
-        public static void AddIfNotNull<T>(this List<T> list, T t) where T : class
+        public static List<T> AddIfNotNull<T>(this List<T> list, T t) where T : class
         {
             if (t != null) list.Add(t);
+            return list;
         }
 
         public static List<To> ConvertAll<From, To>(this IEnumerable<From> array, Func<From, To> convert)

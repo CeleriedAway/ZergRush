@@ -9,14 +9,16 @@ namespace ZergRush.CodeGen
     public static partial class CodeGen
     {
         public static string WriteFuncName = "Serialize";
-        
-        public static void GenWriteValueToStream(MethodBuilder sink, DataInfo info, string stream, bool writeDataNodeAsId = false)
-	    {
-	        if (info.canBeNull) GenWriteNullableToStream(sink, info, stream, writeDataNodeAsId);
-	        else WriteToStreamStatement(sink, info, stream,writeDataNodeAsId);
-	    }
-        
-        public static void GenWriteNullableToStream(MethodBuilder sink, DataInfo info, string stream, bool writeDataNodeAsId = false)
+
+        public static void GenWriteValueToStream(MethodBuilder sink, DataInfo info, string stream,
+            bool writeDataNodeAsId = false)
+        {
+            if (info.canBeNull) GenWriteNullableToStream(sink, info, stream, writeDataNodeAsId);
+            else WriteToStreamStatement(sink, info, stream, writeDataNodeAsId);
+        }
+
+        public static void GenWriteNullableToStream(MethodBuilder sink, DataInfo info, string stream,
+            bool writeDataNodeAsId = false)
         {
             sink.content($"if ({info.access} == null) {stream}.Write(false);");
             sink.content($"else {{");
@@ -27,7 +29,8 @@ namespace ZergRush.CodeGen
             sink.content($"}}");
         }
 
-        public static void WriteToStreamStatement(MethodBuilder sink, DataInfo info, string stream, bool writeDataNodeAsId = false)
+        public static void WriteToStreamStatement(MethodBuilder sink, DataInfo info, string stream,
+            bool writeDataNodeAsId = false)
         {
             var t = info.type;
             if (t == typeof(byte[]))
@@ -60,51 +63,59 @@ namespace ZergRush.CodeGen
 
         public static bool IsConfigStorage(this Type t)
         {
-            return t.IsGenericType && t.GetGenericTypeDefinition() == typeof (ConfigStorageList<>) ||
-                t.IsGenericType && t.GetGenericTypeDefinition() == typeof (ConfigStorageDict<,>)
-                ;
+            return t.IsGenericType && t.GetGenericTypeDefinition() == typeof(ConfigStorageList<>) ||
+                   t.IsGenericType && t.GetGenericTypeDefinition() == typeof(ConfigStorageDict<,>) ||
+                   t.IsConfig() || t.IsLoadableConfig();
         }
-        
+
         public static void SinkListWriterCode(Type listType, MethodBuilder sink, DataInfo info, string stream)
         {
             sink.content($"{stream}.Write({info.access}.Count);");
             sink.content($"for (int i = 0; i < {info.access}.Count; i++)");
             sink.content($"{{");
             sink.indent++;
-            WriteToStreamStatement(sink, new DataInfo{type = info.type, baseAccess = $"{info.access}[i]", insideConfigStorage = listType.IsConfigStorage()}, stream);
+            WriteToStreamStatement(sink,
+                new DataInfo
+                {
+                    type = info.type, baseAccess = $"{info.access}[i]", insideConfigStorage = listType.IsConfigStorage()
+                }, stream);
             sink.indent--;
             sink.content($"}}");
         }
-        
-        public static void SinkDictWriterCode(MethodBuilder sink, Type keyType, Type valType, string path, string stream, bool configStorage)
+
+        public static void SinkDictWriterCode(MethodBuilder sink, Type keyType, Type valType, string path,
+            string stream, bool configStorage)
         {
             sink.content($"{stream}.Write({path}.Count);");
             sink.content($"foreach (var item in {path})");
             sink.content($"{{");
             sink.indent++;
-            WriteToStreamStatement(sink, new DataInfo{type = keyType, baseAccess = $"item.Key", insideConfigStorage = configStorage}, stream);
-            WriteToStreamStatement(sink, new DataInfo{type = valType, baseAccess = $"item.Value", insideConfigStorage = configStorage}, stream);
+            WriteToStreamStatement(sink,
+                new DataInfo {type = keyType, baseAccess = $"item.Key", insideConfigStorage = configStorage}, stream);
+            WriteToStreamStatement(sink,
+                new DataInfo {type = valType, baseAccess = $"item.Value", insideConfigStorage = configStorage}, stream);
             sink.indent--;
             sink.content($"}}");
         }
-        
+
         public static void SinkArrayWriterCode(MethodBuilder sink, DataInfo info, string stream)
         {
             sink.content($"{stream}.Write({info.access}.Length);");
             sink.content($"for (int i = 0; i < {info.access}.Length; i++)");
             sink.content($"{{");
             sink.indent++;
-            WriteToStreamStatement(sink, new DataInfo{type = info.type, baseAccess = $"{info.access}[i]"}, stream);
+            WriteToStreamStatement(sink, new DataInfo {type = info.type, baseAccess = $"{info.access}[i]"}, stream);
             sink.indent--;
             sink.content($"}}");
         }
-        
+
         static void GenerateSerialize(Type type, string funcPrefix = "")
         {
             GenClassSink(type).usingSink("System.IO");
 
             const string writerName = "writer";
-            var sinkWriter = MakeGenMethod(type, GenTaskFlags.Serialize, funcPrefix + WriteFuncName, Void, $"BinaryWriter {writerName}");
+            var sinkWriter = MakeGenMethod(type, GenTaskFlags.Serialize, funcPrefix + WriteFuncName, Void,
+                $"BinaryWriter {writerName}");
 
             var accessPrefix = type.AccessPrefixInGeneratedFunction();
             if (type.IsList())
@@ -129,10 +140,8 @@ namespace ZergRush.CodeGen
             }
             else
             {
-                type.ProcessMembers(GenTaskFlags.Serialize, true, info =>
-                {
-                    GenWriteValueToStream(sinkWriter, info, writerName);
-                });
+                type.ProcessMembers(GenTaskFlags.Serialize, true,
+                    info => { GenWriteValueToStream(sinkWriter, info, writerName); });
             }
         }
 
@@ -140,11 +149,12 @@ namespace ZergRush.CodeGen
         {
             return Nullable.GetUnderlyingType(t) != null;
         }
-        
-        public static void GenReadValueFromStream(MethodBuilder sink, DataInfo info, string stream, bool pooled, bool needVar = false, bool readDataNodeFromId = false)
+
+        public static void GenReadValueFromStream(MethodBuilder sink, DataInfo info, string stream, bool pooled,
+            bool needVar = false, bool readDataNodeFromId = false)
         {
             var t = info.type;
-            
+
 
             // info can be transformed because read from can do temp value wrapping for it
             Action<MethodBuilder, DataInfo> baseCall = (s, info1) =>
@@ -153,7 +163,7 @@ namespace ZergRush.CodeGen
             if (t.IsArray || t.IsImmutableType() || (t.IsValueType && t.IsControllable() == false))
                 baseCall = (s, info1) =>
                     s.content($"{info1.access} = {stream}.{ReadNewInstanceOfImmutableType(t, pooled)};");
-            
+
 
             GeneralReadFrom(sink, info,
                 baseReadCall: baseCall,
@@ -175,11 +185,12 @@ namespace ZergRush.CodeGen
             sink.content($"if({countVar} > 1000) throw new {nameof(ZergRushCorruptedOrInvalidDataLayout)}();");
         }
 
-        public static void SinkListReaderCode(Type listType, MethodBuilder sink, Type type, string path, string stream, bool pooled)
+        public static void SinkListReaderCode(Type listType, MethodBuilder sink, Type type, string path, string stream,
+            bool pooled)
         {
             string count = listType.IsList() ? "Count" : "Length";
             if (listType.IsDataList()) sink.content($"{path}.{updatemod} = true;");
-            
+
             sink.content($"var size = {stream}.ReadInt32();");
             sink.SinkCountCheck("size");
             sink.content($"{path}.Capacity = size;");
@@ -189,16 +200,26 @@ namespace ZergRush.CodeGen
             if (type.IsDataNode())
             {
                 sink.content($"self.Add(null);");
-                GenReadValueFromStream(sink, 
-                    new DataInfo {type = type, baseAccess = $"self[self.{count} - 1]", insideConfigStorage = listType.IsConfigStorage(),
-                        sureIsNull = true}, stream, pooled, false);
+                GenReadValueFromStream(sink,
+                    new DataInfo
+                    {
+                        type = type, carrierType = listType, baseAccess = $"self[self.{count} - 1]",
+                        insideConfigStorage = listType.IsConfigStorage(),
+                        sureIsNull = true
+                    }, stream, pooled, false);
             }
             else
             {
-                GenReadValueFromStream(sink, new DataInfo {type = type, baseAccess = $"val", sureIsNull = true, insideConfigStorage = listType.IsConfigStorage()},
+                GenReadValueFromStream(sink,
+                    new DataInfo
+                    {
+                        type = type, carrierType = listType, baseAccess = $"val", sureIsNull = true,
+                        insideConfigStorage = listType.IsConfigStorage()
+                    },
                     stream, pooled, true);
                 sink.content($"self.Add(val);");
             }
+
             sink.indent--;
             sink.content($"}}");
             if (listType.IsDataList()) sink.content($"{path}.{updatemod} = false;");
@@ -214,9 +235,15 @@ namespace ZergRush.CodeGen
             sink.content($"{{");
             sink.indent++;
             sink.content($"var key = default({keyType.RealName(true)});");
-            GenReadValueFromStream(sink, new DataInfo {type = keyType, baseAccess = $"key", sureIsNull = true, insideConfigStorage = configStorage}, stream, pooled);
+            GenReadValueFromStream(sink,
+                new DataInfo
+                    {type = keyType, baseAccess = $"key", sureIsNull = true, insideConfigStorage = configStorage},
+                stream, pooled);
             sink.content($"var val = default({valType.RealName(true)});");
-            GenReadValueFromStream(sink, new DataInfo {type = valType, baseAccess = $"val", sureIsNull = true, insideConfigStorage = configStorage}, stream,
+            GenReadValueFromStream(sink,
+                new DataInfo
+                    {type = valType, baseAccess = $"val", sureIsNull = true, insideConfigStorage = configStorage},
+                stream,
                 pooled);
             if (configStorage)
                 sink.content($"{path}.Add(val);"); // ConfigStorageDict must use id as a key.
@@ -249,7 +276,7 @@ namespace ZergRush.CodeGen
             const string readerName = "reader";
 
             var flag = pooled ? GenTaskFlags.PooledDeserialize : GenTaskFlags.Deserialize;
-            
+
             MethodBuilder sinkReader = null;
             if (type.GenMode() == Mode.ExtensionMethod && type.IsStruct() || type.IsArray)
             {
@@ -261,7 +288,7 @@ namespace ZergRush.CodeGen
                 sinkReader = MakeGenMethod(type, flag, funcPrefix + ReadFuncName, Void,
                     $"BinaryReader {readerName}{type.OptPoolSecondArgDecl(pooled)}");
             }
-            
+
 
             var accessPrefix = type.AccessPrefixInGeneratedFunction();
             if (type.IsList() && type.IsGenericOfType(typeof(RefListMk2<>)) == false)
@@ -282,7 +309,7 @@ namespace ZergRush.CodeGen
                 var valType = type.SecondGenericArg();
                 RequestGen(keyType, type, flag);
                 RequestGen(valType, type, flag);
-                SinkDictReaderCode(sinkReader, keyType, valType, accessPrefix, readerName, pooled, 
+                SinkDictReaderCode(sinkReader, keyType, valType, accessPrefix, readerName, pooled,
                     type.IsConfigStorage());
             }
             else
@@ -290,14 +317,12 @@ namespace ZergRush.CodeGen
                 bool immutableMode = type.IsStruct() && !type.IsControllable();
                 if (immutableMode)
                     sinkReader.content($"var self = new {type.RealName(true)}();");
-                type.ProcessMembers(flag, true, info =>
-                {
-                    GenReadValueFromStream(sinkReader, info, readerName, pooled);
-                });
+                type.ProcessMembers(flag, true,
+                    info => { GenReadValueFromStream(sinkReader, info, readerName, pooled); });
                 if (immutableMode) sinkReader.content("return self;");
             }
         }
-        
+
 //        static bool SerializeWithFeatures(DataInfo info, MethodBuilder sink, string stream, bool deserialize)
 //        {
 //            foreach (var serializationFeature in serializationFeatures)
@@ -328,20 +353,33 @@ namespace ZergRush.CodeGen
 
         static Type ConfigRootType(this Type t)
         {
-            return t.FindTagInHierarchy<ConfigRootType>()?.type;
+            var configType = t.FindTagInHierarchy<ConfigRootType>()?.type;
+            if (configType == null)
+            {
+                var requesters = typeRequestMap[t];
+                foreach (var requester in requesters)
+                {
+                    var requesterRootConfig = requester.ConfigRootType();
+                    if (requesterRootConfig != null) return requesterRootConfig;
+                }
+            }
+
+            return configType;
         }
-        
+
         static void ConfigFromId(MethodBuilder sink, DataInfo info, Func<Type, string> idReader, bool needCreateVar)
         {
             var type = typeof(ulong);
-            var configType = info.carrierType.ConfigRootType();
+            var configType = info.carrierType?.ConfigRootType();
             if (configType == null)
             {
                 //TODO fix, right now it is difficult to reach generation hierarchy and cleary undeerstand config loading type for a field
                 throw new NotImplementedException();
                 //return;
             }
-            sink.content($"{OptVar(needCreateVar)}{info.access} = ({info.type.RealName(true)}){configType.NameWithNamespace()}.GetConfig({idReader(type)});");
+
+            sink.content(
+                $"{OptVar(needCreateVar)}{info.access} = ({info.type.RealName(true)}){configType.NameWithNamespace()}.GetConfig({idReader(type)});");
         }
     }
 }

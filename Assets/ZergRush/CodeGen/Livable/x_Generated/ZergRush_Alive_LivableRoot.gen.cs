@@ -56,7 +56,9 @@ namespace ZergRush.Alive {
         public override void ReadFromJsonField(JsonTextReader reader, string __name) 
         {
             base.ReadFromJsonField(reader,__name);
-
+            switch(__name)
+            {
+            }
         }
         public override void WriteJsonFields(JsonTextWriter writer) 
         {

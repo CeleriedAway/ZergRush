@@ -34,7 +34,9 @@ namespace ZergRush.Alive {
         }
         public virtual void ReadFromJsonField(JsonTextReader reader, string __name) 
         {
-
+            switch(__name)
+            {
+            }
         }
         public virtual void WriteJsonFields(JsonTextWriter writer) 
         {
