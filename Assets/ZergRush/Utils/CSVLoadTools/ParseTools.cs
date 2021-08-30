@@ -19,11 +19,6 @@ public static class ParseTools
         return String.IsNullOrEmpty(str);
     }
 
-    public static bool Valid(this string str)
-    {
-        return !String.IsNullOrEmpty(str);
-    }
-
     public static bool HasPrefixAndStrip(this string str, string prefix, out string suff)
     {
         if (str.StartsWith(prefix))
