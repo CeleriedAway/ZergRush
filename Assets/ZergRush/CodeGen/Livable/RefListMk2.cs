@@ -112,9 +112,9 @@ namespace ZergRush.Alive
             foreach (var item in items) Add(item);
         }
 
-        public IEventStream<ReactiveCollectionEvent<T>> update
+        public IEventStream<IReactiveCollectionEvent<T>> update
         {
-            get { return up ?? (up = new EventStream<ReactiveCollectionEvent<T>>()); }
+            get { return up ??= new EventStream<ReactiveCollectionEvent<T>>(); }
         }
 
         public bool Contains(T item)

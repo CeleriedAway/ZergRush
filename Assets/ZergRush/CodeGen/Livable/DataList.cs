@@ -13,7 +13,7 @@ namespace ZergRush.Alive
     {
         public bool __update_mod;
         protected EventStream<ReactiveCollectionEvent<T>> up;
-        public IEventStream<ReactiveCollectionEvent<T>> update
+        public IEventStream<IReactiveCollectionEvent<T>> update
         {
             get { return up ?? (up = new EventStream<ReactiveCollectionEvent<T>>()); }
         }

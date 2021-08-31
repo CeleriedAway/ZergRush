@@ -243,7 +243,7 @@ namespace ZergRush.ReactiveCore
             return ((IEnumerable) collection).GetEnumerator();
         }
 
-        public IEventStream<ReactiveCollectionEvent<T>> update => collection.update;
+        public IEventStream<IReactiveCollectionEvent<T>> update => collection.update;
         public int Count => collection.Count;
         public T this[int index] => collection[index];
     }

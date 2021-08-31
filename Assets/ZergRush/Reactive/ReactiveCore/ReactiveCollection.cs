@@ -15,23 +15,25 @@ namespace ZergRush.ReactiveCore
         Set,
     }
 
-    interface IReactiveCollectionEvent<out T>
+    public interface IReactiveCollectionEvent<out T>
     {
+        public ReactiveCollectionEventType type { get; }
+        public int position { get; }
+        
         public T newItem { get; }
         public T oldItem { get; }
         public IReadOnlyList<T> oldData { get; }
         public IReadOnlyList<T> newData { get; }
     }
 
-    public class ReactiveCollectionEvent<T>
+    public sealed class ReactiveCollectionEvent<T> : IReactiveCollectionEvent<T>
     {
-        public ReactiveCollectionEventType type;
-        public int position;
-        
-        public T newItem;
-        public T oldItem;
-        public IReadOnlyList<T> oldData;
-        public IReadOnlyList<T> newData;
+        public ReactiveCollectionEventType type { get; set; }
+        public int position { get; set; }
+        public T newItem { get; set; }
+        public T oldItem { get; set; }
+        public IReadOnlyList<T> oldData { get; set; }
+        public IReadOnlyList<T> newData { get; set; }
     }
     
     /*
@@ -39,9 +41,9 @@ namespace ZergRush.ReactiveCore
           Main usecase is presentation of some collections of data in tables.
      */
 
-    public interface IReactiveCollection<T> : IReadOnlyList<T>
+    public interface IReactiveCollection<out T> : IReadOnlyList<T>
     {
-        IEventStream<ReactiveCollectionEvent<T>> update { get; }
+        IEventStream<IReactiveCollectionEvent<T>> update { get; }
     }
 
     [DebuggerDisplay("{this.ToString()}")]
@@ -67,7 +69,7 @@ namespace ZergRush.ReactiveCore
             this.data.AddRange(list);
         }
 
-        public IEventStream<ReactiveCollectionEvent<T>> update
+        public IEventStream<IReactiveCollectionEvent<T>> update
         {
             get { return up ?? (up = new EventStream<ReactiveCollectionEvent<T>>()); }
         }
@@ -338,13 +340,13 @@ namespace ZergRush.ReactiveCore
             return GetEnumerator();
         }
 
-        IEventStream<ReactiveCollectionEvent<T>> updateWrapp;
+        IEventStream<IReactiveCollectionEvent<T>> updateWrapp;
 
-        public IEventStream<ReactiveCollectionEvent<T>> update
+        public IEventStream<IReactiveCollectionEvent<T>> update
         {
             get
             {
-                return updateWrapp ?? (updateWrapp = new AnonymousEventStream<ReactiveCollectionEvent<T>>(act =>
+                return updateWrapp ??= new AnonymousEventStream<IReactiveCollectionEvent<T>>(act =>
                 {
                     OnConnect();
                     var connection = buffer.update.Subscribe(act);
@@ -353,7 +355,7 @@ namespace ZergRush.ReactiveCore
                         connection.Dispose();
                         OnDisconnect();
                     });
-                }));
+                });
             }
         }
 
@@ -455,9 +457,9 @@ namespace ZergRush.ReactiveCore
             yield return value;
         }
 
-        public IEventStream<ReactiveCollectionEvent<T>> update
+        public IEventStream<IReactiveCollectionEvent<T>> update
         {
-            get { return up ?? (up = new EventStream<ReactiveCollectionEvent<T>>()); }
+            get { return up ??= new EventStream<ReactiveCollectionEvent<T>>(); }
         }
 
         public List<T> current { get {return new List<T>{value};} }
@@ -560,7 +562,7 @@ namespace ZergRush.ReactiveCore
             yield return value;
         }
 
-        public IEventStream<ReactiveCollectionEvent<T>> update
+        public IEventStream<IReactiveCollectionEvent<T>> update
         {
             get { return up ?? (up = new EventStream<ReactiveCollectionEvent<T>>()); }
         }
@@ -593,7 +595,7 @@ namespace ZergRush.ReactiveCore
             return GetEnumerator();
         }
 
-        public IEventStream<ReactiveCollectionEvent<T>> update
+        public IEventStream<IReactiveCollectionEvent<T>> update
         {
             get { return AbandonedStream<ReactiveCollectionEvent<T>>.value; }
         }
@@ -800,11 +802,6 @@ namespace ZergRush.ReactiveCore
             return new ReactiveCollectionFromCellOfArray<T>{cell = cell};    
         }
         
-        public static IReactiveCollection<T> ToReactiveCollection<T>(this IReactiveCollection<Cell<T>> coll)
-        {
-            return coll.Map(c => (ICell<T>) c).ToReactiveCollection();
-        }
-        
         public static IReactiveCollection<T> ToReactiveCollection<T>(this IReactiveCollection<ICell<T>> coll)
         {
             return new ReactiveCollectionCellJoin<T>{coll = coll};    
@@ -842,7 +839,7 @@ namespace ZergRush.ReactiveCore
 
             int countFirst => collection.Count;
 
-            void Process(ReactiveCollectionEvent<T> e)
+            void Process(IReactiveCollectionEvent<T> e)
             {
                 switch (e.type)
                 {
@@ -867,7 +864,7 @@ namespace ZergRush.ReactiveCore
                         throw new ArgumentOutOfRangeException();
                 }
             }
-            void Process2(ReactiveCollectionEvent<T> e)
+            void Process2(IReactiveCollectionEvent<T> e)
             {
                 switch (e.type)
                 {
@@ -957,7 +954,7 @@ namespace ZergRush.ReactiveCore
                 return GetEnumerator();
             }
 
-            public IEventStream<ReactiveCollectionEvent<T>> update
+            public IEventStream<IReactiveCollectionEvent<T>> update
             {
                 get
                 {
@@ -988,7 +985,7 @@ namespace ZergRush.ReactiveCore
                 this.mapFunc = mapFunc;
             }
 
-            void Process(ReactiveCollectionEvent<T> e)
+            void Process(IReactiveCollectionEvent<T> e)
             {
                 switch (e.type)
                 {
@@ -1153,7 +1150,7 @@ namespace ZergRush.ReactiveCore
                 buffer.RemoveAt(oldIndex);
             }
 
-            void Process(ReactiveCollectionEvent<T> e)
+            void Process(IReactiveCollectionEvent<T> e)
             {
                 switch (e.type)
                 {
@@ -1247,7 +1244,7 @@ namespace ZergRush.ReactiveCore
                 buffer.Reset(newList.Select(l => l.value));
             }
 
-            void Process(ReactiveCollectionEvent<ICell<T>> e)
+            void Process(IReactiveCollectionEvent<ICell<T>> e)
             {
                 switch (e.type)
                 {
@@ -1330,7 +1327,7 @@ namespace ZergRush.ReactiveCore
                 buffer.RemoveAt(oldIndex);
             }
 
-            void Process(ReactiveCollectionEvent<T> e)
+            void Process(IReactiveCollectionEvent<T> e)
             {
                 switch (e.type)
                 {

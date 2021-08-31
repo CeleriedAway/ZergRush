@@ -300,7 +300,7 @@ namespace ZergRush.ReactiveCore
             return list.update.Subscribe(_ => action(list));
         }
         
-        public static IDisposable BindCollection<T>(this IReactiveCollection<T> list, Action<ReactiveCollectionEvent<T>> action)
+        public static IDisposable BindCollection<T>(this IReactiveCollection<T> list, Action<IReactiveCollectionEvent<T>> action)
         {
             action(new ReactiveCollectionEvent<T>{type = ReactiveCollectionEventType.Reset, newData = list});
             return list.update.Subscribe(action);
