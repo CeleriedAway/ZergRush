@@ -1,6 +1,6 @@
 {
   "name": "com.celeriedaway.zergrush",
-  "version": "0.9.1",
+  "version": "0.9.2",
   "displayName": "Zerg Rush",
   "description": "Reactive library and code generation tools",
   "unity": "2019.1",

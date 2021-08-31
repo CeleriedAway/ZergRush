@@ -15,14 +15,19 @@ namespace ZergRush.ReactiveCore
         Set,
     }
 
-    public class ReactiveCollectionEvent
+    interface IReactiveCollectionEvent<out T>
+    {
+        public T newItem { get; }
+        public T oldItem { get; }
+        public IReadOnlyList<T> oldData { get; }
+        public IReadOnlyList<T> newData { get; }
+    }
+
+    public class ReactiveCollectionEvent<T>
     {
         public ReactiveCollectionEventType type;
         public int position;
-    }
-
-    public class ReactiveCollectionEvent<T> : ReactiveCollectionEvent
-    {
+        
         public T newItem;
         public T oldItem;
         public IReadOnlyList<T> oldData;
@@ -304,8 +309,6 @@ namespace ZergRush.ReactiveCore
                 ClearBuffer();
             }
         }
-
-        protected virtual void StopListen() {}
 
         void ClearBuffer()
         {
@@ -796,6 +799,16 @@ namespace ZergRush.ReactiveCore
         {
             return new ReactiveCollectionFromCellOfArray<T>{cell = cell};    
         }
+        
+        public static IReactiveCollection<T> ToReactiveCollection<T>(this IReactiveCollection<Cell<T>> coll)
+        {
+            return coll.Map(c => (ICell<T>) c).ToReactiveCollection();
+        }
+        
+        public static IReactiveCollection<T> ToReactiveCollection<T>(this IReactiveCollection<ICell<T>> coll)
+        {
+            return new ReactiveCollectionCellJoin<T>{coll = coll};    
+        }
 
         /// <summary>
         /// TODO: Refactor this. Slow, but written fast.
@@ -1189,6 +1202,92 @@ namespace ZergRush.ReactiveCore
             }
         }
         
+        class ReactiveCollectionCellJoin<T> : AbstractCollectionTransform<T>
+        {
+            public IReactiveCollection<ICell<T>> coll;
+
+            Connections connetions = new Connections();
+            
+            void Insert(int realIndex, ICell<T> item)
+            {
+                buffer.Insert(realIndex, item.value);
+                connetions.Insert(realIndex, item.ListenUpdates(val =>
+                {
+                    buffer[coll.IndexOf(item)] = val;
+                }));
+            }
+
+            void Remove(int realIndex)
+            {
+                connetions.TakeAt(realIndex).Dispose();
+                buffer.RemoveAt(realIndex);
+            }
+            
+            void Set(int realIndex, ICell<T> item)
+            {
+                connetions[realIndex].Dispose();
+                connetions[realIndex] = item.ListenUpdates(val =>
+                {
+                    buffer[coll.IndexOf(item)] = val;
+                });
+                buffer[realIndex] = item.value;
+            }
+
+            void ProperRefill(IReadOnlyList<ICell<T>> newList)
+            {
+                connetions.DisconnectAll();
+                for (int i = 0; i < newList.Count; i++)
+                {
+                    var cell = newList[i];
+                    connetions.Add(cell.ListenUpdates(val =>
+                    {
+                        buffer[coll.IndexOf(cell)] = val;
+                    }));
+                }
+                buffer.Reset(newList.Select(l => l.value));
+            }
+
+            void Process(ReactiveCollectionEvent<ICell<T>> e)
+            {
+                switch (e.type)
+                {
+                    case ReactiveCollectionEventType.Reset:
+                        ProperRefill(e.newData);
+                        break;
+                    case ReactiveCollectionEventType.Insert:
+                        Insert(e.position, e.newItem);
+                        break;
+                    case ReactiveCollectionEventType.Remove:
+                        Remove(e.position);
+                        break;
+                    case ReactiveCollectionEventType.Set:
+                        Set(e.position, e.newItem);
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+            }
+
+            protected override IDisposable StartListenAndRefill()
+            {
+                ProperRefill(coll);
+                return new DoubleDisposable
+                {
+                    first = connetions,
+                    second = coll.update.Subscribe(Process)
+                };
+            }
+
+            protected override void RefillRaw()
+            {
+                buffer.Clear();
+                foreach (var cell in coll)
+                {
+                    buffer.Add(cell.value);
+                }
+            }
+        }
+        
         [DebuggerDisplay("{this.ToString()}")]
         public class FilteredCollection<T> : AbstractCollectionTransform<T>
         {
@@ -1280,7 +1379,8 @@ namespace ZergRush.ReactiveCore
                 buffer.Reset(collection.Where(predicate));
             }
         }
-        
+
+
         class ReactiveCollectionFromCellOfArray<T> : AbstractCollectionTransform<T>
         {
             public ICell<IEnumerable<T>> cell;
