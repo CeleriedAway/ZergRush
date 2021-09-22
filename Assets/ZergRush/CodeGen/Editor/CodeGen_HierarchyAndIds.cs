@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Reflection;
-using CodeGen;
 using UnityEngine;
 using ZergRush.Alive;
 using ZergRush.CodeGen;
@@ -77,6 +76,7 @@ namespace ZergRush.CodeGen
             
             type.ProcessMembers(GenTaskFlags.OwnershipHierarchy, false, info =>
             {
+                if (info.justData) return;
                 if (info.type.IsRootNeededEvent())
                 {
                     setupHierarchy.content($"{info.access}.root = root;");

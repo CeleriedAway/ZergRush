@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using ZergRush.Alive;
-using CodeGen;
 using ZergRush.CodeGen;
 
 namespace ZergRush.CodeGen

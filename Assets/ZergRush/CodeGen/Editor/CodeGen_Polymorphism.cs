@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using ZergRush.Alive;
-using CodeGen;
 using ZergRush.CodeGen;
 
 namespace ZergRush.CodeGen

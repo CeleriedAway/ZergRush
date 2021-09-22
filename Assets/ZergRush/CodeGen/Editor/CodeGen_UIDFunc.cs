@@ -1,6 +1,5 @@
 using System;
 using System.Linq;
-using CodeGen;
 using ZergRush.CodeGen;
 
 namespace ZergRush.CodeGen

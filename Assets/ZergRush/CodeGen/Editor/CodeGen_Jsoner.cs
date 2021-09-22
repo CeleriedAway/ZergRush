@@ -1,6 +1,5 @@
 ﻿using System;
 using ZergRush.Alive;
-using CodeGen;
 using Newtonsoft.Json;
 using ZergRush.CodeGen;
 

@@ -1,5 +1,4 @@
 ﻿using System;
-using CodeGen;
 using ZergRush.CodeGen;
 
 namespace ZergRush.CodeGen

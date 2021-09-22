@@ -5,7 +5,6 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using ZergRush.Alive;
-using CodeGen;
 using UnityEditor;
 using UnityEngine;
 using ZergRush.CodeGen;
