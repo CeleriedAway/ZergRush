@@ -440,48 +440,45 @@ namespace ZergRush.CodeGen
                 select f;
         }
     }
-}
+    
+    public class DataInfo
+    {
+        public Type carrierType;
+        public string name => baseAccess;
+        public string baseAccess;
+        public string accessPrefix;
+        public string access => (!string.IsNullOrEmpty(accessPrefix) ? accessPrefix + "." : "") + valueTransformer(baseAccess);
+        public string realAccess => (!string.IsNullOrEmpty(accessPrefix) ? accessPrefix + "." : "") + baseAccess;
+        public Type type;
+        public bool canBeNull;
+        public bool immutableData;
+        public GenTaskFlags ingoreFlags;
+        public bool isReadOnly;
+        public bool sureIsNull;
+        public bool isPrivate;
+        public bool cantBeAncestor;
+        public bool insideConfigStorage;
+        public bool justData;
+        public MemberInfo sharpMemberInfo;
+        public Type realType; // For cases we use value wrapper transformation.
 
-namespace CodeGen
-{
-        public class DataInfo
+        public object defaultValue;
+
+        public string pathName => string.IsNullOrEmpty(pathLog) ? $"\"{baseAccess}\"" : pathLog;
+        public string pathLog;
+
+        // needed for cells to access other cell with .value
+        public Func<string, string> valueTransformer = n => n;
+        public ZergRush.CodeGen.CodeGen.ValueVrapperType isValueWrapper = ZergRush.CodeGen.CodeGen.ValueVrapperType.None;
+
+        public static DataInfo WithTypeAndName(Type t, string name)
         {
-            public Type carrierType;
-            public string name => baseAccess;
-            public string baseAccess;
-            public string accessPrefix;
-            public string access => (!string.IsNullOrEmpty(accessPrefix) ? accessPrefix + "." : "") + valueTransformer(baseAccess);
-            public string realAccess => (!string.IsNullOrEmpty(accessPrefix) ? accessPrefix + "." : "") + baseAccess;
-            public Type type;
-            public bool canBeNull;
-            public bool immutableData;
-            public GenTaskFlags ingoreFlags;
-            public bool isReadOnly;
-            public bool sureIsNull;
-            public bool isPrivate;
-            public bool cantBeAncestor;
-            public bool insideConfigStorage;
-            public bool justData;
-            public MemberInfo sharpMemberInfo;
-            public Type realType; // For cases we use value wrapper transformation.
-
-            public object defaultValue;
-
-            public string pathName => string.IsNullOrEmpty(pathLog) ? $"\"{baseAccess}\"" : pathLog;
-            public string pathLog;
-
-            // needed for cells to access other cell with .value
-            public Func<string, string> valueTransformer = n => n;
-            public ZergRush.CodeGen.CodeGen.ValueVrapperType isValueWrapper = ZergRush.CodeGen.CodeGen.ValueVrapperType.None;
-
-            public static DataInfo WithTypeAndName(Type t, string name)
-            {
-                return new DataInfo{type = t, baseAccess = name};
-            }
-
-            public override string ToString()
-            {
-                return $"{nameof(baseAccess)}: {baseAccess}, {nameof(type)}: {type}";
-            }
+            return new DataInfo{type = t, baseAccess = name};
         }
+
+        public override string ToString()
+        {
+            return $"{nameof(baseAccess)}: {baseAccess}, {nameof(type)}: {type}";
+        }
+    }
 }

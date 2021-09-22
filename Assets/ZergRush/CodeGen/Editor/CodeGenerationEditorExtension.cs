@@ -10,7 +10,7 @@ using UnityEngine.UI;
 using ZergRush;
 using ZergRush.ReactiveCore;
 
-namespace CodeGen
+namespace ZergRush.CodeGen
 {
     public static class CodeGenerationEditorExtension
     {

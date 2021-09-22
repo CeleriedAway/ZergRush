@@ -56,7 +56,7 @@ namespace ZergRush.CodeGen
                 needDictKeyTraverse = false,
                 interfaceType = null,
                 needMembersGenRequest = false,
-                memberPredicate = info => info.type.IsDataNode() || info.type.IsDataList() || info.type.IsLivableSlot(),
+                memberPredicate = info => !info.justData && (info.type.IsDataNode() || info.type.IsDataList() || info.type.IsLivableSlot()),
                 start = (sink, hasBaseCall) => {
                     if (type.HasAttribute<HasRefId>())
                     {
