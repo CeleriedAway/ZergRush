@@ -151,6 +151,14 @@ public class SimpleList<T> : IList<T>, IReadOnlyList<T>
         return Array.IndexOf<T>(data, item, 0, currentCount);
     }
 
+    public int IndexOf(Func<T, bool> predicate) {
+        for (int i = 0; i < currentCount; i++) {
+            if (predicate(data[i]))
+                return i;
+        }
+        return -1;
+    }
+
     public int IndexOf(T item, int index)
     {
         if (index > currentCount)

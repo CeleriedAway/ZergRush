@@ -368,7 +368,7 @@ namespace ZergRush.ReactiveCore
             return new MappedCell<T,T2>{cell = cell, map = map};
         }
         
-        public static ICell<T2> MapWithDefaultIfNull<T, T2>(this ICell<T> cell, Func<T, T2> map, T2 def) where T : class
+        public static ICell<T2> MapWithDefaultIfNull<T, T2>(this ICell<T> cell, Func<T, T2> map, T2 def = default) where T : class
         {
             return cell.Map(v => v == null ? def : map(v));
         }
@@ -790,6 +790,10 @@ namespace ZergRush.ReactiveCore
             return Merge(cell, cell2, cell3, cell4, cell5, Tuple.Create);
         }
 
+        public static ICell<Tuple<T, T2, T3, T4, T5, T6>> Merge<T, T2, T3, T4, T5, T6>(this ICell<T> cell, ICell<T2> cell2, ICell<T3> cell3, ICell<T4> cell4, ICell<T5> cell5, ICell<T6> cell6) {
+            return Merge(cell, cell2, cell3, cell4, cell5, cell6, Tuple.Create);
+        }
+
         // Merge two dynamic values in new dynamic value with transformation function.
         public static ICell<TRes> Merge<T1, T2, TRes>(this ICell<T1> cell1, ICell<T2> cell2, Func<T1, T2, TRes> func)
         {
@@ -842,6 +846,20 @@ namespace ZergRush.ReactiveCore
                 disp.Add(ListenUpdates(cell3, curr, disp, reaction));
                 disp.Add(ListenUpdates(cell4, curr, disp, reaction));
                 disp.Add(ListenUpdates(cell5, curr, disp, reaction));
+                return disp;
+            }, curr);
+        }
+        public static ICell<TRes> Merge<T1, T2, T3, T4, T5, T6, TRes>(this ICell<T1> cell1, ICell<T2> cell2, ICell<T3> cell3, ICell<T4> cell4, ICell<T5> cell5, ICell<T6> cell6, Func<T1, T2, T3, T4, T5, T6, TRes> func) {
+            Func<TRes> curr = () => func(cell1.value, cell2.value, cell3.value, cell4.value, cell5.value, cell6.value);
+            return new AnonymousCell<TRes>((Action<TRes> reaction) => {
+                var disp = new CellMergeMultipleDisposable<TRes>();
+                disp.lastValue = curr();
+                disp.Add(ListenUpdates(cell1, curr, disp, reaction));
+                disp.Add(ListenUpdates(cell2, curr, disp, reaction));
+                disp.Add(ListenUpdates(cell3, curr, disp, reaction));
+                disp.Add(ListenUpdates(cell4, curr, disp, reaction));
+                disp.Add(ListenUpdates(cell5, curr, disp, reaction));
+                disp.Add(ListenUpdates(cell6, curr, disp, reaction));
                 return disp;
             }, curr);
         }

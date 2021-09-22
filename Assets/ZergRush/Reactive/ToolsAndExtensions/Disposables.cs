@@ -128,6 +128,9 @@ namespace ZergRush
         {
         }
 
+        public Connections(IDisposable connection)
+            => Add(connection);
+
         public IDisposable addConnection
         {
             set => Add(value);
