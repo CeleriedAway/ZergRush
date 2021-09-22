@@ -17,13 +17,13 @@ namespace ZergRush.ReactiveCore
 
     public interface IReactiveCollectionEvent<out T>
     {
-        public ReactiveCollectionEventType type { get; }
-        public int position { get; }
+        ReactiveCollectionEventType type { get; }
+        int position { get; }
         
-        public T newItem { get; }
-        public T oldItem { get; }
-        public IReadOnlyList<T> oldData { get; }
-        public IReadOnlyList<T> newData { get; }
+        T newItem { get; }
+        T oldItem { get; }
+        IReadOnlyList<T> oldData { get; }
+        IReadOnlyList<T> newData { get; }
     }
 
     public sealed class ReactiveCollectionEvent<T> : IReactiveCollectionEvent<T>
@@ -346,7 +346,7 @@ namespace ZergRush.ReactiveCore
         {
             get
             {
-                return updateWrapp ??= new AnonymousEventStream<IReactiveCollectionEvent<T>>(act =>
+                return updateWrapp = updateWrapp ?? new AnonymousEventStream<IReactiveCollectionEvent<T>>(act =>
                 {
                     OnConnect();
                     var connection = buffer.update.Subscribe(act);
@@ -459,7 +459,7 @@ namespace ZergRush.ReactiveCore
 
         public IEventStream<IReactiveCollectionEvent<T>> update
         {
-            get { return up ??= new EventStream<ReactiveCollectionEvent<T>>(); }
+            get { return up = up ?? new EventStream<ReactiveCollectionEvent<T>>(); }
         }
 
         public List<T> current { get {return new List<T>{value};} }

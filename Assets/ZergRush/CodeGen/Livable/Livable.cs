@@ -19,7 +19,6 @@ namespace ZergRush.Alive
         [GenIgnore] List<Connection> fastConnections;
         [GenIgnore] List<Action> normalConnections;
 
-
         public void DisconnectAll()
         {
             if (fastConnections != null)

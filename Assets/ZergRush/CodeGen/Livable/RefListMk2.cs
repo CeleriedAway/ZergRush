@@ -114,7 +114,7 @@ namespace ZergRush.Alive
 
         public IEventStream<IReactiveCollectionEvent<T>> update
         {
-            get { return up ??= new EventStream<ReactiveCollectionEvent<T>>(); }
+            get { return up = up ?? new EventStream<ReactiveCollectionEvent<T>>(); }
         }
 
         public bool Contains(T item)
