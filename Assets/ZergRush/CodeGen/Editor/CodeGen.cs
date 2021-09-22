@@ -255,17 +255,18 @@ namespace ZergRush.CodeGen
                 genDir.Create();
             }
 
-            bool IsGameType(Type t)
-            {
-                var typeNamespace = t.Namespace;
-                var inProject = typeNamespace != null && (
-                    typeNamespace.StartsWith("TWL") || typeNamespace.StartsWith("Game") ||
-                    typeNamespace.StartsWith("Zerg"));
-                return inProject;
-            }
+            // TODO add namespace customization for more performance 
+            // bool IsGameType(Type t)
+            // {
+            //     var typeNamespace = t.Namespace;
+            //     var inProject = typeNamespace != null && (
+            //         typeNamespace.StartsWith("TWL") || typeNamespace.StartsWith("Game") ||
+            //         typeNamespace.StartsWith("Zerg"));
+            //     return inProject;
+            // }
             
             var assemblies = AppDomain.CurrentDomain.GetAssemblies().Where(a => a.FullName.StartsWith("Assembly-CSharp") || a.FullName.StartsWith("ZergRush") || a.FullName.StartsWith("CodeGen")).ToList();
-            var typesEnumerable = assemblies.SelectMany(assembly => assembly.GetTypes().Where(IsGameType));
+            var typesEnumerable = assemblies.SelectMany(assembly => assembly.GetTypes());
 
             allTypesInAssemblies.Clear();
             allTypesInAssemblies.AddRange(typesEnumerable.ToList());
