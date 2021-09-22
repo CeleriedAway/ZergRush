@@ -137,13 +137,6 @@ namespace ZergRush.ReactiveCore
         IDisposable Subscribe(Action action);
     }
 
-    public static class IEventStreamExtensions {
-        public static IDisposable Bind(this IEventStream stream, Action reaction) {
-            reaction?.Invoke();
-            return stream.Subscribe(reaction);
-        }
-    }
-
     /// <summary>
     /// 
     /// </summary>
