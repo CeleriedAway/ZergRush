@@ -117,9 +117,6 @@ namespace ZergRush.ReactiveCore
         {
             return data.IndexOf(item);
         }
-		
-		 public int IndexOf(Func<T, bool> predicate)
-            => data.IndexOf(predicate);
 
         public void Insert(int index, T item)
         {
@@ -772,24 +769,24 @@ namespace ZergRush.ReactiveCore
             });
         }
 
-        public static ICell<T> AtIndex<T>(this IReactiveCollection<T> collection, int index)
+        public static ICell<T> AtIndex<T>(this IReactiveCollection<T> collection, int index, T ifNoElement = default)
         {
             return new AnonymousCell<T>(action =>
             {
                 return collection.AsCell().ListenUpdates(coll =>
                 {
-                    action(coll.Count > index ? coll[index] : default(T));
+                    action(coll.Count > index ? coll[index] : ifNoElement);
                 });
             }, () =>
             {
                 var coll = collection;
-                return coll.Count > index ? coll[index] : default(T);
+                return coll.Count > index ? coll[index] : ifNoElement;
             });
         }
         
-        public static ICell<T> AtIndex<T>(this IReactiveCollection<T> collection, ICell<int> index)
+        public static ICell<T> AtIndex<T>(this IReactiveCollection<T> collection, ICell<int> index, T ifNoElement = default)
         {
-            return index.FlatMap(collection.AtIndex);
+            return index.FlatMap(v => collection.AtIndex(v, ifNoElement));
         }
 
         public static ICell<IReadOnlyList<T>> AsCell<T>(this IReactiveCollection<T> collection)
@@ -1300,15 +1297,14 @@ namespace ZergRush.ReactiveCore
                 this.sorter = predicate;
             }
 
-            void Insert(int realIndex, T item)
+            void Insert(T item)
             {
                 buffer.InsertSorted(sorter, item);
             }
 
-            void Remove(int realIndex)
+            void Remove(T oldItem)
             {
-                var item = collection[realIndex];
-                buffer.Remove(item);
+                buffer.Remove(oldItem);
             }
 
             void Process(IReactiveCollectionEvent<T> e)
@@ -1319,15 +1315,15 @@ namespace ZergRush.ReactiveCore
                         RefillRaw();
                         break;
                     case ReactiveCollectionEventType.Insert:
-                        Insert(e.position, e.newItem);
+                        Insert(e.newItem);
                         break;
                     case ReactiveCollectionEventType.Remove:
-                        Remove(e.position);
+                        Remove(e.oldItem);
                         break;
                     case ReactiveCollectionEventType.Set:
                         //TODO make proper set event resolve if needed
-                        Remove(e.position); 
-                        Insert(e.position, e.newItem);
+                        Remove(e.oldItem); 
+                        Insert(e.newItem);
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();

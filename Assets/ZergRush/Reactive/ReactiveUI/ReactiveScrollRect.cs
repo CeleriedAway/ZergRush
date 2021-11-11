@@ -1,6 +1,4 @@
-﻿#if UNITY_5_3_OR_NEWER
-
-using System;
+﻿using System;
 using UnityEngine;
 using UnityEngine.UI;
 using ZergRush.ReactiveCore;
@@ -26,4 +24,3 @@ public class ReactiveScrollRect : MonoBehaviour
 	}
 }
 	
-#endif

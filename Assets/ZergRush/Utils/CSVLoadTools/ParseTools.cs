@@ -75,6 +75,11 @@ public static class ParseTools
         return Mathf.RoundToInt(float.Parse(str, CultureInfo.InvariantCulture) * 100);
     }
 
+    public static float ParseFloat(this string str)
+    {
+        if (string.IsNullOrEmpty(str)) return 0;
+        return float.TryParse(str, out var i) ? i : 0;
+    }
     public static int ParseInt(this string str)
     {
         if (string.IsNullOrEmpty(str)) return 0;

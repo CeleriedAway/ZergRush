@@ -1,6 +1,4 @@
-﻿#if UNITY_5_3_OR_NEWER
-
-using System;
+﻿using System;
 using UnityEngine;
 using UnityEngine.UI;
 using ZergRush.ReactiveCore;
@@ -92,4 +90,3 @@ namespace ZergRush.ReactiveUI
         public IEventStream needRecalcVisibility { get { return rect.scrollPos.updates; } }
     }
 }
-#endif
