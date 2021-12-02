@@ -29,7 +29,9 @@ namespace ZergRush.CodeGen
         public static bool IsDictionary(this Type t)
         {
 	        return
-		        t.IsGenericType && t.GetGenericTypeDefinition() == typeof(Dictionary<,>);
+		        t.IsGenericType && (
+			        t.GetGenericTypeDefinition() == typeof(Dictionary<,>) || 
+					t.GetGenericTypeDefinition() == typeof(ConfigStorageDict<,>));
         }
 
 		public static bool IsCollection(this Type t)

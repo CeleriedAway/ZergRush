@@ -244,9 +244,11 @@ namespace ZergRush.CodeGen
                     {type = valType, baseAccess = $"val", sureIsNull = true, insideConfigStorage = configStorage},
                 stream,
                 pooled);
-            if (configStorage)
-                sink.content($"{path}.Add(val);"); // ConfigStorageDict must use id as a key.
-            else
+            
+            // Currently dict is just a dict with custom argument
+            // if (configStorage)
+            //     sink.content($"{path}.Add(val);"); // ConfigStorageDict must use id as a key.
+            // else
                 sink.content($"{path}.Add(key, val);");
             sink.indent--;
             sink.content($"}}");

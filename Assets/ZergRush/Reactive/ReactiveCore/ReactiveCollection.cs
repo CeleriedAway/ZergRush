@@ -1108,27 +1108,25 @@ namespace ZergRush.ReactiveCore
                     }
                 }
 
-                void InsertInner()
+                var passCell = predicate(item);
+                if (passCell.value)
                 {
                     var i = realIndexes.UpperBound(realIndex);
                     realIndexes.Insert(i, realIndex);
                     buffer.Insert(i, item);
                 }
 
-                var passCell = predicate(item);
-                if (passCell.value)
-                {
-                    InsertInner();
-                }
-
                 connetions.Insert(realIndex, passCell.ListenUpdates(pass => {
                     if (pass)
                     {
-                        InsertInner();
+                        var realIndex = collection.IndexOf(item);
+                        var i = realIndexes.UpperBound(realIndex);
+                        realIndexes.Insert(i, realIndex);
+                        buffer.Insert(i, item);
                     }
                     else
                     {
-                        var i = realIndexes.IndexOf(realIndex);
+                        var i = buffer.IndexOf(item);
                         if (i == -1) throw new ZergRushException("this real index must be here");
                         realIndexes.RemoveAt(i);
                         buffer.RemoveAt(i);

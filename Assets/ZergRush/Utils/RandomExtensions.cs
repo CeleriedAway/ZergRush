@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 
 namespace ZergRush
 {
@@ -127,6 +128,12 @@ namespace ZergRush
         }
         public static T RandomWeightedElement<T>(this List<T> elements, Func<T, int> weightFunc, ZergRandom random, out int index)
         {
+            if (elements.Count == 0)
+            {
+                Debug.LogError("random with zero element count");
+                index = -1;
+                return default;
+            }
             if (elements.Count == 1)
             {
                 index = 0;
