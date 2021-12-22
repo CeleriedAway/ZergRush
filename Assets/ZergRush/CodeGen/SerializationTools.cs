@@ -271,6 +271,11 @@ public static class SerializationTools
         return true;
     }
 
+    public static void ReadSkipComments(this JsonTextReader reader)
+    {
+        while (reader.Read() && reader.TokenType == JsonToken.Comment) {}
+    }
+
     public static void WriteJson(this IJsonSerializable obj, JsonTextWriter writer)
     {
         writer.WriteStartObject();

@@ -291,7 +291,7 @@ namespace ZergRush.CodeGen
                     sinkReader.content($"reader.Read();"); // val prop name
                     sinkReader.content($"reader.Read();"); // val content
                     ReadJsonValueStatement(sinkReader, new DataInfo{type = valType, carrierType = type, baseAccess = $"val", insideConfigStorage = type.IsConfigStorage(), sureIsNull = true}, true);
-                    sinkReader.content($"reader.Read();"); // end keyval obj
+                    sinkReader.content($"reader.ReadSkipComments();"); // end keyval obj
                     sinkReader.content($"{accessPrefix}.Add(key, val);");
                 sinkReader.closeBrace();
             }
