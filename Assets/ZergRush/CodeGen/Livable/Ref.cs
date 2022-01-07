@@ -8,7 +8,7 @@ namespace ZergRush.Alive
 {
     [GenInLocalFolder, GenTask(GenTaskFlags.CompareChech), GenTaskCustomImpl(GenTaskFlags.PooledUpdateFrom | GenTaskFlags.JsonSerialization | GenTaskFlags.DefaultConstructor)]
     public sealed partial class Ref<T> : DataNode, ICell<T>, IConnectable
-        where T : class, IReferencableFromDataRoot
+        where T : class, IReferencableFromDataRoot, IDataNode
     {
         int __id;
         int _id
@@ -78,6 +78,10 @@ namespace ZergRush.Alive
                 else if (_id != cachedVal.Id)
                 {
                     cachedVal = null;
+                }
+                else if (cachedVal.IsInHierarchy == false)
+                {
+                    return null;
                 }
 
                 //Debug.Log($"returning cached {cachedVal}");

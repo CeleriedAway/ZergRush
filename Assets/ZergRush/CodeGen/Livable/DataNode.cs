@@ -94,5 +94,6 @@ namespace ZergRush.Alive
     public interface IDataNode
     {
         IEventStream destroyEvent { get; }
+        bool IsInHierarchy { get; }
     }
 }

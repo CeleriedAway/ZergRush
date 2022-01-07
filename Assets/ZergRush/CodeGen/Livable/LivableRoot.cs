@@ -49,10 +49,5 @@ namespace ZergRush.Alive
 
         }
     }
-    
-    public interface IDataRootWithStep
-    {
-        int step { get; }
-    }
 }
 

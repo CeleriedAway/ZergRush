@@ -164,6 +164,17 @@ namespace ZergRush
                 UnityEngine.Debug.LogError("this connection not found");
             }
         }
+        
+        public void RemoveAndDisposeConnectionAt(int index)
+        {
+            if (index >= Count)
+            {
+                throw new ZergRushException($"dispose connection index:{index} is out of range, count:{Count}");
+            }
+            var item = this[index];
+            item.Dispose();
+            RemoveAt(index);
+        }
 
         public virtual void Dispose()
         {

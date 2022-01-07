@@ -650,6 +650,22 @@ namespace ZergRush.ReactiveCore
         {
             return collection.AsCell().Map(c => c.Contains(item));
         }
+        public static ICell<bool> AnyReactive<T>(this IReactiveCollection<T> collection,
+            Func<T, bool> item)
+        {
+            return collection.AsCell().Map(c => c.Any(item));
+        }
+        
+        public static ICell<T> FindReactive<T>(this IReactiveCollection<T> collection,
+            Func<T, bool> item)
+        {
+            return collection.AsCell().Map(c => c.Find(item));
+        }
+        
+        public static ICell<T2> FindCastReactive<T, T2>(this IReactiveCollection<T> collection) where T2 : class
+        {
+            return collection.AsCell().Map(c => c.FindCast<T, T2>());
+        }
 
         public static IReactiveCollection<T> Filter<T>(this IReactiveCollection<T> collection,
             Func<T, bool> predicate)
@@ -820,6 +836,11 @@ namespace ZergRush.ReactiveCore
             return new JoinCellOfCollection<T> {cellOfCollection = cellOfCollection};
         }
         
+        public static IReactiveCollection<T> Join<T>(this IReactiveCollection<IReactiveCollection<T>> collectionOfCollection)
+        {
+            return new JoinCollectionOfCollection<T> {collection = collectionOfCollection};
+        }
+        
         public static IReactiveCollection<T> EnumerateRange<T>(this ICell<int> cellOfElemCount, Func<int, T> fill)
         {
             return new ReactiveRange<T> {fill = fill, cellOfCount = cellOfElemCount};
@@ -924,10 +945,6 @@ namespace ZergRush.ReactiveCore
             protected override void RefillRaw()
             {
                 FillBuffer(cellOfCount.value);
-//                for (int i = 0; i < cellOfCount.value; i++)
-//                {
-//                    buffer.Add(fill(i));
-//                }
             }
 
             void FillBuffer(int i)
@@ -939,6 +956,115 @@ namespace ZergRush.ReactiveCore
                 }
             }
 
+        }
+
+        class JoinCollectionOfCollection<T> : AbstractCollectionTransform<T>
+        {
+            public IReactiveCollection<IReactiveCollection<T>> collection;
+            public Connections collectionConnections = new Connections();
+            public DoubleDisposable allConnections = new DoubleDisposable();
+            protected override IDisposable StartListenAndRefill()
+            {
+                void OnRemove(IReactiveCollectionEvent<IReactiveCollection<T>> reactiveCollectionEvent1)
+                {
+                    collectionConnections.RemoveAndDisposeConnectionAt(reactiveCollectionEvent1.position);
+                    var removeStartIndex = FinalStartIndex(reactiveCollectionEvent1.position);
+                    for (int i = 0; i < reactiveCollectionEvent1.oldItem.Count; i++)
+                    {
+                        buffer.RemoveAt(removeStartIndex);
+                    }
+                }
+
+                void OnInsert(IReactiveCollectionEvent<IReactiveCollection<T>> reactiveCollectionEvent)
+                {
+                    var index = FinalStartIndex(reactiveCollectionEvent.position);
+                    var newItemCount = reactiveCollectionEvent.newItem.Count;
+                    for (int i = 0; i < newItemCount; i++)
+                    {
+                        buffer.Insert(i + index, reactiveCollectionEvent.newItem[i]);
+                    }
+                    SubscribeCollection(reactiveCollectionEvent.newItem, reactiveCollectionEvent.position);
+                }
+                allConnections.first = collectionConnections;
+                allConnections.second = collection.BindCollection(e =>
+                {
+
+                    switch (e.type)
+                    {
+                        case ReactiveCollectionEventType.Reset:
+                            RefillRaw();
+                            collectionConnections.DisconnectAll();
+                            for (int i = 0; i < e.newData.Count; i++)
+                            {
+                                SubscribeCollection(e.newData[i], i);
+                            }
+                            break;
+                        case ReactiveCollectionEventType.Insert:
+                            OnInsert(e);
+                            break;
+                        case ReactiveCollectionEventType.Remove:
+                            OnRemove(e);
+                            break;
+                        case ReactiveCollectionEventType.Set:
+                            OnRemove(e);
+                            OnInsert(e);
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }
+                });
+                return allConnections;
+            }
+
+            int FinalStartIndex(int collectionIndex)
+            {
+                var index = 0;
+                for (int j = 0; j < collectionIndex; j++)
+                {
+                    index += collection[j].Count;
+                }
+                return index;
+            }
+
+            void SubscribeCollection(IReactiveCollection<T> coll, int index)
+            {
+                var disWrap = new SingleDisposable();
+                disWrap.Disposable = coll.update.Subscribe(e =>
+                {
+                    int innerStartIndex = FinalStartIndex(collectionConnections.IndexOf(disWrap));
+                    switch (e.type)
+                    {
+                        case ReactiveCollectionEventType.Reset:
+                            for (int i = 0; i < e.oldData.Count; i++)
+                            {
+                                buffer.RemoveAt(innerStartIndex);
+                            }
+                            for (int i = 0; i < e.newData.Count; i++)
+                            {
+                                buffer.Insert(i + innerStartIndex, e.newData[i]);
+                            }
+                            break;
+                        case ReactiveCollectionEventType.Insert:
+                            buffer.Insert(innerStartIndex + e.position, e.newItem);
+                            break;
+                        case ReactiveCollectionEventType.Remove:
+                            buffer.RemoveAt(innerStartIndex + e.position);
+                            break;
+                        case ReactiveCollectionEventType.Set:
+                            buffer[innerStartIndex + e.position] = e.newItem;
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }
+                });
+                    
+                collectionConnections.Insert(index, disWrap); 
+            }
+
+            protected override void RefillRaw()
+            {
+                buffer.Reset(collection.SelectMany(c => c));
+            }
         }
 
         class JoinCellOfCollection<T> : IReactiveCollection<T>

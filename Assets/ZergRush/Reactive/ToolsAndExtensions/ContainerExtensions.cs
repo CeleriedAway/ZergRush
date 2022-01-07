@@ -474,7 +474,7 @@ namespace ZergRush
             }
         }
 
-        public static void Resize<T>(this List<T> list, int count) where T : new()
+        public static void Resize<T>(this IList<T> list, int count) where T : new()
         {
             while (list.Count > count)
             {
