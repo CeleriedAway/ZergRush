@@ -68,7 +68,7 @@ public interface IPooledUpdatableFrom<T>
     void UpdateFrom(T val, ObjectPool pool);
 }
 
-public interface ICompareChechable<T>
+public interface ICompareChechable<in T>
 {
     void CompareCheck(T t, Stack<string> path);
 }
@@ -580,6 +580,24 @@ public static class SerializationTools
 
         c.CompareCheck(c2, new Stack<string>());
     }
+    
+    public static bool LoadFromBinary<T>(this T t, byte [] content)
+        where T : ISerializable
+    {
+        try
+        {
+            using (var reader = new MemoryStream(content))
+            {
+                t.Deserialize(new BinaryReader(reader));
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"Failed to load binary with error :{e.Message} call stack=\n{e.StackTrace}");
+            return false;
+        }
+        return true;
+    }
 
     public static T LoadFromBinary<T>(this byte[] content, Func<T> defaultIfLoadFailed = null)
         where T : ISerializable, new()
@@ -624,6 +642,23 @@ public static class SerializationTools
         }
     }
 
+    public static bool LoadFromBinaryFile<T>(this T data, string path) where T : ISerializable
+    {
+        try
+        {
+            using (var file = FileWrapper.Open(path, FileMode.Open))
+            {
+                data.Deserialize(new BinaryReader(file));
+                if (data is ILivable livable) livable.Enlive();
+            }
+            return true;
+        }
+        catch (Exception e)
+        {
+            UnityEngine.Debug.Log($"Failed to load {typeof(T)} from path: " + path + e.ToError());
+            return false;
+        }
+    }
     public static bool LoadFromBinaryFile<T>(string path, out T data) where T : ISerializable, new()
     {
         data = new T();
@@ -693,7 +728,7 @@ public static class SerializationTools
     }
 
 
-    public static void ReadFromJsonFile<T>(string filePath, T data) where T : class, IJsonSerializable, new()
+    public static bool ReadFromJsonFile<T>(string filePath, T data) where T : class, IJsonSerializable
     {
         try
         {
@@ -707,7 +742,9 @@ public static class SerializationTools
         {
             Debug.Log($"Failed to load {typeof(T)} from file: " + filePath);
             Debug.Log(e.ToString());
+            return false;
         }
+        return true;
     }
 
     public static T ReadFromFile<T>(string filePath, bool wrapPath, T instance = null)
