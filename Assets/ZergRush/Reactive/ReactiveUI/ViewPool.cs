@@ -175,7 +175,7 @@ namespace ZergRush.ReactiveUI
                     delay = Mathf.Max(delay, value);
                 }
             }
-            if (delay == 0)
+            if (delay == 0 || parent.gameObject.activeInHierarchy == false)
             {
                 Recycle(view);
                 return;
