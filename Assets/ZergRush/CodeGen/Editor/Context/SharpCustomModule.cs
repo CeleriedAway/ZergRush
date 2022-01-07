@@ -52,7 +52,7 @@ namespace ZergRush.CodeGen
 
         public override void Commit()
         {
-            string fileName = name + (string.IsNullOrEmpty(suffix) ? "" : $".{suffix}") + ".cs";
+            string fileName = name + (string.IsNullOrEmpty(suffix) ? "" : $".{suffix}") + extenssion;
             if (contentBuilder.Length == 0 && classes.Count(c => !c.Empty) == 0) return;
 
             StringBuilder result = new StringBuilder(2000);
@@ -60,9 +60,13 @@ namespace ZergRush.CodeGen
             if (definesAppended.Count > 0)
                 result.AppendLine($"#if {definesAppended.PrintCollection(" && ")}");
 
-            result.AppendLine("using System;");
-            result.AppendLine("using System.Collections.Generic;");
-            result.AppendLine("using System.Text;");
+            if (extenssion == ".cs")
+            {
+                result.AppendLine("using System;");
+                result.AppendLine("using System.Collections.Generic;");
+                result.AppendLine("using System.Text;");
+            }
+
             result.Append(usings);
             result.Append(contentBuilder);
             
@@ -73,7 +77,9 @@ namespace ZergRush.CodeGen
 
             if (!Directory.Exists(path)) Directory.CreateDirectory(path);
             var combine = Path.Combine(path, fileName);
-            File.WriteAllText(combine, GeneratorContext.PrepareToWrite(result.ToString()));
+
+            var fileText = GeneratorContext.PrepareToWrite(result.ToString());
+            File.WriteAllText(combine, fileText);
         }
     }
 }

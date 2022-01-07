@@ -16,13 +16,15 @@ namespace ZergRush.CodeGen
         public string name;
         public string path;
         public string suffix;
+        public string extenssion = ".cs";
+
         public abstract void Commit();
     }
 
     public class GeneratorContext
     {
         public int priority;
-        private string pathToSharp => context.sharpGenPath;
+        public string pathToSharp => context.sharpGenPath;
         List<CodeBuilder> builders = new List<CodeBuilder>();
         HashSet<string> builderFileNames = new HashSet<string>();
         private GenInfo context;

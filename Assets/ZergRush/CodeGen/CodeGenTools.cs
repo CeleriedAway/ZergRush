@@ -67,6 +67,7 @@ public static class CodeGenTools
         if (t == typeof(byte)) return "byte";
         if (t == typeof(sbyte)) return "sbyte";
         if (t == typeof(string)) return "string";
+        if (t == typeof(bool)) return "bool";
         if (Nullable.GetUnderlyingType(t) != null)
         {
             return RealName(Nullable.GetUnderlyingType(t)) + "?";

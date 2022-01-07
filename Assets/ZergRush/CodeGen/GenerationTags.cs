@@ -109,7 +109,7 @@ namespace ZergRush.CodeGen
     }
 }
 
-[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Enum, AllowMultiple = true)]
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Enum, AllowMultiple = false)]
 public class GenTargetFolder : Attribute
 {
     public int priority;
@@ -122,7 +122,7 @@ public class GenTargetFolder : Attribute
     }
 }
 
-[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Enum, AllowMultiple = true)]
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Enum, AllowMultiple = false)]
 public class GenDefaultFolder : GenTargetFolder
 {
     public GenDefaultFolder() : base(null)
@@ -130,7 +130,7 @@ public class GenDefaultFolder : GenTargetFolder
     }
 }
 
-[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Enum, AllowMultiple = true)]
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Enum, AllowMultiple = false)]
 public class GenInLocalFolder : GenTargetFolder
 {
     static string GetPath(string dir, string sourceFilePath = "")

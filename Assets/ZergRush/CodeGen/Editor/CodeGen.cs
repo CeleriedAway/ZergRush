@@ -3,11 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Reflection.Emit;
 using ZergRush.Alive;
 using UnityEditor;
 using UnityEngine;
-using ZergRush.CodeGen;
 
 namespace ZergRush.CodeGen
 {
@@ -89,9 +87,9 @@ namespace ZergRush.CodeGen
             return defaultContext;
         }
 
-        public static SharpClassBuilder GenClassSink(Type t)
+        public static SharpClassBuilder GenClassSink(Type t, GeneratorContext ctx = null)
         {
-            var context = GetContext(t);
+            var context = ctx ?? GetContext(t);
             if (t.IsControllable() == false && t != typeof(ObjectPool))
             {
                 return context.extensionSink;
@@ -236,11 +234,32 @@ namespace ZergRush.CodeGen
             
             return method;
         }
+        
+        public static GeneratorContext ProcessTypeContext(Type type)
+        {
+            if (type.HasAttribute<GenTargetFolder>())
+            {
+                var genTargetFolder = type.GetAttribute<GenTargetFolder>();
+                if (contexts.TryGetValue(genTargetFolder.folder, out var c) == false)
+                {
+                    var generatorContext = new GeneratorContext(new GenInfo{sharpGenPath = genTargetFolder.folder}, stubMode);
+                    generatorContext.priority = genTargetFolder.priority;
+                    contexts[genTargetFolder.folder] = generatorContext;
+                    customContextFolders.Add(genTargetFolder.folder);
+                    c = generatorContext;
+                }
+                contextsForTypes[type] = c;
+
+                return c;
+            }
+
+            return contexts[DefaultGenPath];
+        }
 
         static bool stubMode = false;
         
         // You shall not dare to try to unfuck this.
-        public static void Gen(bool stubs)
+        public static void Gen(HashSet<string> includeAssemblies, bool stubs)
         {
             if (EditorApplication.isCompiling)
             {
@@ -264,8 +283,8 @@ namespace ZergRush.CodeGen
             //         typeNamespace.StartsWith("Zerg"));
             //     return inProject;
             // }
-            
-            var assemblies = AppDomain.CurrentDomain.GetAssemblies().Where(a => a.FullName.StartsWith("Assembly-CSharp") || a.FullName.StartsWith("ZergRush") || a.FullName.StartsWith("CodeGen")).ToList();
+
+            var assemblies = AppDomain.CurrentDomain.GetAssemblies().Where(a => includeAssemblies.Contains(a.GetName().Name)).ToList();
             var typesEnumerable = assemblies.SelectMany(assembly => assembly.GetTypes());
 
             allTypesInAssemblies.Clear();
@@ -288,19 +307,7 @@ namespace ZergRush.CodeGen
 
             foreach (var type in allTypesInAssemblies)
             {
-                if (type.HasAttribute<GenTargetFolder>())
-                {
-                    var genTargetFolder = type.GetAttribute<GenTargetFolder>();
-                    if (contexts.TryGetValue(genTargetFolder.folder, out var c) == false)
-                    {
-                        var generatorContext = new GeneratorContext(new GenInfo{sharpGenPath = genTargetFolder.folder}, stubMode);
-                        generatorContext.priority = genTargetFolder.priority;
-                        contexts[genTargetFolder.folder] = generatorContext;
-                        customContextFolders.Add(genTargetFolder.folder);
-                        c = generatorContext;
-                    }
-                    contextsForTypes[type] = c;
-                }
+                ProcessTypeContext(type);
                 
                 foreach (var methodInfo in type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static))
                 {

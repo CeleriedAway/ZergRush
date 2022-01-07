@@ -67,7 +67,7 @@ namespace ZergRush.Alive {
             switch(__name)
             {
                 case "dead":
-                dead = (System.Boolean)reader.Value;
+                dead = (bool)reader.Value;
                 break;
                 case "staticConnections":
                 staticConnections.ReadFromJson(reader);

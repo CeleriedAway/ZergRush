@@ -1,35 +1,37 @@
-﻿using System;
-using System.CodeDom.Compiler;
-using System.Collections;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using UnityEditor;
+﻿using UnityEditor;
 using UnityEngine;
-using UnityEngine.UI;
-using ZergRush;
-using ZergRush.ReactiveCore;
+using System.Collections.Generic;
 
 namespace ZergRush.CodeGen
 {
     public static class CodeGenerationEditorExtension
     {
+        private static readonly HashSet<string> includeAssemblies = new HashSet<string>
+        {
+            "Assembly-CSharp",
+            "Assembly-CSharp-Editor",
+            "ZergRush",
+            "CodeGen",
+            "ClientServerShared",
+            "SharedCode"
+        };
+        
         [MenuItem("Code Gen/Run CodeGen #&c")]
         public static void GenCode()
         {
-            GenerateInner();
+            GenerateInner(includeAssemblies);
         }
         
         [MenuItem("Code Gen/Generate Stubs #&s")]
         public static void GenStubs()
         {
-            GenerateInner(onlyStubs: true);
+            GenerateInner(includeAssemblies, onlyStubs: true);
         }
 
-        static void GenerateInner(bool onlyStubs = false)
+        public static void GenerateInner(HashSet<string> assemblies, bool onlyStubs = false)
         {
             Debug.Log("GenCode called");
-            ZergRush.CodeGen.CodeGen.Gen(onlyStubs);
+            CodeGen.Gen(assemblies, onlyStubs);
         }
     }
 }

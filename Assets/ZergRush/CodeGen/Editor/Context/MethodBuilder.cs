@@ -8,6 +8,7 @@ public enum MethodType
     Instance,
     Extension,
     StaticFunction,
+    StaticExtern,
     Abstract,
     Virtual,
     Override
