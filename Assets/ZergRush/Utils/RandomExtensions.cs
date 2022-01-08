@@ -91,8 +91,13 @@ namespace ZergRush
         public static T RandomElement<T>(this ICollection<T> list, ZergRandom random)
         {
             if (list.Count < 1) return default(T);
-
             return list.ElementAt(random.Range(0, list.Count));
+        }
+        
+        public static T TakeRandom<T>(this IList<T> list, ZergRandom random)
+        {
+            if (list.Count < 1) return default(T);
+            return list.TakeAt(random.Range(0, list.Count));
         }
 
         public static List<T> RollSomeElements<T>(this IReadOnlyList<T> list, int count, ZergRandom random)

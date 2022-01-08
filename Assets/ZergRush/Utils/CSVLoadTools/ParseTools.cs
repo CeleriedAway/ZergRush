@@ -80,10 +80,10 @@ public static class ParseTools
         if (string.IsNullOrEmpty(str)) return 0;
         return float.TryParse(str, out var i) ? i : 0;
     }
-    public static int ParseInt(this string str)
+    public static int ParseInt(this string str, int def = 0)
     {
-        if (string.IsNullOrEmpty(str)) return 0;
-        return int.TryParse(str, out var i) ? i : 0;
+        if (string.IsNullOrEmpty(str)) return def;
+        return int.TryParse(str, out var i) ? i : def;
     }
 
     public static bool ParseBool(this string str)
