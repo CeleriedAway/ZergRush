@@ -100,6 +100,7 @@ namespace ZergRush.CodeGen
                 isPartial: true, isStruct: t.IsValueType, isSealed: false);
             classSink.stubMode = stubMode;
             classSink.usingSink("ZergRush.Alive");
+            classSink.context = context;
             classes[t.UniqueName()] = classSink;
 
             // Do not generate constructe generic types... hack
@@ -240,6 +241,11 @@ namespace ZergRush.CodeGen
             if (type.HasAttribute<GenTargetFolder>())
             {
                 var genTargetFolder = type.GetAttribute<GenTargetFolder>();
+                if (genTargetFolder.folder == null)
+                {
+                    contextsForTypes[type] = defaultContext;
+                    return defaultContext;
+                }
                 if (contexts.TryGetValue(genTargetFolder.folder, out var c) == false)
                 {
                     var generatorContext = new GeneratorContext(new GenInfo{sharpGenPath = genTargetFolder.folder}, stubMode);

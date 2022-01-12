@@ -43,6 +43,9 @@ namespace ZergRush.CodeGen
         public bool doNotGen;
         public bool stubMode;
 
+        // for debug purposes
+        public GeneratorContext context;
+
         public void openBrace()
         {
             content("{");

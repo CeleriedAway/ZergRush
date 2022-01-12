@@ -259,46 +259,5 @@ public static partial class SerializationExtensions
         self.ownerId = other.ownerId;
         self.entityId = other.entityId;
     }
-    public static void CompareCheck(this System.Collections.Generic.List<int> self, System.Collections.Generic.List<int> other, Stack<string> __path) 
-    {
-        if (self.Count != other.Count) SerializationTools.LogCompError(__path, "Count", other.Count, self.Count);
-        var count = Math.Min(self.Count, other.Count);
-        for (int i = 0; i < count; i++)
-        {
-            if (self[i] != other[i]) SerializationTools.LogCompError(__path, i.ToString(), other[i], self[i]);
-        }
-    }
-    public static ulong CalculateHash(this System.Collections.Generic.List<int> self) 
-    {
-        System.UInt64 hash = 345093625;
-        hash += (ulong)340019353;
-        hash += hash << 11; hash ^= hash >> 7;
-        var size = self.Count;
-        for (int i = 0; i < size; i++)
-        {
-            hash += (System.UInt64)self[i];
-            hash += hash << 11; hash ^= hash >> 7;
-        }
-        return hash;
-    }
-    public static void UpdateFrom(this System.Collections.Generic.List<int> self, System.Collections.Generic.List<int> other) 
-    {
-        int i = 0;
-        int oldCount = self.Count;
-        int crossCount = Math.Min(oldCount, other.Count);
-        for (; i < crossCount; ++i)
-        {
-            self[i] = other[i];
-        }
-        for (; i < other.Count; ++i)
-        {
-            var inst = other[i];
-            self.Add(inst);
-        }
-        for (; i < oldCount; ++i)
-        {
-            self.RemoveAt(self.Count - 1);
-        }
-    }
 }
 #endif

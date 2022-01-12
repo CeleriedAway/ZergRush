@@ -145,6 +145,14 @@ public class GenInLocalFolder : GenTargetFolder
     }
 }
 
+public class GenZergRushFolder : GenInLocalFolder
+{
+    public GenZergRushFolder(string dir = "x_generated", [CallerFilePath] string sourceFilePath = "") : base(dir, sourceFilePath)
+    {
+        priority = 10000;
+    }
+}
+
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = true)]
 public class DoNotGen : Attribute
 {

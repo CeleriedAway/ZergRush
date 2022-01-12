@@ -8,15 +8,15 @@ namespace ZergRush.CodeGen
     {
         private static readonly HashSet<string> includeAssemblies = new HashSet<string>
         {
-            "Assembly-CSharp",
-            "Assembly-CSharp-Editor",
             "ZergRush",
             "ZergRush.CodeGen",
             "ZergRush.Reactive",
             "ZergRush.Utils",
             "CodeGen",
             "ClientServerShared",
-            "SharedCode"
+            "SharedCode",
+            "Assembly-CSharp",
+            "Assembly-CSharp-Editor",
         };
         
         [MenuItem("Code Gen/Run CodeGen #&c")]

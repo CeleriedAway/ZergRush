@@ -14,7 +14,7 @@ namespace ZergRush.Alive
         void OnUpdateFinished();
     }
     
-    [GenInLocalFolder, GenTask(GenTaskFlags.Serialization | GenTaskFlags.JsonSerialization), GenTaskCustomImpl(GenTaskFlags.CompareChech | GenTaskFlags.UpdateFrom | GenTaskFlags.Hash)]
+    [GenZergRushFolder, GenTask(GenTaskFlags.Serialization | GenTaskFlags.JsonSerialization), GenTaskCustomImpl(GenTaskFlags.CompareChech | GenTaskFlags.UpdateFrom | GenTaskFlags.Hash)]
     public sealed partial class RefListMk2<T> : IReactiveCollection<T>, IList<T>, INeedUpdateFromPostProcess where T : class, IDataNode, IReferencableFromDataRoot
     {
         [GenIgnore]
