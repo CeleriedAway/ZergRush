@@ -11,6 +11,9 @@ namespace ZergRush.CodeGen
             "Assembly-CSharp",
             "Assembly-CSharp-Editor",
             "ZergRush",
+            "ZergRush.CodeGen",
+            "ZergRush.Reactive",
+            "ZergRush.Utils",
             "CodeGen",
             "ClientServerShared",
             "SharedCode"
