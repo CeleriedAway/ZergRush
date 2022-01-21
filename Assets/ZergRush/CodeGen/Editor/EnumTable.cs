@@ -40,21 +40,39 @@ namespace ZergRush.CodeGen
             sink.content($"}}");
         }
 
-        public static void MakeAndSaveEnum(string enumName, List<string> values, string genScriptFolderWithSlashAtTheEnd,
+        public static void MakeAndSaveSimpleEnum(
+            string enumName,
+            List<(string, int)> values,
+            string genScriptFolderWithSlashAtTheEnd,
+            GeneratorContext context = null, string comment = null)
+        {
+            var t = new EnumTable();
+            foreach (var valueTuple in values)
+            {
+                t.records.Add(valueTuple.Item1, valueTuple.Item2);
+            }
+            GenEnum(t, enumName, genScriptFolderWithSlashAtTheEnd, context, comment);
+        }
+
+        static void GenEnum(EnumTable table, string enumName, string genScriptFolderWithSlashAtTheEnd, GeneratorContext context = null, string comment = null)
+        {
+            bool contextWasNull = context == null;
+            if (contextWasNull)
+                context = new GeneratorContext(new GenInfo { sharpGenPath = genScriptFolderWithSlashAtTheEnd }, false);
+            var commandTableModule = context.createSharpCustomModule(enumName);
+            PrintEnum(commandTableModule, enumName, table.records.Keys, key => table.records[key], comment: comment);
+            if (contextWasNull)
+                context.Commit();
+        }
+
+        public static void MakeAndSaveEnumWithCachedValues(string enumName, List<string> values, string genScriptFolderWithSlashAtTheEnd,
             GeneratorContext context = null, string comment = null)
         {
             var infoCacheFilePath = genScriptFolderWithSlashAtTheEnd + enumName + "ValueCache.txt";
             var typeTable = Load(infoCacheFilePath);
             typeTable.UpdateWithNewTypes(values);
-            Save(infoCacheFilePath, typeTable);
-
-            bool contextWasNull = context == null;
-            if (contextWasNull)
-                context = new GeneratorContext(new GenInfo { sharpGenPath = genScriptFolderWithSlashAtTheEnd }, false);
-            var commandTableModule = context.createSharpCustomModule(enumName);
-            PrintEnum(commandTableModule, enumName, values, key => typeTable.records[key], comment: comment);
-            if (contextWasNull)
-                context.Commit();
+            SaveEnumCache(infoCacheFilePath, typeTable);
+            GenEnum(typeTable, enumName, genScriptFolderWithSlashAtTheEnd, context, comment);
         }
 
         public void UpdateWithNewTypes(IEnumerable<string> typesEnumerable)
@@ -103,7 +121,7 @@ namespace ZergRush.CodeGen
             }
         }
 
-        public static void Save(string fileName, EnumTable table)
+        public static void SaveEnumCache(string fileName, EnumTable table)
         {
             try
             {

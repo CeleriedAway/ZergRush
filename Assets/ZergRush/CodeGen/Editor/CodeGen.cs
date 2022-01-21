@@ -415,7 +415,7 @@ namespace ZergRush.CodeGen
 
             foreach (var typeEnumTable in finalTypeEnum)
             {
-                EnumTable.Save(typeEnumTable.Key.TypeTableFileName(), new EnumTable{records = typeEnumTable.Value});
+                EnumTable.SaveEnumCache(typeEnumTable.Key.TypeTableFileName(), new EnumTable{records = typeEnumTable.Value});
             }
             
             foreach (var context in contexts.Values)

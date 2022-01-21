@@ -99,7 +99,18 @@ namespace ZergRush.CodeGen
             return t.ParentWithPredicate(predicate) != null;
         }
 
-        static Type ParentWithTag<T>(this Type t) where T : Attribute
+        public static IEnumerable<Type> Parents(this Type t)
+        {
+	        var parents = new List<Type>();
+	        var p = t.BaseType;
+	        while (p != null)
+	        {
+		        parents.Add(p);
+		        p = p.BaseType;
+	        }
+	        return parents;
+        }
+        public static Type ParentWithTag<T>(this Type t) where T : Attribute
         {
             return ParentWithPredicate(t, p => p.HasAttribute<T>());
         }

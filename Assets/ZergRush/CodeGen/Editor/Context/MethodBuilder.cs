@@ -107,13 +107,14 @@ namespace ZergRush.CodeGen
                 }
                 if (needBaseValCall && !doNotCallBaseMethod)
                 {
+                    var asyncPart = async ? "await " : "";
                     if (returnType != typeof(void))
                     {
-                        sink($"{indent}\tvar baseVal = base.{RemoveBaseIfNeeded(name)}({CodeGenTools.ExtranctArgNames(args)});");
+                        sink($"{indent}\tvar baseVal = {asyncPart}base.{RemoveBaseIfNeeded(name)}({CodeGenTools.ExtranctArgNames(args)});");
                     }
                     else
                     {
-                        sink($"{indent}\tbase.{RemoveBaseIfNeeded(name)}({CodeGenTools.ExtranctArgNames(args)});");
+                        sink($"{indent}\t{asyncPart}base.{RemoveBaseIfNeeded(name)}({CodeGenTools.ExtranctArgNames(args)});");
                     }
                 }
                 sink(builder.ToStringWithoutListLineEnd());
