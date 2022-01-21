@@ -17,6 +17,7 @@ namespace ZergRush.CodeGen
             "SharedCode",
             "Assembly-CSharp",
             "Assembly-CSharp-Editor",
+            "AGameServerShared"
         };
         
         [MenuItem("Code Gen/Run CodeGen #&c")]
