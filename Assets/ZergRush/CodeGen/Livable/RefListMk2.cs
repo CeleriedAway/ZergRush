@@ -398,4 +398,11 @@ namespace ZergRush.Alive
         {
         }
     }
+
+    // work around some imperfections in codegen context mechanics
+    [GenZergRushFolder, GenTask(GenTaskFlags.CompareChech | GenTaskFlags.UpdateFrom | GenTaskFlags.Hash)]
+    internal class IntListStub
+    {
+        List<int> stub = new List<int>();
+    }
 }
