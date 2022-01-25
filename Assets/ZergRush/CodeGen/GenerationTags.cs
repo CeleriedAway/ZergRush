@@ -33,10 +33,11 @@ namespace ZergRush.CodeGen
         PolymorphicConstruction = 2 << 12,
         PooledPolymorphicConstruction = 2 << 13,
         JsonSerialization = 2 << 14,
-        CommandsGen = 2 << 15,
+        RPC = 2 << 15,
 
         UIDGen = 2 << 16,
         CollectConfigs = 2 << 17,
+        LocalCommands = 2 << 18,
 
         Serialization = Deserialize | Serialize,
         SimpleDataPack = DefaultConstructor | UpdateFrom | Hash | CompareChech | JsonSerialization | Serialization,
@@ -193,13 +194,13 @@ public class GenDoNotInheritGenTags : Attribute
 [AttributeUsage(AttributeTargets.Class)]
 public class GenCommands : GenTask
 {
-    public GenCommands() : base(GenTaskFlags.CommandsGen)
+    public GenCommands() : base(GenTaskFlags.LocalCommands)
     {
     }
 }
 
 [AttributeUsage(AttributeTargets.Method)]
-public class LocalCommand : Attribute
+public class GameCommand : Attribute
 {
 }
 
@@ -273,7 +274,7 @@ public class GenRemoteCommands : GenTask
     public Type networkLayerType;
 
     public GenRemoteCommands(Type requestType, Type responseType, string commandTypeName, Type networkLayerType) : base(
-        GenTaskFlags.CommandsGen)
+        GenTaskFlags.RPC)
     {
         this.requestType = requestType;
         this.responseType = responseType;
