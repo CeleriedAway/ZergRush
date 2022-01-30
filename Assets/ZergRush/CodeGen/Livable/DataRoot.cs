@@ -79,6 +79,10 @@ namespace ZergRush.Alive
             gameEntities.Add(id, entity);
         }
 
+        public bool HasEntityWithId(int id)
+        {
+            return gameEntities.ContainsKey(id);
+        }
         public object Recall(int id)
         {
             #if LogRegistering

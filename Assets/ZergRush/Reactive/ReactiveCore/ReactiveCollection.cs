@@ -787,17 +787,7 @@ namespace ZergRush.ReactiveCore
 
         public static ICell<T> AtIndex<T>(this IReactiveCollection<T> collection, int index, T ifNoElement = default)
         {
-            return new AnonymousCell<T>(action =>
-            {
-                return collection.AsCell().ListenUpdates(coll =>
-                {
-                    action(coll.Count > index ? coll[index] : ifNoElement);
-                });
-            }, () =>
-            {
-                var coll = collection;
-                return coll.Count > index ? coll[index] : ifNoElement;
-            });
+            return collection.AsCell().Map(coll => coll.Count > index ? coll[index] : ifNoElement);
         }
         
         public static ICell<T> AtIndex<T>(this IReactiveCollection<T> collection, ICell<int> index, T ifNoElement = default)
