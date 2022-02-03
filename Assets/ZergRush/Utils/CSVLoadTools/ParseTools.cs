@@ -151,6 +151,19 @@ public static class ParseTools
         return (TEnum) Enum.ToObject(typeof(TEnum), val);
     }
     
+    public static TEnum ParseEnumFlags<TEnum>(this string str) where TEnum : struct
+    {
+        int val = 0;
+        if (str.IsNullOrEmpty() == false)
+            foreach (var s in str.Split(' ', ','))
+            {
+                if (s.IsNullOrWhitespace()) continue;
+                val = val | Convert.ToInt32(s.ParseEnum<TEnum>());
+            }
+
+        return (TEnum) Enum.ToObject(typeof(TEnum), val);
+    }
+    
     public static List<TEnum> ParseEnumListStrict<TEnum>(this string str) where TEnum : struct
     {
         var result = new List<TEnum>();

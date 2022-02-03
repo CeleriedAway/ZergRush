@@ -27,7 +27,7 @@ namespace ZergRush.CodeGen
             string calcHash = $"{name}.CalculateHash()";
             if (t == typeof(string))
             {
-                calcHash = $"({HashTypeName}){name}.GetHashCode()";
+                calcHash = $"({HashTypeName}){name}.CalculateHash()";
             }
             else if (t.IsLoadableConfig())
             {
