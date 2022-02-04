@@ -117,6 +117,9 @@ namespace ZergRush.ReactiveCore
         {
             return data.IndexOf(item);
         }
+		
+        public int IndexOf(Func<T, bool> predicate)
+            => data.IndexOf(predicate);
 
         public void Insert(int index, T item)
         {
