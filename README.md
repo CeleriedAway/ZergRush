@@ -1,6 +1,9 @@
 # ZergRush
 Unity package that represents C# reactive library and set of tools for Unity development.
 
+Add it to your project
+git submodule add git@github.com:antonetalon/ZergRush.git Assets/Plugins/ZergRush
+
 This toolset consists of several parts:
 
 1. ZergRush.Reactive is a reactive library designed to be better alternative to UniRX. Main goal is to manage complex logic dependancies of game/UI state and all sorts of "state-observers". Consists of following parts:
