@@ -621,12 +621,20 @@ namespace ZergRush.ReactiveCore
 
     public static class ReactiveCollectionExtensions
     {
+        public static IReactiveCollection<T> Join<T>(T item, IReactiveCollection<T> items)
+            => item.ToStaticReactiveCollectionFromItem().ConcatReactive(items);
+        public static IReactiveCollection<T> Join<T>(this IReactiveCollection<T> items, T item)
+            => items.ConcatReactive(item.ToStaticReactiveCollectionFromItem());
 
         public static IReactiveCollection<T> ToStaticReactiveCollection<T>(this List<T> coll)
         {
             return new StaticCollection<T> {list = coll};
         }
-        
+
+        public static IReactiveCollection<T> ToStaticReactiveCollectionFromItem<T>(this T item) {
+            return item.ToListFromItem().ToStaticReactiveCollection();
+        }
+
         public static IReactiveCollection<T> ToStaticReactiveCollection<T>(this IEnumerable<T> coll)
         {
             return new StaticCollection<T> {list = coll.ToList()};
