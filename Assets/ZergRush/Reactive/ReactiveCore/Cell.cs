@@ -732,17 +732,17 @@ namespace ZergRush.ReactiveCore
 
         // Creates a new cell that is updated from previous cell unless gate is closed (false),
         // if that is so it waits gate to be true, to update its value from initial cell
-        public static ICell<T> Gate<T>(this ICell<T> cell, ICell<bool> gate, IConnectionSink connectionSink)
+        public static ICell<T> Gate<T>(this ICell<T> cell, ICell<bool> gate, IConnectionSink connectionSink = null)
         {
             var result = new Cell<T>(cell.value);
-            connectionSink.AddConnection(cell.ListenUpdates(v =>
+            connectionSink += cell.ListenUpdates(v =>
             {
                 if (gate.value) result.value = v;
-            }));
-            connectionSink.AddConnection(gate.ListenUpdates(v =>
+            });
+            connectionSink += gate.ListenUpdates(v =>
             {
                 if (v) result.value = cell.value;
-            }));
+            });
             return result;
         }
         
