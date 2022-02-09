@@ -137,7 +137,7 @@ public class GenInLocalFolder : GenTargetFolder
     static string GetPath(string dir, string sourceFilePath = "")
     {
         var path = Path.GetDirectoryName(sourceFilePath);
-        return path + $"\\{dir}";
+        return Path.Combine(path, $"{dir}");
     }
     
     public GenInLocalFolder(string dir = "x_generated", [CallerFilePath] string sourceFilePath = "") : base(GetPath(dir, sourceFilePath), 100)
