@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -745,7 +746,51 @@ namespace ZergRush.ReactiveCore
             });
             return result;
         }
-        
+
+        public static IReactiveCollection<T> Gate<T>(this IReactiveCollection<T> items, ICell<bool> gate)//, IConnectionSink connectionSink = null)
+            => new GatedCollection<T>(items, gate);
+
+        public class GatedCollection<T> : IReactiveCollection<T> {
+            List<T> buffer = new List<T>();
+            IReactiveCollection<T> source;
+            ICell<bool> gate;
+            bool open => gate.value;
+            bool changesExist;
+            public GatedCollection(IReactiveCollection<T> source, ICell<bool> gate) {
+                this.source = source;
+                this.gate = gate;
+                buffer.AddRange(source);
+                source.update.Subscribe(changes => {
+                    if (open)
+                        _update.Send(changes);
+                    else
+                        changesExist = true;
+                });
+                gate.ListenUpdates(open => {
+                    if (open) {
+                        if (changesExist) {
+                            changesExist = false;
+                            _update.Send(new ReactiveCollectionEvent<T>() {
+                                type = ReactiveCollectionEventType.Reset,
+                                newData = source.ToList(),
+                                oldData = buffer,
+                                position = -1
+                            });
+                        }
+                    } else {
+                        buffer.Clear();
+                        buffer.AddRange(source);
+                    }
+                });
+            }
+            public T this[int index] => open ? source[index] : buffer[index];
+            EventStream<IReactiveCollectionEvent<T>> _update = new EventStream<IReactiveCollectionEvent<T>>();
+            public IEventStream<IReactiveCollectionEvent<T>> update => _update;
+            public int Count => open ? source.Count : buffer.Count;
+            public IEnumerator<T> GetEnumerator() => open ? source.GetEnumerator() : buffer.GetEnumerator();
+            IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        }
+
         // Creates a new event that is updated from previous event unless gate is closed (false),
         // when gate opens (true), all blocked events are instantly fired 
         public static IEventStream<T> Gate<T>(this IEventStream<T> e, ICell<bool> gate, IConnectionSink connectionSink)
