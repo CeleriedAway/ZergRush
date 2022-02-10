@@ -74,11 +74,11 @@ namespace ZergRush.Alive {
         }
         public virtual ushort GetClassId() 
         {
-            return (System.UInt16)Types.GameLoadableConfigExample;
+        return (System.UInt16)Types.GameLoadableConfigExample;
         }
         public virtual ZergRush.Alive.GameLoadableConfigExample NewInst() 
         {
-            return new GameLoadableConfigExample();
+        return new GameLoadableConfigExample();
         }
     }
 }
