@@ -104,6 +104,10 @@ namespace ZergRush.CodeGen
                 polymorphicMap.TryGetOrNew(lastValidParent).Add(t);
                 baseClassMap[t] = lastValidParent;
             }
+            else
+            {
+                polymorphicMap.TryGetOrNew(t);
+            }
         }
 
         public static bool NeedClassIdCache(this Type t)

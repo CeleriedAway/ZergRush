@@ -122,6 +122,11 @@ namespace ZergRush.CodeGen
                 {
                     baseReadCall(sink, info);
                 }
+                
+                if (t.IsConfig() && !fromExternalSource)
+                {
+                    sink.content($"{t.ConfigRootType().RealName()}.Instance.RegisterConfig({info.access});");
+                }
 
                 if (canBeNull)
                 {
