@@ -12,12 +12,12 @@ namespace ZergRush.Alive {
         public override void Deserialize(BinaryReader reader) 
         {
             base.Deserialize(reader);
-            examples.Deserialize(reader);
+            items.Deserialize(reader);
         }
         public override void Serialize(BinaryWriter writer) 
         {
             base.Serialize(writer);
-            examples.Serialize(writer);
+            items.Serialize(writer);
         }
         public override ulong CalculateHash() 
         {
@@ -25,34 +25,34 @@ namespace ZergRush.Alive {
             System.UInt64 hash = baseVal;
             hash += (ulong)993987480;
             hash += hash << 11; hash ^= hash >> 7;
-            hash += examples.CalculateHash();
+            hash += items.CalculateHash();
             hash += hash << 11; hash ^= hash >> 7;
             return hash;
         }
         public override void CollectConfigs(ConfigRegister _collection) 
         {
             base.CollectConfigs(_collection);
-            examples.CollectConfigs(_collection);
+            items.CollectConfigs(_collection);
         }
         public  GameConfigExample() 
         {
-            examples = new ZergRush.Alive.ConfigStorageList<ZergRush.Alive.GameLoadableConfigMemberExample>();
+            items = new ZergRush.Alive.ConfigStorageList<ZergRush.Alive.SomeItemFromConfig>();
         }
         public override void ReadFromJsonField(JsonTextReader reader, string __name) 
         {
             base.ReadFromJsonField(reader,__name);
             switch(__name)
             {
-                case "examples":
-                examples.ReadFromJson(reader);
+                case "items":
+                items.ReadFromJson(reader);
                 break;
             }
         }
         public override void WriteJsonFields(JsonTextWriter writer) 
         {
             base.WriteJsonFields(writer);
-            writer.WritePropertyName("examples");
-            examples.WriteJson(writer);
+            writer.WritePropertyName("items");
+            items.WriteJson(writer);
         }
         public override ushort GetClassId() 
         {

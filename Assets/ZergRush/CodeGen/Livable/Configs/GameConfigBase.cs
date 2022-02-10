@@ -9,6 +9,7 @@
     /// <summary>
     /// Represents a top level container for configs.
     /// Inherit that class and pass inherited type as T if u need to create global config container.
+    /// See examples below.
     /// </summary>
     /// <typeparam name="T">Inherited type</typeparam>
     [GenInLocalFolder]
@@ -26,8 +27,8 @@
         
         /// <summary>
         /// Registers config member in config storage.
-        /// Registered config can be retrieved from "allConfigs" dictionary on self deserialization by id.
-        /// You should manually call it for each config member if you need to create config member manually.
+        /// Registered config can be retrieved from "allConfigs" dictionary by id.
+        /// You should manually call that method for each config member if you need to create config members manually.
         /// </summary>
         public void RegisterConfig(LoadableConfig config)
         {
@@ -44,7 +45,7 @@
         
         /// <summary>
         /// Retrieves config member from ConfigsRegister by id.
-        /// Used by deserialization of config member instances.
+        /// Used to deserialize references to config member instances.
         /// </summary>
         /// <param name="uid"></param>
         /// <returns></returns>
@@ -85,11 +86,13 @@
     }
 
     #region Example
+    
     [GenInLocalFolder]
     public partial class GameConfigExample : GameConfigBase<GameConfigExample>
     {
-        public ConfigStorageList<GameLoadableConfigMemberExample> examples;
+        public ConfigStorageList<SomeItemFromConfig> items;
     }
+    
     #endregion
     
     #region Stub

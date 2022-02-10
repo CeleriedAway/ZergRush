@@ -5,7 +5,7 @@
     
     /// <summary>
     /// Base class for all config members.
-    /// Inheritors must defile one or more fields with [UIDComponent] to check equality of config members clearly.
+    /// Inheritors must defile one or more fields with [UIDComponent] to check equality of config members.
     /// Usually, it`s something unique like "string id" field.
     /// See example below.
     /// </summary>
@@ -18,7 +18,7 @@
     }
     
     /// <summary>
-    /// An attribute used to define which config is responsible for storing config members for this hierarchy
+    /// An attribute used to define which config is responsible for storing config members for this hierarchy.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class)]
     public class ConfigRootType : Attribute
@@ -30,10 +30,13 @@
     #region Example
     
     [ConfigRootType(typeof(GameConfigExample)), GenInLocalFolder]
-    public partial class GameLoadableConfigMemberExample : LoadableConfig
+    public partial class SomeItemFromConfig : LoadableConfig
     {
         [UIDComponent]
         public string id;
+
+        public int price;
+        public string name;
     }
     
     #endregion
