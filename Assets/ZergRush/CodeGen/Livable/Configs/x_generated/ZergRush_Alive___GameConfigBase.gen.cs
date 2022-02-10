@@ -7,19 +7,19 @@ using Newtonsoft.Json;
 #if !INCLUDE_ONLY_CODE_GENERATION
 namespace ZergRush.Alive {
 
-    public partial class GameConfigBaseBase : IHashable, IJsonSerializable, IPolymorphable
+    public partial class __GameConfigBase : IHashable, IJsonSerializable, IPolymorphable
     {
         public enum Types : ushort
         {
-            GameConfigBaseBase = 1,
+            __GameConfigBase = 1,
             GameConfigExample = 2,
         }
-        static Func<GameConfigBaseBase> [] polymorphConstructors = new Func<GameConfigBaseBase> [] {
+        static Func<__GameConfigBase> [] polymorphConstructors = new Func<__GameConfigBase> [] {
             () => null, // 0
-            () => new ZergRush.Alive.GameConfigBaseBase(), // 1
+            () => new ZergRush.Alive.__GameConfigBase(), // 1
             () => new ZergRush.Alive.GameConfigExample(), // 2
         };
-        public static GameConfigBaseBase CreatePolymorphic(System.UInt16 typeId) {
+        public static __GameConfigBase CreatePolymorphic(System.UInt16 typeId) {
             return polymorphConstructors[typeId]();
         }
         public virtual void Deserialize(BinaryReader reader) 
@@ -33,7 +33,7 @@ namespace ZergRush.Alive {
         public virtual ulong CalculateHash() 
         {
             System.UInt64 hash = 345093625;
-            hash += (ulong)1071008758;
+            hash += (ulong)657693591;
             hash += hash << 11; hash ^= hash >> 7;
             return hash;
         }
@@ -41,7 +41,7 @@ namespace ZergRush.Alive {
         {
 
         }
-        public  GameConfigBaseBase() 
+        public  __GameConfigBase() 
         {
 
         }
@@ -57,11 +57,11 @@ namespace ZergRush.Alive {
         }
         public virtual ushort GetClassId() 
         {
-        return (System.UInt16)Types.GameConfigBaseBase;
+        return (System.UInt16)Types.__GameConfigBase;
         }
-        public virtual ZergRush.Alive.GameConfigBaseBase NewInst() 
+        public virtual ZergRush.Alive.__GameConfigBase NewInst() 
         {
-        return new GameConfigBaseBase();
+        return new __GameConfigBase();
         }
     }
 }

@@ -244,17 +244,6 @@ public class HasRefId : Attribute
 }
 
 [AttributeUsage(AttributeTargets.Class)]
-public class ConfigRootType : Attribute
-{
-    public Type type;
-
-    public ConfigRootType(Type type)
-    {
-        this.type = type;
-    }
-}
-
-[AttributeUsage(AttributeTargets.Class)]
 public class RootType : Attribute
 {
     public Type type;

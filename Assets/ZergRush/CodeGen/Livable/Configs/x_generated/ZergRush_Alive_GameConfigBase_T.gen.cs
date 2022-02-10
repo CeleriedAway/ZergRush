@@ -46,7 +46,7 @@ namespace ZergRush.Alive {
             base.WriteJsonFields(writer);
 
         }
-        public override ZergRush.Alive.GameConfigBaseBase NewInst() 
+        public override ZergRush.Alive.__GameConfigBase NewInst() 
         {
         throw new NotImplementedException();
         }

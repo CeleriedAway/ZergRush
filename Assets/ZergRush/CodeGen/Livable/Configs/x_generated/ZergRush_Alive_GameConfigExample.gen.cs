@@ -36,7 +36,7 @@ namespace ZergRush.Alive {
         }
         public  GameConfigExample() 
         {
-            examples = new ZergRush.Alive.ConfigStorageList<ZergRush.Alive.GameLoadableConfigExample>();
+            examples = new ZergRush.Alive.ConfigStorageList<ZergRush.Alive.GameLoadableConfigMemberExample>();
         }
         public override void ReadFromJsonField(JsonTextReader reader, string __name) 
         {
@@ -58,7 +58,7 @@ namespace ZergRush.Alive {
         {
         return (System.UInt16)Types.GameConfigExample;
         }
-        public override ZergRush.Alive.GameConfigBaseBase NewInst() 
+        public override ZergRush.Alive.__GameConfigBase NewInst() 
         {
         return new GameConfigExample();
         }

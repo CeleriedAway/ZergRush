@@ -1,0 +1,2 @@
+__GameConfigBase 1
+GameConfigExample 2
