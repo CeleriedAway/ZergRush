@@ -13,7 +13,7 @@
     /// </summary>
     /// <typeparam name="T">Inherited type</typeparam>
     [GenTask(GenTaskFlags.ConfigData & ~GenTaskFlags.PolymorphicConstruction), GenInLocalFolder]
-    public abstract partial class GameConfigRoot<T> where T : GameConfigRoot<T>, new()
+    public abstract partial class GameConfigRoot<T> : ISerializable where T : GameConfigRoot<T>, new()
     {
         /// <summary>
         /// Your config container.
@@ -57,7 +57,7 @@
         /// <summary>
         /// Executes actions to fulfill game config with members.
         /// </summary>
-        public void SetGameConfig(Action<T> fillConfig)
+        public static void SetGameConfig(Action<T> fillConfig)
         {
             Instance = new T();
             fillConfig(Instance);
@@ -66,19 +66,19 @@
         /// <summary>
         /// Executes async actions to fulfill game config with members.
         /// </summary>
-        public async Task SetGameConfig(Func<T, Task> fillInstance)
+        public static async Task SetGameConfig(Func<T, Task> fillInstance)
         {
             Instance = new T();
             await fillInstance(Instance);
         }
         
-        public void LoadFrom(BinaryReader reader)
+        public static void LoadFrom(BinaryReader reader)
         {
             Instance = new T();
             Instance.Deserialize(reader);
         }
 
-        public void LoadFrom(JsonTextReader reader)
+        public static void LoadFrom(JsonTextReader reader)
         {
             Instance = new T();
             Instance.ReadFromJson(reader);

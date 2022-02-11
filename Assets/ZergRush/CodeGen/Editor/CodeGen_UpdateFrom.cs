@@ -125,7 +125,7 @@ namespace ZergRush.CodeGen
                 
                 if (t.IsConfig() && !fromExternalSource)
                 {
-                    sink.content($"{t.ConfigRootType().RealName()}.Instance.RegisterConfig({info.access});");
+                    sink.content($"{t.ConfigRootType().RealName(true)}.Instance.RegisterConfig({info.access});");
                 }
 
                 if (canBeNull)

@@ -17,7 +17,7 @@ public static partial class SerializationExtensions
             ZergRush.Alive.SomeItemFromConfig val = default;
             val = new ZergRush.Alive.SomeItemFromConfig();
             val.ReadFromJson(reader);
-            GameConfigExample.Instance.RegisterConfig(val);
+            ZergRush.Alive.GameConfigExample.Instance.RegisterConfig(val);
             self.Add(val);
         }
     }
@@ -70,7 +70,7 @@ public static partial class SerializationExtensions
             ZergRush.Alive.SomeItemFromConfig val = default;
             val = new ZergRush.Alive.SomeItemFromConfig();
             val.Deserialize(reader);
-            GameConfigExample.Instance.RegisterConfig(val);
+            ZergRush.Alive.GameConfigExample.Instance.RegisterConfig(val);
             self.Add(val);
         }
     }
