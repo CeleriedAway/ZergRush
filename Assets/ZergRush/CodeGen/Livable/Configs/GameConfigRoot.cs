@@ -12,8 +12,8 @@
     /// See examples below.
     /// </summary>
     /// <typeparam name="T">Inherited type</typeparam>
-    [GenInLocalFolder]
-    public abstract partial class GameConfigBase<T> : __GameConfigBase where T : GameConfigBase<T>, new()
+    [GenTask(GenTaskFlags.ConfigData & ~GenTaskFlags.PolymorphicConstruction), GenInLocalFolder]
+    public abstract partial class GameConfigRoot<T> where T : GameConfigRoot<T>, new()
     {
         /// <summary>
         /// Your config container.
@@ -28,17 +28,17 @@
         /// <summary>
         /// Registers config member in config storage.
         /// Registered config can be retrieved from "allConfigs" dictionary by id.
-        /// You should manually call that method for each config member if you need to create config members manually.
+        /// You should manually call that method for each config member you need to create manually.
         /// </summary>
         public void RegisterConfig(LoadableConfig config)
         {
             if (config.UId() == 0)
-                throw new ZergRushException($"Config entity {config.GetType()} should mark fields with {nameof(UIDComponent)} tag." +
-                    "Usually it`s an \"id\" field.");
+                throw new ZergRushException($"Config member {config.GetType()} should mark fields with {nameof(UIDComponent)} tag." +
+                    "Usually it`s something like \"string id\" field.");
             
             if (allConfigs.ContainsKey(config.UId()))
                 throw new ZergRushException($"Two config entities of type {config.GetType()} have a similar uid {config.UId()}. " +
-                    $"{nameof(UIDComponent)} should mark only an unique identifier fields.");
+                    $"{nameof(UIDComponent)} should mark only unique identifier fields.");
 
             allConfigs[config.UId()] = config;
         }
@@ -88,20 +88,10 @@
     #region Example
     
     [GenInLocalFolder]
-    public partial class GameConfigExample : GameConfigBase<GameConfigExample>
+    public partial class GameConfigExample : GameConfigRoot<GameConfigExample>
     {
         public ConfigStorageList<SomeItemFromConfig> items;
     }
     
-    #endregion
-    
-    #region Stub
-    /// <summary>
-    /// DO NOT USE THAT CLASS.
-    /// YOU DONT NEED IT, but
-    /// it`s just a stub to gen polymorphic constructions hierarchy for generic GameConfigBase<T> class
-    /// </summary>
-    [GenConfigData, GenTask(GenTaskFlags.ConfigData), GenInLocalFolder]
-    public partial class __GameConfigBase { }
     #endregion
 }

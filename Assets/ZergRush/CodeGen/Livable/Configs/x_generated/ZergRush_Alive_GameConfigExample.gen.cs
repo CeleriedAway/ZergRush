@@ -7,7 +7,7 @@ using Newtonsoft.Json;
 #if !INCLUDE_ONLY_CODE_GENERATION
 namespace ZergRush.Alive {
 
-    public partial class GameConfigExample : IHashable, IJsonSerializable, IPolymorphable
+    public partial class GameConfigExample : IHashable, IJsonSerializable
     {
         public override void Deserialize(BinaryReader reader) 
         {
@@ -53,14 +53,6 @@ namespace ZergRush.Alive {
             base.WriteJsonFields(writer);
             writer.WritePropertyName("items");
             items.WriteJson(writer);
-        }
-        public override ushort GetClassId() 
-        {
-        return (System.UInt16)Types.GameConfigExample;
-        }
-        public override ZergRush.Alive.__GameConfigBase NewInst() 
-        {
-        return new GameConfigExample();
         }
     }
 }
