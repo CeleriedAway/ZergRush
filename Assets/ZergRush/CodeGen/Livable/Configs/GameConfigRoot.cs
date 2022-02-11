@@ -1,10 +1,10 @@
 ﻿namespace ZergRush.Alive
 {
     using System;
-    using System.IO;
     using CodeGen;
-    using System.Threading.Tasks;
+    using System.IO;
     using Newtonsoft.Json;
+    using System.Threading.Tasks;
 
     /// <summary>
     /// Represents a top level container for configs.
@@ -19,11 +19,11 @@
         /// Your config container.
         /// </summary>
         public static T Instance { get; private set; }
-        
+
         /// <summary>
         /// Storage of all config members.
         /// </summary>
-        [GenIgnore] public ConfigRegister allConfigs;
+        [GenIgnore] public ConfigRegister allConfigs = new ConfigRegister();
         
         /// <summary>
         /// Registers config member in config storage.
