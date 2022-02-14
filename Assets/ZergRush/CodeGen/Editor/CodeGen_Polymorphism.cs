@@ -104,7 +104,7 @@ namespace ZergRush.CodeGen
                 polymorphicMap.TryGetOrNew(lastValidParent).Add(t);
                 baseClassMap[t] = lastValidParent;
             }
-            else
+            else if (t.IsClass)
             {
                 polymorphicMap.TryGetOrNew(t);
             }

@@ -346,15 +346,19 @@ namespace ZergRush.ReactiveCore
         {
             get
             {
-                return updateWrapp = updateWrapp ?? new AnonymousEventStream<IReactiveCollectionEvent<T>>(act =>
+                return updateWrapp ??= new AnonymousEventStream<IReactiveCollectionEvent<T>>(act =>
                 {
                     OnConnect();
                     var connection = buffer.update.Subscribe(act);
-                    return new AnonymousDisposable(() =>
+
+                    // possible work around unity 2021 compilation crash
+                    void Dispose()
                     {
                         connection.Dispose();
                         OnDisconnect();
-                    });
+                    }
+                    var anonymousDisposable = new AnonymousDisposable(Dispose);
+                    return anonymousDisposable;
                 });
             }
         }
