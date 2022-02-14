@@ -14,7 +14,7 @@ namespace ZergRush.CodeGen
         public static List<Type> allTypesInAssemblies = new List<Type>();
         static Dictionary<Type, GenTaskFlags> typeGenRequested = new Dictionary<Type, GenTaskFlags>();
         static Dictionary<string, GenTaskFlags> typeNameRequested = new Dictionary<string, GenTaskFlags>();
-        static Stack<GenerationTask> tasks = new Stack<GenerationTask>();
+        static Queue<GenerationTask> tasks = new Queue<GenerationTask>();
 
         const string DefaultGenPath = "Assets/zGenerated/";
 
@@ -292,7 +292,8 @@ namespace ZergRush.CodeGen
 
 
             var allAssemblies = AppDomain.CurrentDomain.GetAssemblies();
-            var assemblies = includeAssemblies.Select(i => allAssemblies.First(a => a.GetName().Name == i));
+            var assemblies = includeAssemblies.Select(i => allAssemblies.FirstOrDefault(a => a.GetName().Name == i)).Where(a => a != null);
+            Debug.Log(assemblies.PrintCollection());
             var typesEnumerable = assemblies.SelectMany(assembly => assembly.GetTypes());
 
             allTypesInAssemblies.Clear();
@@ -335,7 +336,7 @@ namespace ZergRush.CodeGen
             
             while (tasks.Count > 0)
             {
-                var task = tasks.Pop();
+                var task = tasks.Dequeue();
                 var type = task.type;
                 
                 if (type.HasAttribute<DoNotGen>()) continue;

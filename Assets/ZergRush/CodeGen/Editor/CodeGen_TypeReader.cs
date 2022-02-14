@@ -252,13 +252,13 @@ namespace ZergRush.CodeGen
                 if (newTasks != 0)
                 {
                     typeGenRequested[t.NakedGenericDefinition()] = registered | flags;
-                    tasks.Push(new GenerationTask(t, newTasks));
+                    tasks.Enqueue(new GenerationTask(t, newTasks));
                 }
             }
             else
             {
                 typeGenRequested[t.NakedGenericDefinition()] = flags;
-                tasks.Push(new GenerationTask(t, flags));
+                tasks.Enqueue(new GenerationTask(t, flags));
             }
         }
 
