@@ -265,7 +265,7 @@ namespace ZergRush.CodeGen
         static bool stubMode = false;
         
         // You shall not dare to try to unfuck this.
-        public static void Gen(HashSet<string> includeAssemblies, bool stubs)
+        public static void Gen(List<string> includeAssemblies, bool stubs)
         {
             if (EditorApplication.isCompiling)
             {
@@ -290,7 +290,9 @@ namespace ZergRush.CodeGen
             //     return inProject;
             // }
 
-            var assemblies = AppDomain.CurrentDomain.GetAssemblies().Where(a => includeAssemblies.Contains(a.GetName().Name)).ToList();
+
+            var allAssemblies = AppDomain.CurrentDomain.GetAssemblies();
+            var assemblies = includeAssemblies.Select(i => allAssemblies.First(a => a.GetName().Name == i));
             var typesEnumerable = assemblies.SelectMany(assembly => assembly.GetTypes());
 
             allTypesInAssemblies.Clear();

@@ -6,7 +6,7 @@ namespace ZergRush.CodeGen
 {
     public static class CodeGenerationEditorExtension
     {
-        private static readonly HashSet<string> includeAssemblies = new HashSet<string>
+        private static readonly List<string> includeAssemblies = new List<string>
         {
             "ZergRush",
             "ZergRush.CodeGen",
@@ -32,7 +32,7 @@ namespace ZergRush.CodeGen
             GenerateInner(includeAssemblies, onlyStubs: true);
         }
 
-        public static void GenerateInner(HashSet<string> assemblies, bool onlyStubs = false)
+        public static void GenerateInner(List<string> assemblies, bool onlyStubs = false)
         {
             Debug.Log("GenCode called");
             CodeGen.Gen(assemblies, onlyStubs);
