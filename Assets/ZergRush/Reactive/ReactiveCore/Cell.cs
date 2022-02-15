@@ -707,6 +707,16 @@ namespace ZergRush.ReactiveCore
             });
         }
 
+        // With this function you receive previous collection values as second argument
+        public static IDisposable BufferListenUpdates<T>(this IReactiveCollection<T> source, Action<IReadOnlyList<T>, IReadOnlyList<T>> action) {
+            // Implicit lambda boxing used as a prev val storage here
+            var prevVal = source.ConvertAll(i => i);
+            return source.AsCell().ListenUpdates(v => {
+                action(v, prevVal);
+                prevVal = v.ConvertAll(i => i);
+            });
+        }
+
         // Useful when you need previous value of a cell, it comes as a second item in the tuple.
         public static IEventStream<(T, T)> BufferPreviousValue<T>(this ICell<T> cell)
         {
