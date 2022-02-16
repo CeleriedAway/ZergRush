@@ -1466,7 +1466,7 @@ namespace ZergRush.ReactiveCore
             }
         }
 
-        public static IReactiveCollection<T> SortReactive<T>(this ReactiveCollection<T> collection,
+        public static IReactiveCollection<T> SortReactive<T>(this IReactiveCollection<T> collection,
             Func<T, T, int> comparator)
         {
             return new SortedCollection<T>(collection, comparator);
