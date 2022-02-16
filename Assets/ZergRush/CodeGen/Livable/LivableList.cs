@@ -21,7 +21,7 @@ namespace ZergRush.Alive
             for (var i = 0; i < items.Count; i++)
             {
                 //Debug.Log($"enliving {items[i]}" );
-                items[i].Enlive();
+                items[i]?.Enlive();
             }
         }
 
@@ -34,7 +34,7 @@ namespace ZergRush.Alive
 
             for (var i = 0; i < items.Count; i++)
             {
-                items[i].Mortify();
+                items[i]?.Mortify();
             }
 
             alive = false;
@@ -44,19 +44,19 @@ namespace ZergRush.Alive
         {
             if (alive)
             {
-                item.Mortify();
+                item?.Mortify();
             }
             base.ProcessRemoveItem(item);
-            if (root != null && root.pool != null) item.ReturnToPool(root.pool);
+            if (root != null && root.pool != null) item?.ReturnToPool(root.pool);
         }
 
         public new void AddCopy(T item, T refData)
         {
             items.Add(item);
             SetupItemHierarchy(item);
-            item.UpdateFrom(refData);
+            item?.UpdateFrom(refData);
             if (alive) {
-                item.Enlive();
+                item?.Enlive();
             }
             ReactiveCollection<T>.OnItemAdded(item, up, items);
         }
@@ -65,7 +65,7 @@ namespace ZergRush.Alive
         {
             base.ProcessAddItem(item);
             if (alive) {
-                item.Enlive();
+                item?.Enlive();
             }
         }
 
@@ -78,7 +78,7 @@ namespace ZergRush.Alive
 
             foreach (var item in items)
             {
-                item.ReturnToPool(pool);
+                item?.ReturnToPool(pool);
             }
 
             items.Clear();

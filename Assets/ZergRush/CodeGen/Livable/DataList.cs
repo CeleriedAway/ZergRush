@@ -6,7 +6,7 @@ using ZergRush.ReactiveCore;
 
 namespace ZergRush.Alive
 {
-    public partial class DataList<T> : IList<T>, IReadOnlyList<T>
+    public class DataList<T> : IList<T>, IReadOnlyList<T>
         , IReactiveCollection<T>, IConnectable
         where T : DataNode
 
@@ -43,12 +43,14 @@ namespace ZergRush.Alive
 
         protected void SetupItemHierarchy(T item)
         {
+            if (item == null) return;
             item.carrier = carrier;
             item.root = root;
             item.__PropagateHierarchyAndRememberIds();
         }
         protected virtual void ProcessAddItem(T item)
         {
+            if (item == null) return;
             SetupItemHierarchy(item);
             if (!__update_mod)
             {
@@ -63,6 +65,7 @@ namespace ZergRush.Alive
         
         protected virtual void ProcessRemoveItem(T item)
         {
+            if (item == null) return;
             item.__ForgetIds();
             if (!__update_mod)
             {
