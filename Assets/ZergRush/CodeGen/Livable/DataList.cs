@@ -176,7 +176,7 @@ namespace ZergRush.Alive
             for (var i = 0; i < items.Count; i++)
             {
                 var item = items[i];
-                item.__GenIds(__root);
+                item?.__GenIds(__root);
             }
         }
 
@@ -185,6 +185,7 @@ namespace ZergRush.Alive
             for (var i = 0; i < items.Count; i++)
             {
                 var item = items[i];
+                if (item == null) continue;
                 item.root = root;
                 item.carrier = carrier;
                 item.__PropagateHierarchyAndRememberIds();
@@ -196,7 +197,7 @@ namespace ZergRush.Alive
             for (var i = 0; i < items.Count; i++)
             {
                 var item = items[i];
-                item.__ForgetIds();
+                item?.__ForgetIds();
             }
         }
     }
