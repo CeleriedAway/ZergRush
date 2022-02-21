@@ -21,6 +21,11 @@
         public static T Instance { get; private set; }
 
         /// <summary>
+        /// Version of config container
+        /// </summary>
+        public Version version;
+        
+        /// <summary>
         /// Storage of all config members.
         /// </summary>
         [GenIgnore] public ConfigRegister allConfigs = new ConfigRegister();
