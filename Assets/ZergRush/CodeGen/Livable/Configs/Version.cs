@@ -26,5 +26,10 @@
             if (!(obj is Version)) return false;
             return Comparison(this, (Version) obj) == 0;
         }
+
+        public override string ToString()
+        {
+            return $"{major}.{middle}.{minor}";
+        }
     }
 }
