@@ -293,7 +293,7 @@ namespace ZergRush.CodeGen
 
             var allAssemblies = AppDomain.CurrentDomain.GetAssemblies();
             var assemblies = includeAssemblies.Select(i => allAssemblies.FirstOrDefault(a => a.GetName().Name == i)).Where(a => a != null);
-            Debug.Log(assemblies.PrintCollection());
+            Debug.Log($"Order: {assemblies.Select(a => a.GetName().Name).PrintCollection()}");
             var typesEnumerable = assemblies.SelectMany(assembly => assembly.GetTypes());
 
             allTypesInAssemblies.Clear();

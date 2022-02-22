@@ -11,17 +11,15 @@ namespace ZergRush.Alive {
     {
         public virtual void Deserialize(BinaryReader reader) 
         {
-            version = reader.ReadZergRush_Alive_Version();
+
         }
         public virtual void Serialize(BinaryWriter writer) 
         {
-            version.Serialize(writer);
+
         }
         public virtual ulong CalculateHash() 
         {
             System.UInt64 hash = 345093625;
-            hash += version.CalculateHash();
-            hash += hash << 11; hash ^= hash >> 7;
             return hash;
         }
         public virtual void CollectConfigs(ConfigRegister _collection) 
@@ -36,15 +34,11 @@ namespace ZergRush.Alive {
         {
             switch(__name)
             {
-                case "version":
-                version = (ZergRush.Alive.Version)reader.ReadFromJsonZergRush_Alive_Version();
-                break;
             }
         }
         public virtual void WriteJsonFields(JsonTextWriter writer) 
         {
-            writer.WritePropertyName("version");
-            version.WriteJson(writer);
+
         }
     }
 }
