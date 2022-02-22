@@ -27,7 +27,11 @@ namespace ZergRush.Alive
         public int Capacity
         {
             get => items.Capacity;
-            set => items.Capacity = value;
+            set
+            {
+                if (value > items.Capacity)
+                    items.Capacity = value;
+            }
         }
         
         public void ForEach(Action<T> action)
