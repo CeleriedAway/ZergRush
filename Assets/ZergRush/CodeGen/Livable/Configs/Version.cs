@@ -1,5 +1,6 @@
 ﻿namespace ZergRush.Alive
 {
+    [GenInLocalFolder]
     public struct Version
     {
         public int major, middle, minor;
