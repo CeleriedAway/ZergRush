@@ -228,7 +228,11 @@ namespace ZergRush.CodeGen
                         initArray();
                     }
                     else
+                    {
                         sinkReader.content($"self.Add(null);");
+                        sinkReader.content("if (reader.TokenType == JsonToken.Null) continue;");
+                    }
+
                     ReadJsonValueStatement(sinkReader, 
                         new DataInfo {type = elemType, carrierType = type, baseAccess = $"self[self.{count} - 1]", insideConfigStorage = type.IsConfigStorage(),
                             sureIsNull = true}, false);

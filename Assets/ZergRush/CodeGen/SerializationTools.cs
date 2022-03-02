@@ -278,6 +278,12 @@ public static class SerializationTools
 
     public static void WriteJson(this IJsonSerializable obj, JsonTextWriter writer)
     {
+        if (obj == null)
+        {
+            writer.WriteNull();
+            return;
+        }
+
         writer.WriteStartObject();
         var polymorph = obj as IPolymorphable;
         if (polymorph != null)
