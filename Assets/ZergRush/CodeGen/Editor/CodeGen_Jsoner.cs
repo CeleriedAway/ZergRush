@@ -239,8 +239,15 @@ namespace ZergRush.CodeGen
                 }
                 else
                 {
+                    if (type.IsValueType)
+                    {
+                        sinkReader.content(type.IsArray ? $"self.Add(null);" : "self[self.Length - 1] = null;");
+                        sinkReader.content("if (reader.TokenType == JsonToken.Null) continue;");
+                    }
+
                     ReadJsonValueStatement(sinkReader, new DataInfo{type = info.type, baseAccess = $"val", carrierType = type,
                         insideConfigStorage = type.IsConfigStorage(), sureIsNull = true}, true);
+                    
                     if (type.IsArray)
                     {
                         initArray();

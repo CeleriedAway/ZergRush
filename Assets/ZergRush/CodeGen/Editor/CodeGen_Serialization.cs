@@ -75,8 +75,8 @@ namespace ZergRush.CodeGen
             sink.indent++;
             if (!info.type.IsValueType)
             {
-                sink.content($"if {stream}.Write({info.access} != null);");
-                sink.content($"if ({info.access} != null)");
+                sink.content($"{stream}.Write({info.access}[i] != null);");
+                sink.content($"if ({info.access}[i] != null)");
             }
             sink.content("{");
             sink.indent++;
@@ -128,8 +128,8 @@ namespace ZergRush.CodeGen
 
             if (!info.type.IsValueType)
             {
-                sink.content($"{stream}.Write({info.access} != null);");
-                sink.content($"if ({info.access} != null)");
+                sink.content($"{stream}.Write({info.access}[i] != null);");
+                sink.content($"if ({info.access}[i] != null)");
             }
 
             sink.content("{");
@@ -244,7 +244,7 @@ namespace ZergRush.CodeGen
             else
             {
                 if (!type.IsValueType)
-                    sink.content($"if (!{stream}.ReadBoolean()) self.Add(null); continue;");
+                    sink.content($"if (!{stream}.ReadBoolean()) {{ self.Add(null); continue; }}");
                 GenReadValueFromStream(sink,
                     new DataInfo
                     {
@@ -276,7 +276,7 @@ namespace ZergRush.CodeGen
                 stream, pooled);
             
             if (!valType.IsValueType)
-                sink.content($"if (!{stream}.ReadBoolean()) {path}.Add(key, null); continue;");
+                sink.content($"if (!{stream}.ReadBoolean()) {{ {path}.Add(key, null); continue; }}");
                 
             sink.content($"var val = default({valType.RealName(true)});");
             GenReadValueFromStream(sink,
@@ -304,7 +304,7 @@ namespace ZergRush.CodeGen
             sink.content($"{{");
             sink.indent++;
             if (!type.IsValueType)
-                sink.content($"if (!{stream}.ReadBoolean()) self.Add(null); continue;");
+                sink.content($"if (!{stream}.ReadBoolean()) {{ self[i] = null; continue; }}");
             GenReadValueFromStream(sink, new DataInfo {type = type, baseAccess = $"{path}[i]", sureIsNull = true},
                 stream, pooled);
             sink.indent--;

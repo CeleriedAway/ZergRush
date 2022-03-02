@@ -88,7 +88,9 @@ public static partial class SerializationExtensions
         writer.Write(self.Count);
         for (int i = 0; i < self.Count; i++)
         {
-            writer.Write(self[i]);
+            {
+                writer.Write(self[i]);
+            }
         }
     }
     public static void ReadFromJson(this System.Collections.Generic.List<int> self, JsonTextReader reader) 
@@ -205,7 +207,9 @@ public static partial class SerializationExtensions
         writer.Write(self.Count);
         for (int i = 0; i < self.Count; i++)
         {
-            self[i].Serialize(writer);
+            {
+                self[i].Serialize(writer);
+            }
         }
     }
     public static ulong CalculateHash(this ZergRush.Alive.SerializableConnection self) 

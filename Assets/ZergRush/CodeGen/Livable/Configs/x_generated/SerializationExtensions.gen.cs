@@ -15,6 +15,7 @@ public static partial class SerializationExtensions
         self.Capacity = size;
         for (int i = 0; i < size; i++)
         {
+            if (!reader.ReadBoolean()) { self.Add(null); continue; }
             ZergRush.Alive.SomeItemFromConfig val = default;
             val = new ZergRush.Alive.SomeItemFromConfig();
             val.Deserialize(reader);
@@ -27,7 +28,11 @@ public static partial class SerializationExtensions
         writer.Write(self.Count);
         for (int i = 0; i < self.Count; i++)
         {
-            self[i].Serialize(writer);
+            writer.Write(self[i] != null);
+            if (self[i] != null)
+            {
+                self[i].Serialize(writer);
+            }
         }
     }
     public static ulong CalculateHash(this ZergRush.Alive.ConfigStorageList<ZergRush.Alive.SomeItemFromConfig> self) 
