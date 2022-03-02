@@ -54,10 +54,13 @@ namespace ZergRush.Alive
         {
             items.Add(item);
             SetupItemHierarchy(item);
-            item?.UpdateFrom(refData);
-            if (alive) {
+            
+            if (refData != null)
+                item?.UpdateFrom(refData);
+            
+            if (alive)
                 item?.Enlive();
-            }
+            
             ReactiveCollection<T>.OnItemAdded(item, up, items);
         }
 
