@@ -315,7 +315,7 @@ public class GenRecordable : __GenReplaceFieldBase
     }
 }
 
-[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = true)]
 public class GenTaskCustomImpl : GenTask
 {
     public bool genBaseMethods;
