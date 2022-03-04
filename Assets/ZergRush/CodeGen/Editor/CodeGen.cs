@@ -379,7 +379,7 @@ namespace ZergRush.CodeGen
                 checkFlag(GenTaskFlags.LifeSupport, funcPrefix => GenerateLivable(type, funcPrefix));
                 checkFlag(GenTaskFlags.OwnershipHierarchy, funcPrefix => GenerateHierarchyAndId(type, funcPrefix));
                 checkFlag(GenTaskFlags.OwnershipHierarchy, funcPrefix => GenerateConstructionFromRoot(type));
-                checkFlag(GenTaskFlags.DefaultConstructor, funcPrefix => GenerateConstructor(type));
+                checkFlag(GenTaskFlags.DefaultConstructor, funcPrefix => GenerateConstructor(type, funcPrefix));
                 checkFlag(GenTaskFlags.CompareChech, funcPrefix => GenerateComparisonFunc(type, funcPrefix));
                 checkFlag(GenTaskFlags.JsonSerialization, funcPrefix => GenerateJsonSerialization(type, funcPrefix));
                 checkFlag(GenTaskFlags.Pooled, funcPrefix => GeneratePoolSupportMethods(type));

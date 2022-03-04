@@ -1,4 +1,5 @@
 ﻿using System;
+using Sirenix.Utilities;
 using ZergRush.Alive;
 using ZergRush.CodeGen;
 
@@ -160,7 +161,7 @@ namespace ZergRush.CodeGen
             sink.content($"{(needCreateVar ? "var " : "")}{name} = {(needCast ? $"({t.RealName(true)})" : "")}{newExpr};");
         }
 
-        public static void GenerateConstructor(Type t)
+        public static void GenerateConstructor(Type t, string funcPrefix)
         {
             if (t.IsControllable() == false)
             {
@@ -170,7 +171,12 @@ namespace ZergRush.CodeGen
 
             if (t.IsValueType) return;
 
-            var constructor = MakeGenMethod(t, GenTaskFlags.DefaultConstructor, t.ClearName(), null, "");
+            MethodBuilder constructor;
+            if (funcPrefix.IsNullOrWhitespace())
+                constructor = MakeGenMethod(t, GenTaskFlags.DefaultConstructor, t.ClearName(), null, "");
+            else
+                constructor = MakeGenMethod(t, GenTaskFlags.DefaultConstructor, funcPrefix + t.ClearName(), Void, "");
+            
             constructor.type = MethodType.Instance;
 
             t.ProcessMembers(GenTaskFlags.DefaultConstructor, false, info =>
