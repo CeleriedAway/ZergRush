@@ -34,7 +34,7 @@ namespace ZergRush.CodeGen
                 calcHash = $"({HashTypeName}){name}.{UIdFuncName}()";
             }
 
-            if (info.canBeNull)
+            if (info.canBeNull && !info.type.IsValueType)
             {
                 return $"{name} != null ? {calcHash} : {RandomHash()}";
             }
@@ -113,7 +113,7 @@ namespace ZergRush.CodeGen
             sink.content($"for (int i = 0; i < size; i++)");
             sink.content($"{{");
             sink.indent++;
-            strategy.elemProcess(sink, new DataInfo{type = elemType, baseAccess = $"{prefix}[i]"});
+            strategy.elemProcess(sink, new DataInfo{type = elemType, baseAccess = $"{prefix}[i]", canBeNull = true});
             sink.indent--;
             sink.content($"}}");
             strategy.finish?.Invoke(sink);
@@ -125,7 +125,7 @@ namespace ZergRush.CodeGen
             sink.content($"foreach (var item in {path})");
             sink.content($"{{");
             sink.indent++;
-            if (strategy.needDictKeyTraverse) strategy.elemProcess(sink, new DataInfo{type = keyType, baseAccess = "item.Key"});
+            if (strategy.needDictKeyTraverse) strategy.elemProcess(sink, new DataInfo{type = keyType, baseAccess = "item.Key", canBeNull = true});
             strategy.elemProcess(sink, new DataInfo{type = valType, baseAccess = "item.Value"});
             sink.indent--;
             sink.content($"}}");

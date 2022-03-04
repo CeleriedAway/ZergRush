@@ -31,7 +31,9 @@ public static partial class SerializationExtensions
         writer.Write(self.Length);
         for (int i = 0; i < self.Length; i++)
         {
-            writer.Write(self[i]);
+            {
+                writer.Write(self[i]);
+            }
         }
     }
     public static ulong CalculateHash(this System.Int32[] self) 

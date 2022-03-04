@@ -73,11 +73,20 @@ namespace ZergRush.CodeGen
             sink.content($"for (int i = 0; i < {info.access}.Count; i++)");
             sink.content($"{{");
             sink.indent++;
+            if (!info.type.IsValueType)
+            {
+                sink.content($"{stream}.Write({info.access}[i] != null);");
+                sink.content($"if ({info.access}[i] != null)");
+            }
+            sink.content("{");
+            sink.indent++;
             WriteToStreamStatement(sink,
                 new DataInfo
                 {
                     type = info.type, baseAccess = $"{info.access}[i]", insideConfigStorage = listType.IsConfigStorage()
                 }, stream);
+            sink.indent--;
+            sink.content("}");
             sink.indent--;
             sink.content($"}}");
         }
@@ -89,10 +98,23 @@ namespace ZergRush.CodeGen
             sink.content($"foreach (var item in {path})");
             sink.content($"{{");
             sink.indent++;
+            
             WriteToStreamStatement(sink,
                 new DataInfo {type = keyType, baseAccess = $"item.Key", insideConfigStorage = configStorage}, stream);
+
+            if (!valType.IsValueType)
+            {
+                sink.content($"{stream}.Write(item.Value != null);");
+                sink.content("if (item.Value != null)");
+            }
+
+            sink.content("{");
+            sink.indent++;
             WriteToStreamStatement(sink,
                 new DataInfo {type = valType, baseAccess = $"item.Value", insideConfigStorage = configStorage}, stream);
+
+            sink.indent--;
+            sink.content("}");
             sink.indent--;
             sink.content($"}}");
         }
@@ -103,7 +125,18 @@ namespace ZergRush.CodeGen
             sink.content($"for (int i = 0; i < {info.access}.Length; i++)");
             sink.content($"{{");
             sink.indent++;
+
+            if (!info.type.IsValueType)
+            {
+                sink.content($"{stream}.Write({info.access}[i] != null);");
+                sink.content($"if ({info.access}[i] != null)");
+            }
+
+            sink.content("{");
+            sink.indent++;
             WriteToStreamStatement(sink, new DataInfo {type = info.type, baseAccess = $"{info.access}[i]"}, stream);
+            sink.indent--;
+            sink.content("}");
             sink.indent--;
             sink.content($"}}");
         }
@@ -199,6 +232,7 @@ namespace ZergRush.CodeGen
             if (type.IsDataNode())
             {
                 sink.content($"self.Add(null);");
+                sink.content($"if (!{stream}.ReadBoolean()) continue;");
                 GenReadValueFromStream(sink,
                     new DataInfo
                     {
@@ -209,6 +243,8 @@ namespace ZergRush.CodeGen
             }
             else
             {
+                if (!type.IsValueType)
+                    sink.content($"if (!{stream}.ReadBoolean()) {{ self.Add(null); continue; }}");
                 GenReadValueFromStream(sink,
                     new DataInfo
                     {
@@ -238,6 +274,10 @@ namespace ZergRush.CodeGen
                 new DataInfo
                     {type = keyType, baseAccess = $"key", sureIsNull = true, insideConfigStorage = configStorage},
                 stream, pooled);
+            
+            if (!valType.IsValueType)
+                sink.content($"if (!{stream}.ReadBoolean()) {{ {path}.Add(key, null); continue; }}");
+                
             sink.content($"var val = default({valType.RealName(true)});");
             GenReadValueFromStream(sink,
                 new DataInfo
@@ -263,6 +303,8 @@ namespace ZergRush.CodeGen
             sink.content($"for (int i = 0; i < size; i++)");
             sink.content($"{{");
             sink.indent++;
+            if (!type.IsValueType)
+                sink.content($"if (!{stream}.ReadBoolean()) {{ self[i] = null; continue; }}");
             GenReadValueFromStream(sink, new DataInfo {type = type, baseAccess = $"{path}[i]", sureIsNull = true},
                 stream, pooled);
             sink.indent--;
