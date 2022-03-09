@@ -362,6 +362,20 @@ namespace ZergRush
             return default(T);
         }
 
+        public static List<T> TakeAll<T>(this IList<T> list, Func<T, bool> predicate)
+        {
+            var result = new List<T>();
+            for (var i = list.Count - 1; i >= 0; i--)
+            {
+                var x1 = list[i];
+                if (predicate(x1))
+                {
+                    result.Add(list.TakeAt(i));
+                }
+            }
+            return result;
+        }
+        
         public static T TakeAt<T>(this IList<T> list, int index)
         {
             var t = list[index];
