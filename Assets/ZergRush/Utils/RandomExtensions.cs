@@ -11,7 +11,7 @@ namespace ZergRush
         public static T TakeRandom<T>(this List<T> list, ZergRandom random)
         {
             var i = random.Range(0, list.Count);
-            return list.Take(i);
+            return list.TakeAt(i);
         }
         
         public static List<float> NormalizeFloatRange(this IEnumerable<float> range)

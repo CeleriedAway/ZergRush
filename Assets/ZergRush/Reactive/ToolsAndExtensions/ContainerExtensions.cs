@@ -329,13 +329,6 @@ namespace ZergRush
             return keysToRemove.Count;
         }
 
-        public static T Take<T>(this List<T> list, int index)
-        {
-            T t = list[index];
-            list.RemoveAt(index);
-            return t;
-        }
-
         public static TVal TakeKey<TKey, TVal>(this Dictionary<TKey, TVal> dict, TKey key)
         {
             if (dict.TryGetValue(key, out var val))
