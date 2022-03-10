@@ -217,6 +217,9 @@ namespace ZergRush.CodeGen
                 sinkReader.content($"{{");
                 sinkReader.indent++;
                 sinkReader.content("if (reader.TokenType == JsonToken.EndArray) { break; }");
+                if (elemType.IsValueType == false)
+                    sinkReader.content("if (reader.TokenType == JsonToken.Null) { self.Add(null); continue; }");
+            
                 Action initArray = () =>
                 {
                     sinkReader.content($"Array.Resize(ref self, self.Length + 1);");

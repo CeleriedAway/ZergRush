@@ -37,7 +37,7 @@
                     "Usually it`s something like \"string id\" field.");
             
             if (allConfigs.ContainsKey(config.UId()))
-                throw new ZergRushException($"Two config entities of type {config.GetType()} have a similar uid {config.UId()}. " +
+                throw new ZergRushException($"Two config entities of type {config.GetType()} and {allConfigs[config.UId()].GetType()} have a similar uid {config.UId()}. " +
                     $"{nameof(UIDComponent)} should mark only unique identifier fields.");
 
             allConfigs[config.UId()] = config;

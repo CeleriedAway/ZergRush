@@ -63,6 +63,7 @@ public static partial class SerializationExtensions
         while (reader.Read())
         {
             if (reader.TokenType == JsonToken.EndArray) { break; }
+            if (reader.TokenType == JsonToken.Null) { self.Add(null); continue; }
             ZergRush.Alive.SomeItemFromConfig val = default;
             val = new ZergRush.Alive.SomeItemFromConfig();
             val.ReadFromJson(reader);
