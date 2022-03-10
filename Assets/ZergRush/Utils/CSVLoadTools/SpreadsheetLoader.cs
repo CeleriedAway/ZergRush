@@ -112,7 +112,7 @@ namespace GameTools
             return new CsvReader(source.Split(new[] { "\r\n" }, StringSplitOptions.None));
         }
 
-        public void DownloadAllConfigs()
+        public void DownloadAllConfigs(Action onLoaded = null)
         {
             Authorize();
             Connect();
@@ -153,6 +153,8 @@ namespace GameTools
             }
 
             EditorUtility.ClearProgressBar();
+            
+            onLoaded?.Invoke();
         }
 
         private string LoadTableAsCSV(string tableId, string pageId)
