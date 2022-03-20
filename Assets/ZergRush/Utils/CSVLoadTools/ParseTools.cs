@@ -63,9 +63,9 @@ public static class ParseTools
         return i;
     }
 
-    public static int ParsePartToPercent(this string str)
+    public static int ParsePartToPercent(this string str, int def = 0)
     {
-        if (string.IsNullOrEmpty(str)) return 0;
+        if (string.IsNullOrEmpty(str)) return def;
         return Mathf.RoundToInt(float.Parse(str, CultureInfo.InvariantCulture) * 100);
     }
 
@@ -75,10 +75,10 @@ public static class ParseTools
         return Mathf.RoundToInt(float.Parse(str, CultureInfo.InvariantCulture) * 100);
     }
 
-    public static float ParseFloat(this string str)
+    public static float ParseFloat(this string str, float def = 0)
     {
-        if (string.IsNullOrEmpty(str)) return 0;
-        return float.TryParse(str, out var i) ? i : 0;
+        if (string.IsNullOrEmpty(str)) return def;
+        return float.TryParse(str, out var i) ? i : def;
     }
     public static int ParseInt(this string str, int def = 0)
     {
