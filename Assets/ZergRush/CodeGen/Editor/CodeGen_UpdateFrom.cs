@@ -225,9 +225,9 @@ namespace ZergRush.CodeGen
             sink.content($"for (int i = 0; i < {prefix}.Length; i++)");
             sink.content($"{{");
             sink.indent++;
-            if (!type.IsValueType)
-                sink.content($"if (self[i] == null) {{ {other}[i] = null; continue; }}");
-            GenUpdateValueFromInstance(sink, new DataInfo {type = type, baseAccess = $"{prefix}[i]", canBeNull = true},
+            // if (!type.IsValueType)
+            //     sink.content($"if ({other}[i] == null) {{ {prefix}[i] = null; continue; }}");
+            GenUpdateValueFromInstance(sink, new DataInfo {type = type, baseAccess = $"{prefix}[i]", canBeNull = !type.IsValueType},
                 $"{other}[i]", pooled);
             sink.indent--;
             sink.content($"}}");
@@ -245,9 +245,8 @@ namespace ZergRush.CodeGen
             sink.content($"for (; i < crossCount; ++i)");
             sink.content($"{{");
             sink.indent++;
-            if (!elementType.IsValueType)
-                sink.content($"if (self[i] == null) {{ {other}[i] = null; continue; }}");
-            GenUpdateValueFromInstance(sink, new DataInfo {type = elementType, baseAccess = $"self[i]"}, refInst,
+            GenUpdateValueFromInstance(sink, new DataInfo {type = elementType,
+                    baseAccess = $"{accessPrefix}[i]", canBeNull = !elementType.IsValueType}, refInst,
                 pooled,
                 needTempVarThenAssign: elementType.IsValueType);
             sink.indent--;
