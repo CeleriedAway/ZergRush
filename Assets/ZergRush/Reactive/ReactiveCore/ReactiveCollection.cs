@@ -273,6 +273,8 @@ namespace ZergRush.ReactiveCore
 
     public abstract class AbstractCollectionTransform<T> : IReactiveCollection<T>
     {
+        protected bool disconected => connectionCounter == 0;
+        
         int connectionCounter = 0;
         IDisposable collectionConnection;
         
@@ -304,7 +306,7 @@ namespace ZergRush.ReactiveCore
                 if (buffer.getConnectionCount != 0)
                 {
                     //Debug.LogError("WTF is that");
-                    throw new Exception("this should not happen");
+                    //throw new Exception("this should not happen");
                 }
                 collectionConnection.Dispose();
                 collectionConnection = null;
@@ -856,6 +858,8 @@ namespace ZergRush.ReactiveCore
 
             void Process(IReactiveCollectionEvent<T> e)
             {
+                if (disconected) return;
+                
                 switch (e.type)
                 {
                     case ReactiveCollectionEventType.Reset:
@@ -881,6 +885,8 @@ namespace ZergRush.ReactiveCore
             }
             void Process2(IReactiveCollectionEvent<T> e)
             {
+                if (disconected) return;
+                
                 switch (e.type)
                 {
                     case ReactiveCollectionEventType.Reset:
@@ -908,9 +914,10 @@ namespace ZergRush.ReactiveCore
             protected override IDisposable StartListenAndRefill()
             {
                 RefillBuffer();
-                var disp = new DoubleDisposable();
-                disp.first = collection.update.Subscribe(Process);
-                disp.second = collection2.update.Subscribe(Process2);
+                var disp = new MultipleDisposable();
+                disp.Add(collection.update.Subscribe(Process));
+                disp.Add(collection2.update.Subscribe(Process2));
+                
                 return disp;
             }
 
@@ -1107,6 +1114,8 @@ namespace ZergRush.ReactiveCore
 
             void Process(IReactiveCollectionEvent<T> e)
             {
+                if (disconected) return;
+                
                 switch (e.type)
                 {
                     case ReactiveCollectionEventType.Reset:
@@ -1154,6 +1163,7 @@ namespace ZergRush.ReactiveCore
 
             void Process(ReactiveCollectionEvent<T> e, int index)
             {
+                if (disconected) return;
                 switch (e.type)
                 {
                     case ReactiveCollectionEventType.Reset:
@@ -1364,6 +1374,8 @@ namespace ZergRush.ReactiveCore
 
             void Process(IReactiveCollectionEvent<ICell<T>> e)
             {
+                if (disconected) return;
+                
                 switch (e.type)
                 {
                     case ReactiveCollectionEventType.Reset:
@@ -1427,6 +1439,8 @@ namespace ZergRush.ReactiveCore
 
             void Process(IReactiveCollectionEvent<T> e)
             {
+                if (disconected) return;
+                
                 switch (e.type)
                 {
                     case ReactiveCollectionEventType.Reset:
@@ -1516,6 +1530,7 @@ namespace ZergRush.ReactiveCore
 
             void Process(IReactiveCollectionEvent<T> e)
             {
+                if (disconected) return;
                 switch (e.type)
                 {
                     case ReactiveCollectionEventType.Reset:
