@@ -83,7 +83,7 @@ namespace Demo.CellDemo
 			connections += selectedEquipmentView.upgradeButton.SetVisibility(uiState.selectedEquipment.IsNot(null));
 		
 			// Final selected unit + equpment buff
-			foreach (var buffTypeIt in Utils.GetEnumValues<UnitBuffType>())
+			foreach (var buffTypeIt in ZergRush.Utils.GetEnumValues<UnitBuffType>())
 			{
 				// Copy var to prevent c# capturing iterator
 				var buffType = buffTypeIt;
