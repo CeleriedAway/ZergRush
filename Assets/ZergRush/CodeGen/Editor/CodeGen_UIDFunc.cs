@@ -23,6 +23,11 @@ namespace ZergRush.CodeGen
                     sink.needBaseValCall = false;
                     var start = type.NeedsPolymorphRegistration() ? $"{PolymorphClassIdFunc}()" : RandomHash().ToString();
                     sink.content($"{HashType} hash = {start};");
+                    if (baseCall)
+                    {
+                        sink.content($"hash += base.{UIdFuncName}();");
+                        sink.content(HashMixStatement("hash"));
+                    }
                 },
                 elemProcess = (sink, info) =>
                 {
