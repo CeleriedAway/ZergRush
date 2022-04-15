@@ -192,6 +192,7 @@ public static class SerializationTools
 
     public static ulong CalculateHash(this string array)
     {
+        if (array == null) return 1234567;
         ulong hash = 0;
         for (int i = 0; i < array.Length; i++)
         {

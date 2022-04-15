@@ -56,7 +56,6 @@ namespace ZergRush.CodeGen
                 }
             }
         }
-         
         
         public static void GenerateComparisonFunc(Type type, string funcPrefix)
         {
@@ -80,7 +79,8 @@ namespace ZergRush.CodeGen
                 sink.content($"for (int i = 0; i < count; i++)");
                 sink.content($"{{");
                 sink.indent++;
-                CompareCheckValue(sink, new DataInfo {type = elemType, baseAccess = $"self[i]", pathLog = $"i.ToString()"}, $"{otherName}[i]"); 
+                CompareCheckValue(sink, new DataInfo {type = elemType, canBeNull = !elemType.IsValueType,
+                    baseAccess = $"self[i]", pathLog = $"i.ToString()"}, $"{otherName}[i]"); 
                 sink.indent--;
                 sink.content($"}}");
             }

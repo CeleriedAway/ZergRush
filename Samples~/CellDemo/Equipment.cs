@@ -17,7 +17,7 @@ namespace Demo.CellDemo
 
         public static Equipment RandomOne()
         {
-            var allValues = Utils.GetEnumValues<UnitBuffType>().ToList();
+            var allValues = ZergRush.Utils.GetEnumValues<UnitBuffType>().ToList();
             var randomVal = allValues[Random.Range(0, allValues.Count)];
             return new Equipment
             {

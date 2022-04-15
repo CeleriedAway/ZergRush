@@ -233,6 +233,7 @@ namespace ZergRush.Alive
 
         public void RemoveAt(int index)
         {
+            CheckSetup();
             var item = data[index];
             data.RemoveAt(index);
             ids.RemoveAt(index);
@@ -289,8 +290,12 @@ namespace ZergRush.Alive
 
         public int Capacity
         {
-            get { return data.Capacity; }
-            set { data.Capacity = value; }
+            get { return ids.Capacity; }
+            set
+            {
+                ids.Capacity = value;
+                data.Capacity = value;
+            }
         }
 
         public IEnumerator<T> GetEnumerator()
@@ -326,10 +331,6 @@ namespace ZergRush.Alive
             {
                 other.CheckSetup();
                 mirroringList = other;
-                if (mirroringList.data.Count != mirroringList.ids.Count)
-                {
-                    Debug.LogError("asdfadsf");
-                }
                 root.__RegisterUpdatePostprocess(this);
             }
         }
