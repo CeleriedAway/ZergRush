@@ -578,6 +578,16 @@ namespace ZergRush.ReactiveCore
             return cell.Map(v => EqualityComparer<T>.Default.Equals(value, v) == false);
         }
         
+        public static ICell<int> Negate(this ICell<int> cell)
+        {
+            return cell.Map(v => -v);
+        }
+        
+        public static ICell<float> Negate(this ICell<float> cell)
+        {
+            return cell.Map(v => -v);
+        }
+        
         /// An experimental concept some kink of abstract lens.
         public static ICellRW<T2> MapRW<T, T2>(this ICellRW<T> cell, Func<T, T2> map, Func<T2, T> mapBack)
         {
