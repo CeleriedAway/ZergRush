@@ -24,7 +24,7 @@
         /// Storage of all config members.
         /// </summary>
         [GenIgnore] public ConfigRegister allConfigs = new ConfigRegister();
-        
+
         /// <summary>
         /// Registers config member in config storage.
         /// Registered config can be retrieved from "allConfigs" dictionary by id.
@@ -33,16 +33,18 @@
         public void RegisterConfig(LoadableConfig config)
         {
             if (config.UId() == 0)
-                throw new ZergRushException($"Config member {config.GetType()} should mark fields with {nameof(UIDComponent)} tag." +
+                throw new ZergRushException(
+                    $"Config member {config.GetType()} should mark fields with {nameof(UIDComponent)} tag." +
                     "Usually it`s something like \"string id\" field.");
-            
+
             if (allConfigs.ContainsKey(config.UId()))
-                throw new ZergRushException($"Two config entities of type {config.GetType()} and {allConfigs[config.UId()].GetType()} have a similar uid {config.UId()}. " +
+                throw new ZergRushException(
+                    $"Two config entities of type {config.GetType()} and {allConfigs[config.UId()].GetType()} have a similar uid {config.UId()}. " +
                     $"{nameof(UIDComponent)} should mark only unique identifier fields.");
 
             allConfigs[config.UId()] = config;
         }
-        
+
         /// <summary>
         /// Retrieves config member from ConfigsRegister by id.
         /// Used to deserialize references to config member instances.
@@ -51,9 +53,15 @@
         /// <returns></returns>
         public static IUniquelyIdentifiable GetConfig(ulong uid)
         {
-            return Instance.allConfigs[uid];
+            if (Instance.allConfigs.TryGetValue(uid, out var c))
+            {
+                return c;
+            }
+            throw new ZergRushException(
+                $"uid:{uid} is not registerred in game config, check that this configs are contained in" +
+                $" ConfigStorageList or Dict in somewhere in game config and is loaded earlier then required id");
         }
-        
+
         /// <summary>
         /// Executes actions to fulfill game config with members.
         /// </summary>
@@ -62,7 +70,7 @@
             Instance = new T();
             fillConfig(Instance);
         }
-        
+
         /// <summary>
         /// Executes async actions to fulfill game config with members.
         /// </summary>
@@ -71,7 +79,7 @@
             Instance = new T();
             await fillInstance(Instance);
         }
-        
+
         public static void LoadFrom(BinaryReader reader)
         {
             Instance = new T();
@@ -86,12 +94,12 @@
     }
 
     #region Example
-    
+
     [GenInLocalFolder]
     public partial class GameConfigExample : GameConfigRoot<GameConfigExample>
     {
         public ConfigStorageList<SomeItemFromConfig> items;
     }
-    
+
     #endregion
 }
