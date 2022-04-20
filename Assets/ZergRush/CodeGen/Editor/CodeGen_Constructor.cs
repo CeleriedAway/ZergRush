@@ -171,7 +171,7 @@ namespace ZergRush.CodeGen
             if (t.IsValueType) return;
 
             MethodBuilder constructor;
-            if (funcPrefix.IsNullOrWhitespace())
+            if (string.IsNullOrWhiteSpace(funcPrefix))
                 constructor = MakeGenMethod(t, GenTaskFlags.DefaultConstructor, t.ClearName(), null, "");
             else
                 constructor = MakeGenMethod(t, GenTaskFlags.DefaultConstructor, funcPrefix + t.ClearName(), Void, "");
