@@ -135,7 +135,7 @@ namespace ZergRush
         {
             if (elements.Count == 0)
             {
-                Debug.LogError("random with zero element count");
+                //Debug.LogError("random with zero element count");
                 index = -1;
                 return default;
             }

@@ -649,7 +649,13 @@ namespace ZergRush.ReactiveCore
         public static ICellRW<T> ReflectionFieldToRW<T>(this object obj, string fieldName)
         {
             var f = obj.GetType().GetField(fieldName);
-            if (f == null) {UnityEngine.Debug.LogError($"field {fieldName} is not found in obj {obj}"); return null;}
+            if (f == null)
+            {
+                #if UNITY_EDITOR
+                UnityEngine.Debug.LogError($"field {fieldName} is not found in obj {obj}");
+                #endif
+                return null;
+            }
             return obj.ReflectionFieldToRW<T>(f);
         }
         public static IValueRW<float> ToFloat(this IValueRW<int> val)

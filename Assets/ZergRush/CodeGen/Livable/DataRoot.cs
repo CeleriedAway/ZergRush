@@ -70,7 +70,9 @@ namespace ZergRush.Alive
                 {
                     return;
                 }
+                #if LogRegistering
                 Debug.LogError($"This id {id} of {entity} is already taken by entity: {gameEntities[id]} id={id}");
+                #endif
                 return;
             }
             #if LogRegistering

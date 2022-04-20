@@ -161,7 +161,9 @@ namespace ZergRush
             item.Dispose();
             if (!Remove(item))
             {
+                #if UNITY_EDITOR
                 UnityEngine.Debug.LogError("this connection not found");
+                #endif
             }
         }
         
