@@ -72,7 +72,7 @@ namespace ZergRush
 
         public bool disposed = false;
 
-        void AlertIfDisposed() {if (disposed) throw new ZergRushException("double disposable is disposed");}
+        void AlertIfDisposed() { }//if (disposed) throw new ZergRushException("double disposable is disposed");}
         public IDisposable First
         {
             get { AlertIfDisposed(); return first; }
