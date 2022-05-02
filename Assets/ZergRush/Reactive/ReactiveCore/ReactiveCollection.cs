@@ -666,7 +666,17 @@ namespace ZergRush.ReactiveCore
         {
             return collection.AsCell().Map(c => c.Any(item));
         }
-        
+        public static ICell<bool> AnyReactive(this IReactiveCollection<bool> collection) {
+            return collection.AsCell().Map(c => c.Any(v => v));
+        }
+        public static ICell<bool> AllReactive<T>(this IReactiveCollection<T> collection,
+           Func<T, bool> item) {
+            return collection.AsCell().Map(c => c.All(item));
+        }
+        public static ICell<bool> AllReactive(this IReactiveCollection<bool> collection) {
+            return collection.AsCell().Map(c => c.All(v => v));
+        }
+
         public static ICell<T> FindReactive<T>(this IReactiveCollection<T> collection,
             Func<T, bool> item)
         {
