@@ -163,63 +163,13 @@ public class DoNotGen : Attribute
 }
 
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = true)]
-public class GenSimpleData : GenTask
-{
-    public GenSimpleData() : base(GenTaskFlags.SimpleDataPack)
-    {
-    }
-}
-
-[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = true)]
-public class GenConfigData : GenTask
-{
-    public GenConfigData() : base(GenTaskFlags.ConfigData)
-    {
-    }
-}
-
-[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = true)]
-public class GenLoadableConfigData : GenTask
-{
-    public GenLoadableConfigData() : base(GenTaskFlags.ConfigData | GenTaskFlags.UIDGen)
-    {
-    }
-}
-
-[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = true)]
 public class GenDoNotInheritGenTags : Attribute
-{
-}
-
-[AttributeUsage(AttributeTargets.Class)]
-public class GenCommands : GenTask
-{
-    public GenCommands() : base(GenTaskFlags.LocalCommands)
-    {
-    }
-}
-
-[AttributeUsage(AttributeTargets.Method)]
-public class GameCommand : Attribute
-{
-}
-
-[AttributeUsage(AttributeTargets.Method)]
-public class RemoteCommand : Attribute
 {
 }
 
 [AttributeUsage(AttributeTargets.Method)]
 public class IsDebug : Attribute
 {
-}
-
-[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = true)]
-public class GenLivable : GenTask
-{
-    public GenLivable() : base(GenTaskFlags.LivableNodePack)
-    {
-    }
 }
 
 [AttributeUsage(AttributeTargets.Class)]
@@ -253,25 +203,6 @@ public class RootType : Attribute
         this.type = type;
     }
 }
-
-[AttributeUsage(AttributeTargets.Class)]
-public class GenRemoteCommands : GenTask
-{
-    public Type requestType;
-    public Type responseType;
-    public string commandTypeName;
-    public Type networkLayerType;
-
-    public GenRemoteCommands(Type requestType, Type responseType, string commandTypeName, Type networkLayerType) : base(
-        GenTaskFlags.RPC)
-    {
-        this.requestType = requestType;
-        this.responseType = responseType;
-        this.commandTypeName = commandTypeName;
-        this.networkLayerType = networkLayerType;
-    }
-}
-
 
 [AttributeUsage(AttributeTargets.Class)]
 public class GenUpdatedEvent : Attribute
@@ -327,43 +258,6 @@ public class GenTaskCustomImpl : GenTask
     }
 }
 
-[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
-public class GenSerialization : GenTask
-{
-    public GenSerialization() : base(GenTaskFlags.Serialization)
-    {
-    }
-}
-
-
-[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
-public class GenHashing : GenTask
-{
-    public GenHashing() : base(GenTaskFlags.Hash)
-    {
-    }
-}
-
-[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
-public class GenUpdateFrom : GenTask
-{
-    public GenUpdateFrom() : base(GenTaskFlags.UpdateFrom)
-    {
-    }
-}
-
-[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
-public class SortedElements : Attribute
-{
-    public string numberGetter;
-
-    public SortedElements(string numberGetter)
-    {
-        this.numberGetter = numberGetter;
-    }
-}
-
-
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
 public class GenInclude : Attribute
 {
@@ -390,13 +284,6 @@ public class CantBeAncestor : Attribute
 public class UIDComponent : Attribute
 {
 }
-
-// Says that this field should be loaded from config, type should implement IUniquelyIdentifiable
-[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
-public class LoadFromConfig : Attribute
-{
-}
-
 
 // If this attribute is set this static function will be called during main codegeneration
 // process and you can request types for generation in main chunk with CodeGen.RequestGen
