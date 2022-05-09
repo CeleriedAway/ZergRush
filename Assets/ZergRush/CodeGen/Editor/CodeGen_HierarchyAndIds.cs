@@ -31,6 +31,7 @@ namespace ZergRush.CodeGen
                 setupIds.content($"Id = __root.entityIdFactory++;");
             type.ProcessMembers(GenTaskFlags.OwnershipHierarchy, false, info =>
             {
+                if (info.justData) return;
                 if (info.isValueWrapper == ValueVrapperType.None && info.type.IsDataNode())
                 {
 //                    if (info.type.HasReferenceId())

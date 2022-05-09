@@ -464,6 +464,18 @@ namespace ZergRush
         {
             return Enum.GetValues(typeof(T)).Cast<int>();
         }
+        
+        public static bool IsPowerOfTwo(this int val)
+        {
+            if (val < 0) val = -val;
+            return (val & (val - 1)) == 0;
+        }
+        
+        public static IEnumerable<TEnum> DecomposeToBasicValues<TEnum>(this TEnum value)
+        {
+            return GetEnumValuesInt<TEnum>().Where(v => v.IsPowerOfTwo() && ((int)(object)value & v) != 0).Cast<TEnum>();
+        }
+
 
         public static void EnsureSizeWithNulls<T>(this List<T> list, int count) where T : class
         {

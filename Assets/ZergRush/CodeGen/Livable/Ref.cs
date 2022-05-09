@@ -119,11 +119,6 @@ namespace ZergRush.Alive
             base.ReadFromJsonField(reader, name);
         }
 
-        public static implicit operator T(Ref<T> r)
-        {
-            return r.value;
-        }
-
         public int getConnectionCount => up == null ? 0 : up.getConnectionCount;
     }
 }

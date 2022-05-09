@@ -98,7 +98,6 @@ public static class ParseTools
         return str.Split(',').Select(s => ParseInt(s)).ToArray();
     }
 
-
     public static IEnumerable<TEnum> EnumValues<TEnum>()
     {
         return Enum.GetValues(typeof(TEnum)).Cast<TEnum>();

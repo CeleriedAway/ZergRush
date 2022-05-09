@@ -2,8 +2,10 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using JetBrains.Annotations;
 using Newtonsoft.Json;
 using UnityEngine;
+using ZergRush.CodeGen;
 
 namespace ZergRush.ReactiveCore
 {
@@ -216,22 +218,65 @@ namespace ZergRush.ReactiveCore
     public class ModifiableList<T> : IReactiveCollection<T>, IReadOnlyList<T>
     {
         ReactiveCollection<T> collection = new ReactiveCollection<T>();
+        List<int> priorities = new List<int>();
 
-        public IDisposable ModifyAdd(T elem)
-        {
-            collection.Add(elem);
-            return new AnonymousDisposable(() => collection.Remove(elem));
-        }
+        public int currPriority;
 
-        public void ModifyAdd(IConnectionSink sink, T elem)
+        /*  priority is required to make this list not dependant on call order
+            priority 0 means it will be the last element and real priority is set internally
+            that why it is the 'ref'
+            so please save the priority you got
+        */
+        [MustUseReturnValue]
+        public IDisposable ModifyAdd(T elem, ref int priority)
         {
-            collection.Add(elem);
-            sink.AddConnection(new AnonymousDisposable(() =>
+            if (priority != 0)
             {
-                //Debug.Log("removing...");
-                collection.Remove(elem);
-            }));
+                var pp = priority;
+                var index = priorities.IndexOf(p => p > pp);
+                if (index < 0) index = priorities.Count;
+                collection.Insert(index, elem);
+                priorities.Insert(index, pp);
+                currPriority = Math.Max(currPriority, priority);
+            }
+            else
+            {
+                currPriority++;
+                priority = currPriority;
+                collection.Add(elem);
+                priorities.Add(priority);
+            }
+            return new AnonymousDisposable(() =>
+            {
+                var i = collection.IndexOf(elem);
+                collection.RemoveAt(i);
+                priorities.RemoveAt(i);
+            });
         }
+
+        public void ModifyAdd(IConnectionSink sink, T elem, ref int priority)
+        {
+            sink.AddConnection(ModifyAdd(elem, ref priority));
+        }
+
+        public IDisposable ModifyAdd(ICell<T> elem, ref int priority)
+        {
+            var disp = new DoubleDisposable();
+            disp.First = ModifyAdd(elem.value, ref priority);
+            disp.Second = elem.BufferListenUpdates((newVal, oldVal) =>
+            {
+                //Debug.Log($"cell({cellMod.GetHashCode()}) value replaced from:{oldVal} to:{newVal} Connected to {GetHashCode()}}}");
+                var index = collection.IndexOf(m => EqualityComparer<T>.Default.Equals(m, oldVal));
+                collection[index] = newVal;
+            });
+            return disp;
+        }
+        
+        public void ModifyAdd(IConnectionSink sink, ICell<T> elem, ref int priority)
+        {
+            sink.AddConnection(ModifyAdd(elem, ref priority));
+        }
+        
 
         public IEnumerator<T> GetEnumerator()
         {

@@ -12,6 +12,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 using UnityEditor;
@@ -112,7 +113,7 @@ namespace GameTools
             return new CsvReader(source.Split(new[] { "\r\n" }, StringSplitOptions.None));
         }
 
-        public void DownloadAllConfigs(Action onLoaded = null)
+        public async void DownloadAllConfigs(Action onLoaded = null)
         {
             Authorize();
             Connect();
@@ -129,9 +130,10 @@ namespace GameTools
             var part = 1f / count;
             var i = 0;
 
-            var filesToWrite = new List<(string, string)>();
+            var filesToWrite = new List<(string, Task<string>)>();
 
             foreach (var config in googleConfig)
+            {
                 foreach (var page in config.pages)
                 {
                     EditorUtility.DisplayProgressBar($"Downloading {config.name} page", $"Page {page.Key}", i++ * part);
@@ -140,24 +142,27 @@ namespace GameTools
                     Directory.CreateDirectory(path);
                     filesToWrite.Add(($"{path}/{page.Key}.csv", content));
                 }
-
-            foreach (var config in atlassianConfig)
-            {
-                var content = DownloadAtlassianTable(config.Value, config.Key.ToString(), part, i++);
-                filesToWrite.Add(($"{pathToConfigs}{config.Key}.csv", content));
             }
+
+            // foreach (var config in atlassianConfig)
+            // {
+            //     var content = DownloadAtlassianTable(config.Value, config.Key.ToString(), part, i++);
+            //     filesToWrite.Add(($"{pathToConfigs}{config.Key}.csv", content));
+            // }
 
             foreach (var (path, content) in filesToWrite)
             {
-                File.WriteAllText(path, content);
+                File.WriteAllText(path, await content);
             }
+            
+            Debug.Log("Load csv data complete!");
 
             EditorUtility.ClearProgressBar();
             
             onLoaded?.Invoke();
         }
 
-        private string LoadTableAsCSV(string tableId, string pageId)
+        private async Task<string> LoadTableAsCSV(string tableId, string pageId)
         {
             ServicePointManager.ServerCertificateValidationCallback = MyRemoteCertificateValidationCallback;
 
@@ -167,7 +172,7 @@ namespace GameTools
             var client = new WebClient();
             try
             {
-                csv = new StreamReader(client.OpenRead(link)).ReadToEnd();
+                csv = await client.DownloadStringTaskAsync(link);
             }
             catch (Exception e)
             {

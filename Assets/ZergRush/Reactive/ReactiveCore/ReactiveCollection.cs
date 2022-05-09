@@ -801,6 +801,11 @@ namespace ZergRush.ReactiveCore
             return index.FlatMap(v => collection.AtIndex(v, ifNoElement));
         }
 
+        public static ICell<T> LastElementCell<T>(this IReactiveCollection<T> collection)
+        {
+            return collection.AsCell().Map(c => c.LastElement());
+        }
+
         public static ICell<IReadOnlyList<T>> AsCell<T>(this IReactiveCollection<T> collection)
         {
             return new AnonymousCell<IReadOnlyList<T>>(action =>
