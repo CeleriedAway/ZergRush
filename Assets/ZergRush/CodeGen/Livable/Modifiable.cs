@@ -249,8 +249,11 @@ namespace ZergRush.ReactiveCore
             return new AnonymousDisposable(() =>
             {
                 var i = collection.IndexOf(elem);
-                collection.RemoveAt(i);
-                priorities.RemoveAt(i);
+                if (i >= 0)
+                {
+                    collection.RemoveAt(i);
+                    priorities.RemoveAt(i);
+                }
             });
         }
 
