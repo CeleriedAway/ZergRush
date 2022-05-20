@@ -102,7 +102,7 @@ namespace ZergRush.Alive
                 if (_value != null)
                 {
                     _value.__ForgetIds();
-                    if (alive) _value.Mortify();
+                    if (isAlive) _value.Mortify();
                     _value.ReturnToPool(root.pool);
                     if (!__update_mod)
                     {
@@ -115,7 +115,7 @@ namespace ZergRush.Alive
 
                 if (_value != null)
                 {
-                    if (_value.alive)
+                    if (_value.isAlive)
                     {
                         throw new ZergRushException("alive value came into livable slot");
                     }
@@ -127,7 +127,7 @@ namespace ZergRush.Alive
                         _value.__PropagateHierarchyAndRememberIds();
                     }
                     
-                    if (alive)
+                    if (isAlive)
                     {
                         EnliveValue();
                     }

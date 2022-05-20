@@ -30,6 +30,7 @@ public interface ILivable
 {
     void Enlive();
     void Mortify();
+    public bool isAlive { get; }
 }
 
 public interface IReferencableFromDataRoot
@@ -600,7 +601,7 @@ public static class SerializationTools
         }
         catch (Exception e)
         {
-            Debug.LogError($"Failed to load binary with error :{e.Message} call stack=\n{e.StackTrace}");
+            Debug.LogError($"Failed to load binary with error :{e.ToError()}");
             return false;
         }
         return true;
@@ -656,7 +657,7 @@ public static class SerializationTools
             using (var file = FileWrapper.Open(path, FileMode.Open))
             {
                 data.Deserialize(new BinaryReader(file));
-                if (data is ILivable livable) livable.Enlive();
+                if (data is ILivable livable && livable.isAlive == false) livable.Enlive();
             }
             return true;
         }

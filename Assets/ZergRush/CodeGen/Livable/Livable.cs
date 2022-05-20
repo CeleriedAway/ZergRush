@@ -13,9 +13,9 @@ namespace ZergRush.Alive
      *     So you never call Enlive methods manually
      */
     [GenTask(GenTaskFlags.LivableNodePack & ~GenTaskFlags.PolymorphicConstruction), GenInLocalFolder]
-    public abstract partial class Livable : DataNode, IConnectionSink
+    public abstract partial class Livable : DataNode, IConnectionSink, ILivable
     {
-        [GenIgnore] public bool alive { get; private set; }
+        [GenIgnore] public bool isAlive { get; private set; }
         [GenIgnore] List<Connection> fastConnections;
         [GenIgnore] List<Action> normalConnections;
 
@@ -83,23 +83,23 @@ namespace ZergRush.Alive
         
         protected virtual void EnliveSelf()
         {
-            if (alive)
+            if (isAlive)
             {
                 throw new ZergRushException("You can not enlive living");
             }
 
-            alive = true;
+            isAlive = true;
         }
 
         protected virtual void MortifySelf()
         {
-            if (!alive)
+            if (!isAlive)
             {
                 throw new ZergRushException("What Is Dead May Never Die (c)");
             }
 
             DisconnectAll();
-            alive = false;
+            isAlive = false;
         }
 
 
@@ -107,6 +107,7 @@ namespace ZergRush.Alive
         {
             AddInfluence(connection.Dispose);
         }
+
     }
     
     public struct Connection
