@@ -404,19 +404,6 @@ public static partial class SerializationTools
         return data;
     }
 
-    public static void CheckSerialization<T>(T c) where T : class, IJsonSerializable, ICompareChechable<T>, new()
-    {
-        var str = new StringWriter();
-        var writer = new JsonTextWriter(str);
-        c.WriteJson(writer);
-        var result = str.ToString();
-
-        var reader = new JsonTextReader(new StringReader(result));
-        var c2 = reader.ReadAsJsonRoot<T>();
-
-        c.CompareCheck(c2, new Stack<string>());
-    }
-
     public static bool LoadFromBinary<T>(this T t, byte[] content)
         where T : ISerializable
     {

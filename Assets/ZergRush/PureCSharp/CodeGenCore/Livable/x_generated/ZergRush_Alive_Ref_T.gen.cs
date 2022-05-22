@@ -53,8 +53,11 @@ namespace ZergRush.Alive {
             base.__ForgetIds();
 
         }
-        public override void CompareCheck(ZergRush.Alive.DataNode other, Stack<string> __path) 
+        public override void CompareCheck(ZergRush.Alive.DataNode other, Stack<string> __path, Action<string> printer) 
         {
+            base.CompareCheck(other,__path,printer);
+            var otherConcrete = (ZergRush.Alive.Ref<T>)other;
+            if (__id != otherConcrete.__id) SerializationTools.LogCompError(__path, "__id", printer, otherConcrete.__id, __id);
         }
     }
 }

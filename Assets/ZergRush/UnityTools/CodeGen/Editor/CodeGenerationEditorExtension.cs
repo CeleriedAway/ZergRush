@@ -8,10 +8,8 @@ namespace ZergRush.CodeGen
     {
         private static readonly List<string> includeAssemblies = new List<string>
         {
-            "ZergRush",
-            "ZergRush.CodeGen",
-            "ZergRush.Reactive",
-            "ZergRush.Utils",
+            "ZergRush.Core",
+            "ZergRush.Unity",
             "CodeGen",
             "ClientServerShared",
             "SharedCode",

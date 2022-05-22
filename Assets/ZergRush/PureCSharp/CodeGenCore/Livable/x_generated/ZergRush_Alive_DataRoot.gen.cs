@@ -56,10 +56,11 @@ namespace ZergRush.Alive {
         {
 
         }
-        public override void CompareCheck(ZergRush.Alive.DataNode other, Stack<string> __path) 
+        public override void CompareCheck(ZergRush.Alive.DataNode other, Stack<string> __path, Action<string> printer) 
         {
-            base.CompareCheck(other,__path);
+            base.CompareCheck(other,__path,printer);
             var otherConcrete = (ZergRush.Alive.DataRoot)other;
+            if (__entityIdFactory != otherConcrete.__entityIdFactory) SerializationTools.LogCompError(__path, "__entityIdFactory", printer, otherConcrete.__entityIdFactory, __entityIdFactory);
         }
         public override void ReadFromJsonField(JsonTextReader reader, string __name) 
         {

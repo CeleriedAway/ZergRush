@@ -9,6 +9,11 @@ using ZergRush;
 
 public static class CodeGenTools
 {
+    public static void CompareCheck<T>(this T t, T other) where T : ICompareChechable<T>
+    {
+        t.CompareCheck(other, new Stack<string>(), Debug.LogError);
+    }
+    
     public static T GetAttribute<T>(this Type type) where T : Attribute
     {
         var customAttributes = type.GetCustomAttributes(typeof(T), false);

@@ -20,10 +20,10 @@ namespace ZergRush.Alive {
             hash += hash << 11; hash ^= hash >> 7;
             return hash;
         }
-        public virtual void CompareCheck(ZergRush.Alive.IntListStub other, Stack<string> __path) 
+        public virtual void CompareCheck(ZergRush.Alive.IntListStub other, Stack<string> __path, Action<string> printer) 
         {
             __path.Push("stub");
-            stub.CompareCheck(other.stub, __path);
+            stub.CompareCheck(other.stub, __path, printer);
             __path.Pop();
         }
     }

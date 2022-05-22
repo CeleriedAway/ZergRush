@@ -54,8 +54,13 @@ namespace ZergRush.Alive {
         {
             staticConnections = new ZergRush.Alive.StaticConnections();
         }
-        public virtual void CompareCheck(ZergRush.Alive.DataNode other, Stack<string> __path) 
+        public virtual void CompareCheck(ZergRush.Alive.DataNode other, Stack<string> __path, Action<string> printer) 
         {
+            if (dead != other.dead) SerializationTools.LogCompError(__path, "dead", printer, other.dead, dead);
+            __path.Push("staticConnections");
+            staticConnections.CompareCheck(other.staticConnections, __path, printer);
+            __path.Pop();
+            if (__parent_id != other.__parent_id) SerializationTools.LogCompError(__path, "__parent_id", printer, other.__parent_id, __parent_id);
         }
         public virtual void ReadFromJsonField(JsonTextReader reader, string __name) 
         {

@@ -9,6 +9,19 @@ using ZergRush;
 
 public static partial class SerializationFileTools
 {
+    public static void CheckSerialization<T>(T c) where T : class, IJsonSerializable, ICompareChechable<T>, new()
+    {
+        var str = new StringWriter();
+        var writer = new JsonTextWriter(str);
+        c.WriteJson(writer);
+        var result = str.ToString();
+
+        var reader = new JsonTextReader(new StringReader(result));
+        var c2 = reader.ReadAsJsonRoot<T>();
+
+        c.CompareCheck(c2);
+    }
+    
     public static T LoadFromBinary<T>(this byte[] content, Func<T> defaultIfLoadFailed = null)
         where T : ISerializable, new()
     {
