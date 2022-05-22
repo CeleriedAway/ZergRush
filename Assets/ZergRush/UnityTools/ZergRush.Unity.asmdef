@@ -1,0 +1,17 @@
+{
+    "name": "ZergRush.CodeGen",
+    "rootNamespace": "",
+    "references": [
+        "Unity.TextMeshPro",
+        "ZergRush.Core"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
