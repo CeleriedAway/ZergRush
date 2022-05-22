@@ -10,38 +10,36 @@ namespace ZergRush.CodeGen
         public static string CompNullComp = "SerializationTools.CompareNull";
         public static string CompRef = "SerializationTools.CompareRefs";
         public static string CompClassId = "SerializationTools.CompareClassId";
+        public static string PrinterArg = "Action<string> printer";
+        public static string PrinterName = "printer";
 
         public static void CompareCheckValue(MethodBuilder sink, DataInfo info, string otherValueReader)
         {
             if (info.type.IsAlmostPrimitive() || info.type.IsEnum || info.type.IsString())
             {
-                sink.content($"if ({info.access} != {otherValueReader}) {CompErrorFunc}(__path, {info.pathName}, {otherValueReader}, {info.access});");
+                sink.content($"if ({info.access} != {otherValueReader}) {CompErrorFunc}(__path, {info.pathName}, {PrinterName}, {otherValueReader}, {info.access});");
             }
-//            else if (info.isStatic && info.type.IsValueType == false && info.type.IsList() == false)
-//            {
-//                sink.content($"{CompRef}(path, {info.pathName}, {otherValueReader}, {info.access});");
-//            }
             else
             {
                 if (info.canBeNull)
                 {
-                    sink.content($"if ({CompNullComp}(__path, {info.pathName}, {info.access}, {otherValueReader})) {{");
+                    sink.content($"if ({CompNullComp}(__path, {info.pathName}, {PrinterName}, {info.access}, {otherValueReader})) {{");
                     sink.indent++;
                 }
                 if (info.type.CanBeAncestor())
                 {
-                    sink.content($"if ({CompClassId}(__path, {info.pathName}, {info.access}, {otherValueReader})) {{");
+                    sink.content($"if ({CompClassId}(__path, {info.pathName}, {PrinterName}, {info.access}, {otherValueReader})) {{");
                     sink.indent++;
                 }
                 sink.content($"__path.Push({info.pathName});");
                 if (info.type.IsLoadableConfig())
                 {
-                    sink.content($"if ({info.access}.id != {otherValueReader}.id) {CompErrorFunc}(__path, {info.pathName}, {otherValueReader}.id, {info.access}.id);");
+                    sink.content($"if ({info.access}.id != {otherValueReader}.id) {CompErrorFunc}(__path, {info.pathName}, {PrinterName}, {otherValueReader}.id, {info.access}.id);");
                 }
                 else
                 {
                     RequestGen(info.type, sink.classType, GenTaskFlags.CompareChech);
-                    sink.content($"{info.access}.{CompareFuncName}({otherValueReader}, __path);");
+                    sink.content($"{info.access}.{CompareFuncName}({otherValueReader}, __path, {PrinterName});");
                 }
                 sink.content($"__path.Pop();");
                 if (info.type.CanBeAncestor())
@@ -67,7 +65,7 @@ namespace ZergRush.CodeGen
             var updateFromType = type.TopParentImplementingFlag(GenTaskFlags.CompareChech) ?? type;
 
             MethodBuilder sink = MakeGenMethod(type, GenTaskFlags.CompareChech, funcPrefix + CompareFuncName, typeof(void),
-                $"{updateFromType.RealName(true)} {instanceName}, Stack<string> __path");
+                $"{updateFromType.RealName(true)} {instanceName}, Stack<string> __path, {PrinterArg}");
             
             if (type.IsList() || type.IsReadOnlyList() || type.IsArray)
             {
