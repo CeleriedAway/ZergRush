@@ -17,6 +17,31 @@ namespace ZergRush.Alive {
         {
             throw new NotImplementedException();
         }
+
+        public void UpdateFrom(DataNode val)
+        {
+            throw new NotImplementedException();
+        }
+
+        public ulong CalculateHash()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void CompareCheck(DataNode t, Stack<string> path, Action<string> printer)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void WriteJsonFields(JsonTextWriter writer)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void ReadFromJsonField(JsonTextReader reader, string name)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
 #endif

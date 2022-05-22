@@ -53,6 +53,11 @@ namespace ZergRush.Alive {
         {
             throw new NotImplementedException();
         }
+
+        public void CompareCheck(DataNode t, Stack<string> path, Action<string> printer)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
 #endif

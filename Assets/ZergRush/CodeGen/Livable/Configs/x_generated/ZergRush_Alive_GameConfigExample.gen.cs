@@ -13,6 +13,21 @@ namespace ZergRush.Alive {
         {
             throw new NotImplementedException();
         }
+
+        public ulong CalculateHash()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void WriteJsonFields(JsonTextWriter writer)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void ReadFromJsonField(JsonTextReader reader, string name)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
 #endif

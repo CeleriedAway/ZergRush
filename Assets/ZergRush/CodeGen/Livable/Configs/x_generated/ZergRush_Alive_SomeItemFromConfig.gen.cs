@@ -7,12 +7,5 @@ using Newtonsoft.Json;
 #if !INCLUDE_ONLY_CODE_GENERATION
 namespace ZergRush.Alive {
 
-    public partial class SomeItemFromConfig : IHashable, IJsonSerializable
-    {
-        public  SomeItemFromConfig() 
-        {
-            throw new NotImplementedException();
-        }
-    }
 }
 #endif

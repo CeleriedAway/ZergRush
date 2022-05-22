@@ -11,6 +11,11 @@ namespace ZergRush.Alive {
         {
             throw new NotImplementedException();
         }
+
+        public void CompareCheck(__RefListRecord<T> t, Stack<string> path, Action<string> printer)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
 #endif
