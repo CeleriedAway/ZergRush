@@ -5,7 +5,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 
-public static partial class UnityExtensions
+public static partial class ExceptionPrintExtensions
 {
     public static readonly Dictionary<string, string> TypeNameAlternatives = new Dictionary<string, string>()
     {
