@@ -664,7 +664,7 @@ namespace ZergRush
                 }
 
                 // Find next random ind.
-                float rand = UnityEngine.Random.value * sum;
+                float rand = ZergRandom.global.Range(0, 1) * sum;
                 int selectedInd = -1;
                 for (int i = 0; i < weights.Count; i++)
                 {

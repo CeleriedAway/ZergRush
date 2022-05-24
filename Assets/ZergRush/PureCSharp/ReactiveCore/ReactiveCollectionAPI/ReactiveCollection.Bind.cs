@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
+using ZergRush.CodeGen;
 
 namespace ZergRush.ReactiveCore
 {
@@ -44,7 +45,7 @@ namespace ZergRush.ReactiveCore
                 var itemConnections = new Connections();
                 if (itemConnectionsDict.ContainsKey(item))
                 {
-                    UnityEngine.Debug.LogError(
+                    ErrorLogSink.errLog?.Invoke(
                         "it seems item is already loaded, this function wont work if elements repeated in the collection");
                     return;
                 }

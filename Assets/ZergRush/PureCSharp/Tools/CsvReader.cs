@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
 using JetBrains.Annotations;
-using UnityEngine;
+using ZergRush.CodeGen;
 
 namespace GameTools
 {
@@ -101,18 +101,10 @@ namespace GameTools
 
         public string GetValue()
         {
-            try
+            if (x < table.Count && y < table[x].Count)
             {
-                if (x < table.Count && y < table[x].Count)
-                {
-                    return table[x][y];
-                }
+                return table[x][y];
             }
-            catch (Exception e)
-            {
-                Debug.Log(e);
-            }
-
             return "";
         }
     }
@@ -147,7 +139,7 @@ namespace GameTools
         {
             var reader = new CsvReader();
             if (count < 0) count = 0xffffff;
-            var limit = Mathf.Min(rowCount, rowIndex + count);
+            var limit = Math.Min(rowCount, rowIndex + count);
             for (int i = rowIndex; i < limit; i++)
             {
                 var r = new Row(rows[i].data);
@@ -242,7 +234,7 @@ namespace GameTools
                 }
                 catch (Exception e)
                 {
-                    Debug.LogError(e.Message + e.StackTrace + ", at row " + rowIndex);
+                    throw;
                 }
 
                 var cells = new List<string>();
@@ -260,7 +252,7 @@ namespace GameTools
                 }
                 catch (Exception e)
                 {
-                    Debug.LogError(e.Message + e.StackTrace + ", at row " + rowIndex);
+                    ErrorLogSink.errLog($"{e}, at row " + rowIndex + " " + e.ToError());
                 }
             }
 

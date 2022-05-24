@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using ZergRush.CodeGen;
 
 namespace ZergRush
 {
@@ -162,7 +163,7 @@ namespace ZergRush
             if (!Remove(item))
             {
                 #if UNITY_EDITOR
-                UnityEngine.Debug.LogError("this connection not found");
+                ErrorLogSink.errLog?.Invoke("this connection not found");
                 #endif
             }
         }
