@@ -23,5 +23,10 @@ namespace ZergRush.ReactiveCore
             connectionSink.AddConnection(cell.Bind(val => materializedCell.value = val));
             return materializedCell;
         }
+
+        public static ICell<T> ToStaticCell<T>(this T val)
+        {
+            return new StaticCell<T>(val);
+        }
     }
 }
