@@ -89,7 +89,7 @@ namespace ZergRush.ReactiveCore
                     switch (e.type)
                     {
                         case ReactiveCollectionEventType.Reset:
-                            RefillRaw();
+                            RefillRaw(e.newData);
                             collectionConnections.DisconnectAll();
                             for (int i = 0; i < e.newData.Count; i++)
                             {
@@ -162,9 +162,13 @@ namespace ZergRush.ReactiveCore
                 collectionConnections.Insert(index, disWrap);
             }
 
+            protected void RefillRaw(IReadOnlyList<IReactiveCollection<T>> list)
+            {
+                buffer.Reset(list.SelectMany(c => c));
+            }
             protected override void RefillRaw()
             {
-                buffer.Reset(collection.SelectMany(c => c));
+                RefillRaw(collection);
             }
         }
         
