@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
@@ -31,7 +32,7 @@ namespace ZergRush.ReactiveCore
                 switch (e.type)
                 {
                     case ReactiveCollectionEventType.Reset:
-                        base.RefillBuffer();
+                        RefillRaw(e.newData);
                         break;
                     case ReactiveCollectionEventType.Insert:
                         var item = mapFunc(e.newItem);
@@ -55,9 +56,13 @@ namespace ZergRush.ReactiveCore
                 return collection.update.Subscribe(Process);
             }
 
+            protected void RefillRaw(IReadOnlyList<T> list)
+            {
+                buffer.Reset(list.Select(mapFunc));
+            }
             protected override void RefillRaw()
             {
-                buffer.Reset(collection.Select(mapFunc));
+                RefillRaw(collection);
             }
         }
     }

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 
 namespace ZergRush.ReactiveCore
@@ -40,7 +41,7 @@ namespace ZergRush.ReactiveCore
                 switch (e.type)
                 {
                     case ReactiveCollectionEventType.Reset:
-                        RefillRaw();
+                        RefillRaw(e.newData);
                         break;
                     case ReactiveCollectionEventType.Insert:
                         Insert(e.newItem);
@@ -66,8 +67,13 @@ namespace ZergRush.ReactiveCore
 
             protected override void RefillRaw()
             {
+                RefillRaw(collection);
+            }
+
+            protected void RefillRaw(IReadOnlyList<T> list)
+            {
                 buffer.Clear();
-                var coll = collection;
+                var coll = list;
                 for (int i = 0; i < coll.Count; i++)
                 {
                     var item = coll[i];

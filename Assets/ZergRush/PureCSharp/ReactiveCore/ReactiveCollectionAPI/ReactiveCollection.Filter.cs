@@ -186,7 +186,7 @@ namespace ZergRush.ReactiveCore
                 switch (e.type)
                 {
                     case ReactiveCollectionEventType.Reset:
-                        ProperRefill();
+                        ProperRefill(e.newData);
                         break;
                     case ReactiveCollectionEventType.Insert:
                         Insert(e.position, e.newItem);
@@ -204,11 +204,11 @@ namespace ZergRush.ReactiveCore
                 }
             }
 
-            void ProperRefill()
+            void ProperRefill(IReadOnlyList<T> list)
             {
                 buffer.Clear();
                 realIndexes.Clear();
-                var coll = collection;
+                var coll = list;
                 for (int i = 0; i < coll.Count; i++)
                 {
                     var item = coll[i];
@@ -222,7 +222,7 @@ namespace ZergRush.ReactiveCore
 
             protected override IDisposable StartListenAndRefill()
             {
-                ProperRefill();
+                ProperRefill(collection);
                 return collection.update.Subscribe(Process);
             }
 
