@@ -217,7 +217,7 @@ public static partial class SerializationFileTools
             using (var file = FileWrapper.OpenText(filePath))
             {
                 data.ReadFromJson(new JsonTextReader(file));
-                if (data is ILivable livable) livable.Enlive();
+                if (data is ILivable livable && livable.isAlive == false) livable.Enlive();
             }
         }
         catch (Exception e)
