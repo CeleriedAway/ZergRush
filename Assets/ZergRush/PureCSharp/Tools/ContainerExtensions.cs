@@ -725,6 +725,11 @@ namespace ZergRush
             return max;
         }
 
+        public static IEnumerable<T2> MapAndFilterNulls<T, T2>(this IReadOnlyList<T> items, Func<T, T2> select) where T2 : class
+        {
+            return items.Select(select).Where(v => v != null);
+        }
+        
         public static List<T> Filter<T>(this List<T> items, Func<T, bool> filter)
         {
             List<T> filtered = new List<T>();
@@ -733,7 +738,6 @@ namespace ZergRush
                 if (filter(item))
                     filtered.Add(item);
             }
-
             return filtered;
         }
 
