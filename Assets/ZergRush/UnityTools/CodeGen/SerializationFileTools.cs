@@ -223,7 +223,7 @@ public static partial class SerializationFileTools
         catch (Exception e)
         {
             Debug.Log($"Failed to load {typeof(T)} from file: " + filePath);
-            Debug.Log(e.ToString());
+            Debug.Log(e.ToError());
             return false;
         }
         return true;
