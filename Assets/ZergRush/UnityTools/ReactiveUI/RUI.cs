@@ -284,7 +284,7 @@ namespace ZergRush.ReactiveUI
                         pool.AddViewToUse((TView)view.prefabRef, view);
                     }
                     else if (options.Has(PresentOptions.UseChildWithSameNameAsView) &&
-                             view.name == prefabRef.ExtractName())
+                             view.name.StartsWith(prefabRef.ExtractName()))
                     {
                         view.prefabRef = prefab;
                         pool.AddViewToUse((TView)view.prefabRef, view);
