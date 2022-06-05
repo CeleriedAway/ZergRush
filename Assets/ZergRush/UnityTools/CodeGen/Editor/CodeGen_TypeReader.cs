@@ -419,6 +419,8 @@ namespace ZergRush.CodeGen
                     member.type = member.type.FirstGenericArg();
                     member.isValueWrapper = isCell ? ValueVrapperType.Cell : ValueVrapperType.LivableSlot;
                 }
+                
+                //member.valueTransformer = member.type.FirstGenericArg().IsValueType ? n => n + ".valueRef" : n => n + ".value";
             }
 
             if (ignoreCheck && inheretedMembers) membersForCodegenInheretedCache[type] = members;
@@ -427,28 +429,6 @@ namespace ZergRush.CodeGen
 
             // remove ignored members.
             return Filter(members);
-        }
-
-        static DataInfo PostProcessDataInfo(this DataInfo member)
-        {
-            member.realType = member.type;
-
-            if (member.type.IsLivableSlot())
-            {
-                member.canBeNull = true;
-            }
-
-            // Make cell look like usual field in codegeneration process.
-            var isCell = member.type.IsCell();
-            if (isCell || member.type.IsLivableSlot())
-            {
-                member.valueTransformer = n => n + ".value";
-                member.realType = member.type;
-                member.type = member.type.FirstGenericArg();
-                member.isValueWrapper = isCell ? ValueVrapperType.Cell : ValueVrapperType.LivableSlot;
-            }
-
-            return member;
         }
 
         static bool IsVectorElementProperty(PropertyInfo prop)

@@ -208,7 +208,8 @@ namespace ZergRush.CodeGen
                 refIdReader: $"{stream}.{ReadNewInstanceOfImmutableType(RefIdType, pooled)}",
                 directReader: $"{stream}.{ReadNewInstanceOfImmutableType(t, pooled)}",
                 needCreateVar: needVar,
-                getDataNodeFromRootWithRefId: readDataNodeFromId
+                getDataNodeFromRootWithRefId: readDataNodeFromId,
+                useTempVarThenAssign: info.isValueWrapper != ValueVrapperType.None && info.type.IsControllableStruct()
             );
         }
 

@@ -191,6 +191,11 @@ namespace ZergRush.CodeGen
 	        return t.IsValueType;
         }
 
+        public static bool IsControllableStruct(this Type t)
+        {
+	        return t.IsValueType && t.IsControllable();
+        }
+
         public static string NewInstance(this Type t)
         {
             if (t == typeof(string)) return "string.Empty";
