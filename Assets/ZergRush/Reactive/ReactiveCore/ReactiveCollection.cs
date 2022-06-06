@@ -889,7 +889,7 @@ namespace ZergRush.ReactiveCore
                 switch (e.type)
                 {
                     case ReactiveCollectionEventType.Reset:
-                        buffer.RemoveRange(countFirst, buffer.Count - e.oldData.Count);
+                        buffer.RemoveRange(0, e.oldData.Count);
                         var newDataCount = e.newData.Count;
                         for (var i = 0; i < newDataCount; i++)
                         {
