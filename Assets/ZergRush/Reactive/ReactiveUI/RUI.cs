@@ -17,7 +17,7 @@ namespace ZergRush.ReactiveUI
         UseChildWithSameNameAsView = 8 | UseLoadedViews,
         NeedLayout = 16
     }
-    
+
     // You need to dispose this when table view is done.
     public class SimplePresentComponents<TView, TData> : Connections
         where TView : ReusableView
@@ -55,6 +55,7 @@ namespace ZergRush.ReactiveUI
         {
             return (self & option) == option;
         }
+
         static void SetAnchorPositionInASaneWay(this RectTransform rt, Vector2 pos)
         {
             rt.anchoredPosition = pos;
@@ -180,25 +181,35 @@ namespace ZergRush.ReactiveUI
             IReactiveCollection<TData> data,
             Transform parent,
             Action<TData, TView> show,
-            IViewPool<TView, TData> pool = null, 
+            IViewPool<TView, TData> pool = null,
             PrefabRef<TView> prefab = default,
             Func<TData, PrefabRef<TView>> prefabSelector = null,
+            IEnumerable<PrefabRef<TView>> prefabSelectorPreload = null,
             IScrollViewLayout layout = null, // Linear layout is default
             TableDelegates<TView> delegates = null,
             Func<TData, IEventStream> updater = null,
             PresentOptions options = PresentOptions.None
-                ) where TView : ReusableView
+        ) where TView : ReusableView
         {
             var components = new TableConnectionsAndComponents<TView, TData>();
-            
+
             if (options.Has(PresentOptions.NeedLayout) && layout == null) layout = LinearLayout();
             components.layout = layout;
-            
+
             if (pool == null)
             {
                 if (prefabSelector != null)
                 {
-                    pool = new DistinctivePool<TView, TData>(parent, prefabSelector, options);
+                    var dPool = new DistinctivePool<TView, TData>(parent, prefabSelector, options);
+                    if (prefabSelectorPreload != null)
+                    {
+                        foreach (var prefabRef in prefabSelectorPreload)
+                        {
+                            dPool.Preload(prefabRef);
+                        }
+                    }
+
+                    pool = dPool;
                 }
                 else
                 {
@@ -211,7 +222,7 @@ namespace ZergRush.ReactiveUI
                     }
                 }
             }
-            
+
             if (updater != null)
             {
                 var showCopy = show;
@@ -222,11 +233,13 @@ namespace ZergRush.ReactiveUI
                 };
                 show = showAndSubscribe;
             }
+
             delegates = delegates ?? new TableDelegates<TView>();
-            if (delegates.onInsertAnimated != null) show += (d, view) =>
-            {
-                if (components.animationsEnabled) delegates.onInsertAnimated(view);
-            };
+            if (delegates.onInsertAnimated != null)
+                show += (d, view) =>
+                {
+                    if (components.animationsEnabled) delegates.onInsertAnimated(view);
+                };
             if (options.Has(PresentOptions.PreserveSiblingOrder))
             {
                 show += (d, view) => { view.tr.SetSiblingIndex(view.indexInModel); };
@@ -242,32 +255,36 @@ namespace ZergRush.ReactiveUI
                     else return 0;
                 };
             }
+
             components.viewLoader = new LinearViewLoader<TView, TData>(pool, show, onRemove);
             components.delegates = delegates;
             components.collection = data;
-            
+
             return components;
         }
 
-        public static void FillPoolWithChildrenViews<TView, TData>(IViewPool<TView, TData> pool, Transform parent, PrefabRef<TView> prefabRef, 
+        public static void FillPoolWithChildrenViews<TView, TData>(IViewPool<TView, TData> pool, Transform parent,
+            PrefabRef<TView> prefabRef,
             TView prefab, PresentOptions options) where TView : ReusableView
         {
             if (parent == null) return;
             foreach (var obj in parent)
             {
-                var view = ((Transform) obj).GetComponent<TView>();
-                if (view != null) 
+                var view = ((Transform)obj).GetComponent<TView>();
+                if (view != null)
                 {
                     if (view.prefabRef != null && view.prefabRef == prefab)
                     {
                         pool.AddViewToUse((TView)view.prefabRef, view);
                     }
-                    else if (options.Has(PresentOptions.UseChildWithSameTypeAsView) && view.GetType() == prefabRef.ExtractType())
+                    else if (options.Has(PresentOptions.UseChildWithSameTypeAsView) &&
+                             view.GetType() == prefabRef.ExtractType())
                     {
                         view.prefabRef = prefab;
                         pool.AddViewToUse((TView)view.prefabRef, view);
                     }
-                    else if (options.Has(PresentOptions.UseChildWithSameNameAsView) && view.name == prefabRef.ExtractName())
+                    else if (options.Has(PresentOptions.UseChildWithSameNameAsView) &&
+                             view.name == prefabRef.ExtractName())
                     {
                         view.prefabRef = prefab;
                         pool.AddViewToUse((TView)view.prefabRef, view);
@@ -275,7 +292,7 @@ namespace ZergRush.ReactiveUI
                 }
             }
         }
-        
+
         public class GroupItem<TGroup, TData, TView> : TableConnectionsAndComponents<TView, TData>
             where TView : ReusableView
         {
@@ -294,9 +311,10 @@ namespace ZergRush.ReactiveUI
         {
             return new ViewPool<TView, TData>(parent, prefab);
         }
-        
+
         // Searches prefab in parents children
-        public static IViewPool<TView, TData> SimpleViewPool<TView, TData>(this RectTransform parent) where TView : ReusableView
+        public static IViewPool<TView, TData> SimpleViewPool<TView, TData>(this RectTransform parent)
+            where TView : ReusableView
         {
             var views = parent.GetComponentsInChildren<TView>();
             if (views.Length == 0)
@@ -310,6 +328,7 @@ namespace ZergRush.ReactiveUI
             {
                 pool.AddViewToUse(prefab, view);
             }
+
             return pool;
         }
 
@@ -367,7 +386,7 @@ namespace ZergRush.ReactiveUI
                     groupView.layout.SetEndShift(groupLayout.EndPointForIndex(i));
                 }
             }
-            
+
             GroupItem<TGroup, TData, TView> CreateGroupItem(TGroup g, TData firstItem)
             {
                 if (groupPool.Count > 0)
@@ -402,6 +421,7 @@ namespace ZergRush.ReactiveUI
                     {
                         RecycleGroup(groupView);
                     }
+
                     grouped.Clear();
 
                     foreach (var tData in ev.newData)
@@ -412,9 +432,10 @@ namespace ZergRush.ReactiveUI
                         {
                             settings.forceSize = groupViewPool.sampleViewSize(g);
                         }
+
                         if (grouped.TryFind(elem => EqualityComparer<TGroup>.Default.Equals(g, elem.g), out var coll))
                         {
-                            ((ReactiveCollection<TData>) coll.collection).InsertSorted(itemSort, tData);
+                            ((ReactiveCollection<TData>)coll.collection).InsertSorted(itemSort, tData);
                         }
                         else
                         {
@@ -423,12 +444,13 @@ namespace ZergRush.ReactiveUI
                             grouped.InsertSorted((g1, g2) => groupSort(g1.g, g2.g), groupItem);
                         }
                     }
-                    
+
                     foreach (var groupView in grouped)
                     {
                         groupView.layout.count = groupView.collection.Count;
                         groupView.layout.RefreshSize();
                     }
+
                     groupLayout.Refill(grouped, LayoutBoundingsFactory);
                     for (var i = 0; i < grouped.Count; i++)
                     {
@@ -441,13 +463,17 @@ namespace ZergRush.ReactiveUI
                 {
                     var g = grouper(ev.oldItem);
                     var groupView = grouped.Find(v => EqualityComparer<TGroup>.Default.Equals(v.g, g));
-                    if (groupView == null) { throw new ZergRushException("wtf"); }
-                    var gColl = ((ReactiveCollection<TData>) groupView.collection);
+                    if (groupView == null)
+                    {
+                        throw new ZergRushException("wtf");
+                    }
+
+                    var gColl = ((ReactiveCollection<TData>)groupView.collection);
 
                     var index = grouped.IndexOf(groupView);
                     var initSize = groupView.layout.size.value;
                     gColl.Remove(ev.oldItem);
-                    
+
                     if (gColl.Count == 0)
                     {
                         RecycleGroup(groupView);
@@ -479,7 +505,7 @@ namespace ZergRush.ReactiveUI
                     else
                     {
                         var initSize = groupView.layout.size.value;
-                        ((ReactiveCollection<TData>) groupView.collection).InsertSorted(itemSort, ev.newItem);
+                        ((ReactiveCollection<TData>)groupView.collection).InsertSorted(itemSort, ev.newItem);
                         if (initSize != groupView.layout.size.value)
                         {
                             needUpdatePos = true;
@@ -505,13 +531,10 @@ namespace ZergRush.ReactiveUI
             ControlItemVisibilityAndRecycle(groupComponents);
 
             if (viewPort is ScrollRectViewPort scroll) groupComponents.addConnection = scroll.BindToLayout(groupLayout);
-            
+
             groupComponents.addConnection = new AnonymousDisposable(() =>
             {
-                groupComponents.collection.ForEach(groupView =>
-                {
-                    groupView.DisconnectAll();
-                });
+                groupComponents.collection.ForEach(groupView => { groupView.DisconnectAll(); });
             });
 
             return groupComponents;
@@ -523,18 +546,20 @@ namespace ZergRush.ReactiveUI
             PrefabRef<TView> prefab = default,
             Action<TData, TView> show = null,
             Func<TData, PrefabRef<TView>> prefabSelector = null,
+            List<PrefabRef<TView>> prefabSelectorPreload = null,
             IScrollViewLayout layout = null, // Linear layout is default
             TableDelegates<TView> delegates = null,
             PresentOptions options = PresentOptions.UseChildWithSameTypeAsView
-            ) where TView : ReusableView
+        ) where TView : ReusableView
         {
             var components = CreateBasicTableComponents(
                 data,
                 scroll.scroll.content,
                 show,
-                prefab: prefab, 
-                prefabSelector:prefabSelector,
-                layout: layout, 
+                prefab: prefab,
+                prefabSelector: prefabSelector,
+                prefabSelectorPreload: prefabSelectorPreload,
+                layout: layout,
                 delegates: delegates,
                 options: options | PresentOptions.NeedLayout);
             return PresentInScrollWithLayout(components, scroll);
@@ -548,16 +573,21 @@ namespace ZergRush.ReactiveUI
             Action<TData, TView> fillFactory,
             IScrollViewLayout layout = null, // Linear layout is default
             TableDelegates<TView> delegates = null,
+            Func<TData, PrefabRef<TView>> prefabSelector = null,
+            IEnumerable<PrefabRef<TView>> prefabSelectorPreload = null,
+            IViewPool<TView, TData> pool = null,
             PresentOptions options = PresentOptions.UseChildWithSameTypeAsView) where TView : ReusableView
         {
-            var components = CreateBasicTableComponents(data, rect, fillFactory, prefab: prefab, 
-                layout: layout, delegates: delegates, options:options | PresentOptions.NeedLayout);
+            var components = CreateBasicTableComponents(data, rect, fillFactory, prefab: prefab,
+                layout: layout, delegates: delegates, prefabSelector: prefabSelector,
+                prefabSelectorPreload: prefabSelectorPreload, pool: pool, options: options | PresentOptions.NeedLayout);
             components.viewPort = new AllVisibleViewPort();
             return ControlItemVisibilityAndRecycle(components);
         }
 
         public static IScrollViewLayout LinearLayout(LayoutDirection direction = LayoutDirection.Vertical,
-            float forceMainSize = 0, float margin = 5, bool expandViews = true, float topShift = 0, float bottomShift = 0)
+            float forceMainSize = 0, float margin = 5, bool expandViews = true, float topShift = 0,
+            float bottomShift = 0)
         {
             return new LinearLayout(new LinearLayoutSettings
             {
@@ -571,15 +601,18 @@ namespace ZergRush.ReactiveUI
                 bottomShift = bottomShift
             });
         }
-        
-        public static IScrollViewLayout GridLayout(int gridSize = 0, LayoutDirection direction = LayoutDirection.Vertical,
-            float margin = 5, float subMargin = 5, float topShift = 0, float bottomShift = 0, Vector2 forceSize = default)
+
+        public static IScrollViewLayout GridLayout(int gridSize = 0,
+            LayoutDirection direction = LayoutDirection.Vertical,
+            float margin = 5, float subMargin = 5, float topShift = 0, float bottomShift = 0,
+            Vector2 forceSize = default)
         {
             return new GridLayout(new GridLayoutSettings
             {
                 direction = direction,
                 forceSize = forceSize,
-                marginVec = new Vector2(direction == LayoutDirection.Horizontal ? margin : subMargin, direction == LayoutDirection.Horizontal ? subMargin : margin),
+                marginVec = new Vector2(direction == LayoutDirection.Horizontal ? margin : subMargin,
+                    direction == LayoutDirection.Horizontal ? subMargin : margin),
                 subMargin = subMargin,
                 gridSize = gridSize,
                 topShift = topShift,
@@ -591,7 +624,7 @@ namespace ZergRush.ReactiveUI
         {
             return new LinearLayout(settings);
         }
-        
+
         public static IScrollViewLayout GridLayout(GridLayoutSettings settings)
         {
             return new GridLayout(settings);
@@ -626,7 +659,7 @@ namespace ZergRush.ReactiveUI
             this IReactiveCollection<T> coll,
             List<TView> views,
             Action<T, TView> show
-            ) where TView : ReusableView
+        ) where TView : ReusableView
         {
             var connections = new DoubleDisposable();
 
@@ -654,6 +687,7 @@ namespace ZergRush.ReactiveUI
                     UpdateView(i);
                 }
             }
+
             connections.First = coll.update.Subscribe(e =>
             {
                 switch (e.type)
@@ -671,9 +705,9 @@ namespace ZergRush.ReactiveUI
                 }
             });
             connections.Second = new AnonymousDisposable(() => views.ForEach(v => v.DisconnectAll()));
-            
+
             UpdateFromIndex(0);
-            
+
             return connections;
         }
 
@@ -685,12 +719,14 @@ namespace ZergRush.ReactiveUI
             Action<T, TView> show = null,
             Func<T, IEventStream> updater = null,
             Func<T, PrefabRef<TView>> prefabSelector = null,
+            IEnumerable<PrefabRef<TView>> prefabSelectorPreload = null,
             IViewPool<TView, T> pool = null,
             PresentOptions options = PresentOptions.UseChildWithSameTypeAsView,
             TableDelegates<TView> delegates = null
-            ) where TView : ReusableView
+        ) where TView : ReusableView
         {
-            var components = CreateBasicTableComponents(coll, parent, show, pool, prefab, prefabSelector, null, delegates, updater, options);
+            var components = CreateBasicTableComponents(coll, parent, show, pool, prefab, prefabSelector,
+                prefabSelectorPreload, null, delegates, updater, options);
             var viewStorage = components.viewLoader;
 
             components.addConnection = coll.update.Subscribe(e =>

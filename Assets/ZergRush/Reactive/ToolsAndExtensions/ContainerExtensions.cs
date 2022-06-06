@@ -329,13 +329,6 @@ namespace ZergRush
             return keysToRemove.Count;
         }
 
-        public static T Take<T>(this List<T> list, int index)
-        {
-            T t = list[index];
-            list.RemoveAt(index);
-            return t;
-        }
-
         public static TVal TakeKey<TKey, TVal>(this Dictionary<TKey, TVal> dict, TKey key)
         {
             if (dict.TryGetValue(key, out var val))
@@ -362,6 +355,20 @@ namespace ZergRush
             return default(T);
         }
 
+        public static List<T> TakeAll<T>(this IList<T> list, Func<T, bool> predicate)
+        {
+            var result = new List<T>();
+            for (var i = list.Count - 1; i >= 0; i--)
+            {
+                var x1 = list[i];
+                if (predicate(x1))
+                {
+                    result.Add(list.TakeAt(i));
+                }
+            }
+            return result;
+        }
+        
         public static T TakeAt<T>(this IList<T> list, int index)
         {
             var t = list[index];
@@ -457,6 +464,18 @@ namespace ZergRush
         {
             return Enum.GetValues(typeof(T)).Cast<int>();
         }
+        
+        public static bool IsPowerOfTwo(this int val)
+        {
+            if (val < 0) val = -val;
+            return (val & (val - 1)) == 0;
+        }
+        
+        public static IEnumerable<TEnum> DecomposeToBasicValues<TEnum>(this TEnum value)
+        {
+            return GetEnumValuesInt<TEnum>().Where(v => v.IsPowerOfTwo() && ((int)(object)value & v) != 0).Cast<TEnum>();
+        }
+
 
         public static void EnsureSizeWithNulls<T>(this List<T> list, int count) where T : class
         {

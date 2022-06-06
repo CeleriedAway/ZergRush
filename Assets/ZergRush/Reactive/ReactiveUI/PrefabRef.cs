@@ -74,7 +74,7 @@ namespace ZergRush.ReactiveUI
             TView view = null;
             if (prefab != null) view = prefab as TView;
             else if (type != null) view = parent.GetComponentInChildren(type, true) as TView;
-            else if (name != null) view = parent.Find(name).GetComponent<TView>();
+            else if (name != null) view = parent.Find(name)?.GetComponent<TView>();
             else view = parent.GetComponentInChildren<TView>();
 
             if (view == null)

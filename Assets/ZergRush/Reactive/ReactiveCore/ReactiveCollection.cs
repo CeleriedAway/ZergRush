@@ -276,6 +276,8 @@ namespace ZergRush.ReactiveCore
 
     public abstract class AbstractCollectionTransform<T> : IReactiveCollection<T>
     {
+        protected bool disconected => connectionCounter == 0;
+        
         int connectionCounter = 0;
         IDisposable collectionConnection;
         
@@ -307,7 +309,7 @@ namespace ZergRush.ReactiveCore
                 if (buffer.getConnectionCount != 0)
                 {
                     //Debug.LogError("WTF is that");
-                    throw new Exception("this should not happen");
+                    //throw new Exception("this should not happen");
                 }
                 collectionConnection.Dispose();
                 collectionConnection = null;
@@ -349,15 +351,19 @@ namespace ZergRush.ReactiveCore
         {
             get
             {
-                return updateWrapp = updateWrapp ?? new AnonymousEventStream<IReactiveCollectionEvent<T>>(act =>
+                return updateWrapp ??= new AnonymousEventStream<IReactiveCollectionEvent<T>>(act =>
                 {
                     OnConnect();
                     var connection = buffer.update.Subscribe(act);
-                    return new AnonymousDisposable(() =>
+
+                    // possible work around unity 2021 compilation crash
+                    void Dispose()
                     {
                         connection.Dispose();
                         OnDisconnect();
-                    });
+                    }
+                    var anonymousDisposable = new AnonymousDisposable(Dispose);
+                    return anonymousDisposable;
                 });
             }
         }
@@ -808,22 +814,17 @@ namespace ZergRush.ReactiveCore
 
         public static ICell<T> AtIndex<T>(this IReactiveCollection<T> collection, int index, T ifNoElement = default)
         {
-            return new AnonymousCell<T>(action =>
-            {
-                return collection.AsCell().ListenUpdates(coll =>
-                {
-                    action(coll.Count > index ? coll[index] : ifNoElement);
-                });
-            }, () =>
-            {
-                var coll = collection;
-                return coll.Count > index ? coll[index] : ifNoElement;
-            });
+            return collection.AsCell().Map(coll => coll.Count > index ? coll[index] : ifNoElement);
         }
         
         public static ICell<T> AtIndex<T>(this IReactiveCollection<T> collection, ICell<int> index, T ifNoElement = default)
         {
             return index.FlatMap(v => collection.AtIndex(v, ifNoElement));
+        }
+
+        public static ICell<T> LastElementCell<T>(this IReactiveCollection<T> collection)
+        {
+            return collection.AsCell().Map(c => c.LastElement());
         }
 
         public static ICell<IReadOnlyList<T>> AsCell<T>(this IReactiveCollection<T> collection)
@@ -883,6 +884,8 @@ namespace ZergRush.ReactiveCore
 
             void Process(IReactiveCollectionEvent<T> e)
             {
+                if (disconected) return;
+                
                 switch (e.type)
                 {
                     case ReactiveCollectionEventType.Reset:
@@ -908,6 +911,8 @@ namespace ZergRush.ReactiveCore
             }
             void Process2(IReactiveCollectionEvent<T> e)
             {
+                if (disconected) return;
+                
                 switch (e.type)
                 {
                     case ReactiveCollectionEventType.Reset:
@@ -935,9 +940,10 @@ namespace ZergRush.ReactiveCore
             protected override IDisposable StartListenAndRefill()
             {
                 RefillBuffer();
-                var disp = new DoubleDisposable();
-                disp.first = collection.update.Subscribe(Process);
-                disp.second = collection2.update.Subscribe(Process2);
+                var disp = new MultipleDisposable();
+                disp.Add(collection.update.Subscribe(Process));
+                disp.Add(collection2.update.Subscribe(Process2));
+                
                 return disp;
             }
 
@@ -1134,6 +1140,8 @@ namespace ZergRush.ReactiveCore
 
             void Process(IReactiveCollectionEvent<T> e)
             {
+                if (disconected) return;
+                
                 switch (e.type)
                 {
                     case ReactiveCollectionEventType.Reset:
@@ -1181,6 +1189,7 @@ namespace ZergRush.ReactiveCore
 
             void Process(ReactiveCollectionEvent<T> e, int index)
             {
+                if (disconected) return;
                 switch (e.type)
                 {
                     case ReactiveCollectionEventType.Reset:
@@ -1391,6 +1400,8 @@ namespace ZergRush.ReactiveCore
 
             void Process(IReactiveCollectionEvent<ICell<T>> e)
             {
+                if (disconected) return;
+                
                 switch (e.type)
                 {
                     case ReactiveCollectionEventType.Reset:
@@ -1454,6 +1465,8 @@ namespace ZergRush.ReactiveCore
 
             void Process(IReactiveCollectionEvent<T> e)
             {
+                if (disconected) return;
+                
                 switch (e.type)
                 {
                     case ReactiveCollectionEventType.Reset:
@@ -1493,7 +1506,7 @@ namespace ZergRush.ReactiveCore
             }
         }
 
-        public static IReactiveCollection<T> SortReactive<T>(this ReactiveCollection<T> collection,
+        public static IReactiveCollection<T> SortReactive<T>(this IReactiveCollection<T> collection,
             Func<T, T, int> comparator)
         {
             return new SortedCollection<T>(collection, comparator);
@@ -1543,6 +1556,7 @@ namespace ZergRush.ReactiveCore
 
             void Process(IReactiveCollectionEvent<T> e)
             {
+                if (disconected) return;
                 switch (e.type)
                 {
                     case ReactiveCollectionEventType.Reset:

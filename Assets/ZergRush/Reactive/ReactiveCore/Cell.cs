@@ -579,6 +579,16 @@ namespace ZergRush.ReactiveCore
             return cell.Map(v => EqualityComparer<T>.Default.Equals(value, v) == false);
         }
         
+        public static ICell<int> Negate(this ICell<int> cell)
+        {
+            return cell.Map(v => -v);
+        }
+        
+        public static ICell<float> Negate(this ICell<float> cell)
+        {
+            return cell.Map(v => -v);
+        }
+        
         /// An experimental concept some kink of abstract lens.
         public static ICellRW<T2> MapRW<T, T2>(this ICellRW<T> cell, Func<T, T2> map, Func<T2, T> mapBack)
         {
@@ -640,7 +650,13 @@ namespace ZergRush.ReactiveCore
         public static ICellRW<T> ReflectionFieldToRW<T>(this object obj, string fieldName)
         {
             var f = obj.GetType().GetField(fieldName);
-            if (f == null) {UnityEngine.Debug.LogError($"field {fieldName} is not found in obj {obj}"); return null;}
+            if (f == null)
+            {
+                #if UNITY_EDITOR
+                UnityEngine.Debug.LogError($"field {fieldName} is not found in obj {obj}");
+                #endif
+                return null;
+            }
             return obj.ReflectionFieldToRW<T>(f);
         }
         public static IValueRW<float> ToFloat(this IValueRW<int> val)

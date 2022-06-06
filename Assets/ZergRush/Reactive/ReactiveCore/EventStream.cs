@@ -20,7 +20,7 @@ namespace ZergRush.ReactiveCore
     public interface IEventRW<T> : IEventStream<T>, IEventWriter<T>
     {
     }
-
+    
     public class EventStream<T> : IEventRW<T>, IConnectable
     {
         List<Action<T>> callbacks;

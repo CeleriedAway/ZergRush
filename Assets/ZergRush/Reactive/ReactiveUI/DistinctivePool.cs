@@ -20,6 +20,11 @@ namespace ZergRush.ReactiveUI
             this.options = options;
         }
 
+        public void Preload(PrefabRef<TView> prefabRef)
+        {
+            Pool(prefabRef);
+        }
+
         ViewPool<TView, TData> Pool(TData data)
         {
             var prefab = prefabSelector(data);

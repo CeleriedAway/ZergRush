@@ -182,7 +182,7 @@ namespace ZergRush.ReactiveUI
             }
             else
             {
-                view.ExecuteWithDelay(delay, () =>
+                UnityExecutor.Instance.ExecuteWithDelay(delay, () =>
                 {
                     view.DisconnectAll();
                     Recycle(view);
