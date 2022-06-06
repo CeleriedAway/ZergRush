@@ -117,6 +117,9 @@ namespace ZergRush.ReactiveCore
         {
             return data.IndexOf(item);
         }
+		
+        public int IndexOf(Func<T, bool> predicate)
+            => data.IndexOf(predicate);
 
         public void Insert(int index, T item)
         {
@@ -624,12 +627,20 @@ namespace ZergRush.ReactiveCore
 
     public static class ReactiveCollectionExtensions
     {
+        public static IReactiveCollection<T> Join<T>(T item, IReactiveCollection<T> items)
+            => item.ToStaticReactiveCollectionFromItem().ConcatReactive(items);
+        public static IReactiveCollection<T> Join<T>(this IReactiveCollection<T> items, T item)
+            => items.ConcatReactive(item.ToStaticReactiveCollectionFromItem());
 
         public static IReactiveCollection<T> ToStaticReactiveCollection<T>(this List<T> coll)
         {
             return new StaticCollection<T> {list = coll};
         }
-        
+
+        public static IReactiveCollection<T> ToStaticReactiveCollectionFromItem<T>(this T item) {
+            return item.ToListFromItem().ToStaticReactiveCollection();
+        }
+
         public static IReactiveCollection<T> ToStaticReactiveCollection<T>(this IEnumerable<T> coll)
         {
             return new StaticCollection<T> {list = coll.ToList()};
@@ -661,7 +672,17 @@ namespace ZergRush.ReactiveCore
         {
             return collection.AsCell().Map(c => c.Any(item));
         }
-        
+        public static ICell<bool> AnyReactive(this IReactiveCollection<bool> collection) {
+            return collection.AsCell().Map(c => c.Any(v => v));
+        }
+        public static ICell<bool> AllReactive<T>(this IReactiveCollection<T> collection,
+           Func<T, bool> item) {
+            return collection.AsCell().Map(c => c.All(item));
+        }
+        public static ICell<bool> AllReactive(this IReactiveCollection<bool> collection) {
+            return collection.AsCell().Map(c => c.All(v => v));
+        }
+
         public static ICell<T> FindReactive<T>(this IReactiveCollection<T> collection,
             Func<T, bool> item)
         {
@@ -868,7 +889,7 @@ namespace ZergRush.ReactiveCore
                 switch (e.type)
                 {
                     case ReactiveCollectionEventType.Reset:
-                        buffer.RemoveRange(countFirst, buffer.Count - e.oldData.Count);
+                        buffer.RemoveRange(0, e.oldData.Count);
                         var newDataCount = e.newData.Count;
                         for (var i = 0; i < newDataCount; i++)
                         {

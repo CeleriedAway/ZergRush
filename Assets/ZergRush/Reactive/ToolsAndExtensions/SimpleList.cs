@@ -177,16 +177,19 @@ public class SimpleList<T> : IList<T>, IReadOnlyList<T>
 
     void EnsureCapacity(int capacity)
     {
-        var num = 0;
-        if (capacity > data.Length)
-        {
-            if (currentCount == 0)
-                num = 4;
-            else
-                num = currentCount * 2;
-        }
-        if (num < capacity) num = capacity;
-        Capacity = num;
+        if (capacity > Capacity)
+            Capacity = capacity;
+        // Donno, but it seems that its eating lots of memory and resizing capacity to be smaller than before.
+        //var num = 0;
+        //if (capacity > data.Length)
+        //{
+        //    if (currentCount == 0)
+        //        num = 4;
+        //    else
+        //        num = currentCount * 2;
+        //}
+        //if (num < capacity) num = capacity;
+        //Capacity = num;
     }
 
     public void Insert(int index, T item)

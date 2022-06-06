@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -722,6 +723,16 @@ namespace ZergRush.ReactiveCore
             });
         }
 
+        // With this function you receive previous collection values as second argument
+        public static IDisposable BufferListenUpdates<T>(this IReactiveCollection<T> source, Action<IReadOnlyList<T>, IReadOnlyList<T>> action) {
+            // Implicit lambda boxing used as a prev val storage here
+            var prevVal = source.ConvertAll(i => i);
+            return source.AsCell().ListenUpdates(v => {
+                action(v, prevVal);
+                prevVal = v.ConvertAll(i => i);
+            });
+        }
+
         // Useful when you need previous value of a cell, it comes as a second item in the tuple.
         public static IEventStream<(T, T)> BufferPreviousValue<T>(this ICell<T> cell)
         {
@@ -748,20 +759,64 @@ namespace ZergRush.ReactiveCore
 
         // Creates a new cell that is updated from previous cell unless gate is closed (false),
         // if that is so it waits gate to be true, to update its value from initial cell
-        public static ICell<T> Gate<T>(this ICell<T> cell, ICell<bool> gate, IConnectionSink connectionSink)
+        public static ICell<T> Gate<T>(this ICell<T> cell, ICell<bool> gate, IConnectionSink connectionSink = null)
         {
             var result = new Cell<T>(cell.value);
-            connectionSink.AddConnection(cell.ListenUpdates(v =>
+            connectionSink += cell.ListenUpdates(v =>
             {
                 if (gate.value) result.value = v;
-            }));
-            connectionSink.AddConnection(gate.ListenUpdates(v =>
+            });
+            connectionSink += gate.ListenUpdates(v =>
             {
                 if (v) result.value = cell.value;
-            }));
+            });
             return result;
         }
-        
+
+        public static IReactiveCollection<T> Gate<T>(this IReactiveCollection<T> items, ICell<bool> gate)//, IConnectionSink connectionSink = null)
+            => new GatedCollection<T>(items, gate);
+
+        public class GatedCollection<T> : IReactiveCollection<T> {
+            List<T> buffer = new List<T>();
+            IReactiveCollection<T> source;
+            ICell<bool> gate;
+            bool open => gate.value;
+            bool changesExist;
+            public GatedCollection(IReactiveCollection<T> source, ICell<bool> gate) {
+                this.source = source;
+                this.gate = gate;
+                buffer.AddRange(source);
+                source.update.Subscribe(changes => {
+                    if (open)
+                        _update.Send(changes);
+                    else
+                        changesExist = true;
+                });
+                gate.ListenUpdates(open => {
+                    if (open) {
+                        if (changesExist) {
+                            changesExist = false;
+                            _update.Send(new ReactiveCollectionEvent<T>() {
+                                type = ReactiveCollectionEventType.Reset,
+                                newData = source.ToList(),
+                                oldData = buffer,
+                                position = -1
+                            });
+                        }
+                    } else {
+                        buffer.Clear();
+                        buffer.AddRange(source);
+                    }
+                });
+            }
+            public T this[int index] => open ? source[index] : buffer[index];
+            EventStream<IReactiveCollectionEvent<T>> _update = new EventStream<IReactiveCollectionEvent<T>>();
+            public IEventStream<IReactiveCollectionEvent<T>> update => _update;
+            public int Count => open ? source.Count : buffer.Count;
+            public IEnumerator<T> GetEnumerator() => open ? source.GetEnumerator() : buffer.GetEnumerator();
+            IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        }
+
         // Creates a new event that is updated from previous event unless gate is closed (false),
         // when gate opens (true), all blocked events are instantly fired 
         public static IEventStream<T> Gate<T>(this IEventStream<T> e, ICell<bool> gate, IConnectionSink connectionSink)

@@ -833,6 +833,11 @@ namespace ZergRush
             return t;
         }
 
+        public static List<T> ToListFromItem<T>(this T t)
+        {
+            return new List<T> { t };
+        }
+
         public static List<T> AddIfNotNull<T>(this List<T> list, T t) where T : class
         {
             if (t != null) list.Add(t);
