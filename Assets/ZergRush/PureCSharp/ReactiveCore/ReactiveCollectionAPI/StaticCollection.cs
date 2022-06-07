@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace ZergRush.ReactiveCore
 {
-    class StaticCollection<T> : IReactiveCollection<T>
+    public class StaticCollection<T> : IReactiveCollection<T>
     {
         public List<T> list;
 
