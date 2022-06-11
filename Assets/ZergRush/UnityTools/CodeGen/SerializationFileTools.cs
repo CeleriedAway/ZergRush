@@ -179,7 +179,7 @@ public static partial class SerializationFileTools
         catch (Exception e)
         {
             UnityEngine.Debug.LogError(
-                $"Failed to save data {data} to path {path} with error :{e.Message} stacktrace =\n{e.StackTrace}");
+                $"Failed to save data {data} to path {path} with error :{e.ToError()}");
         }
     }
 
