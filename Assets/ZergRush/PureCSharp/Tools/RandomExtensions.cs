@@ -150,7 +150,7 @@ namespace ZergRush
                 sum += weightFunc(elements[i]);
             }
             // Find next random ind.
-            int rand = random.Range(0, sum);
+            int rand = random.RangeInclude(1, sum);
             int selectedInd = -1;
             for (int i = 0; i < elements.Count; i++)
             {
