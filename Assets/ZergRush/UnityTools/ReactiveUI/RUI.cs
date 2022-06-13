@@ -111,7 +111,12 @@ namespace ZergRush.ReactiveUI
                 viewStorage.ForEachLoadedView((view, i) =>
                 {
                     var newPos = layout.AncoredPositionForIndex(i);
-                    if (view.rectTransform.anchoredPosition == newPos) return;
+                     if (view.rectTransform.anchoredPosition == newPos)
+                    {
+                        view.currentMoveAnimation?.DisconnectSafe();
+                        view.currentMoveAnimation = null;
+                        return;
+                    }
                     if (delegates.moveAnimation != null)
                     {
                         view.currentMoveAnimation.DisconnectSafe();
