@@ -14,7 +14,7 @@ namespace ZergRush.Alive
     }
     
     [GenZergRushFolder, GenTask(GenTaskFlags.Serialization | GenTaskFlags.JsonSerialization), GenTaskCustomImpl(GenTaskFlags.CompareChech | GenTaskFlags.UpdateFrom | GenTaskFlags.Hash)]
-    public sealed partial class RefListMk2<T> : IReactiveCollection<T>, IList<T>, INeedUpdateFromPostProcess where T : class, IDataNode, IReferencableFromDataRoot
+    public sealed partial class RefListMk2<T> : IReactiveCollection<T>, IList<T>, ICompareChechable<RefListMk2<T>>, INeedUpdateFromPostProcess where T : class, IDataNode, IReferencableFromDataRoot
     {
         [GenIgnore]
         List<T> data;
@@ -340,11 +340,12 @@ namespace ZergRush.Alive
             {
                 for (var i = 0; i < ids.Count; i++)
                 {
-                    if (ids[i] != mirroringList.ids[i]) break;
+                    if (ids[i] != mirroringList.ids[i]) goto perform_update;
                 }
                 // all ids are same so no need to do anything
                 return;
             }
+            perform_update:
             ids.Clear();
             var oldData = data.ToList();
             data.Clear();
