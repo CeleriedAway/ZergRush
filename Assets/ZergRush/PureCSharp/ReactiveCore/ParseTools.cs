@@ -124,6 +124,17 @@ public static class ParseTools
 
         return str.ToUpper();
     }
+    
+    public static string LowerFirstLetter(this string str)
+    {
+        if (str == null)
+            return null;
+
+        if (str.Length > 1)
+            return char.ToLower(str[0]) + str.Substring(1);
+
+        return str.ToUpper();
+    }
 
     public static string CamelCaseToReadableText(this string name)
     {

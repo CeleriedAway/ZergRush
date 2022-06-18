@@ -7,6 +7,13 @@ namespace ZergRush.ReactiveCore
 {
     public static partial class ReactiveCollectionAPI
     {
+        public static IReactiveCollection<T2> FilterCastReactive<T, T2>(this IReactiveCollection<T> collectione) 
+            where T : class
+            where T2 : class
+        {
+            return collectione.Filter(t => t is T2).Map(t => t as T2);
+        }
+        
         public static IReactiveCollection<T> Filter<T>(this IReactiveCollection<T> collection,
             Func<T, bool> predicate)
         {

@@ -214,6 +214,7 @@ namespace ZergRush.ReactiveCore
         }
     }
 
+    [GenIgnore(GenTaskFlags.All & ~GenTaskFlags.DefaultConstructor)]
     public class ModifiableList<T> : IReactiveCollection<T>, IReadOnlyList<T>
     {
         ReactiveCollection<T> collection = new ReactiveCollection<T>();
