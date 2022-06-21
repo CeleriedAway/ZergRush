@@ -126,11 +126,11 @@ namespace ZergRush
             return result;
         }
 
-        public static T RandomWeightedElement<T>(this List<T> elements, ZergRandom random, Func<T, int> weightFunc)
+        public static T RandomWeightedElement<T>(this IList<T> elements, ZergRandom random, Func<T, int> weightFunc)
         {
             return RandomWeightedElement(elements, weightFunc, random, out _);
         }
-        public static T RandomWeightedElement<T>(this List<T> elements, Func<T, int> weightFunc, ZergRandom random, out int index)
+        public static T RandomWeightedElement<T>(this IList<T> elements, Func<T, int> weightFunc, ZergRandom random, out int index)
         {
             if (elements.Count == 0)
             {
