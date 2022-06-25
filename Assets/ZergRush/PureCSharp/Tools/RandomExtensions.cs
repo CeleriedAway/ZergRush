@@ -25,12 +25,14 @@ namespace ZergRush
             return list;
         }
 
+        // trying to choose unique elements from list
         public static IEnumerable<T> RandomElements<T>(this IEnumerable<T> list, ZergRandom random, int count)
         {
             var l = list.ToList();
             return RandomNonoverlappedIndices(l.Count, count, random).Select(i => l[i]);
         }
         
+        // trying to choose unique elements from list
         public static IEnumerable<T> RandomElements<T>(this List<T> list, ZergRandom random, int count)
         {
             return RandomNonoverlappedIndices(list.Count, count, random).Select(i => list[i]);
