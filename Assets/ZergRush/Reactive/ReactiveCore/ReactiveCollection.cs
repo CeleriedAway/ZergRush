@@ -51,11 +51,11 @@ namespace ZergRush.ReactiveCore
 // Proposition: rename to ReactiveList. Reactive collection is too general. Also I want ReactiveDictionary.
     {
         protected EventStream<ReactiveCollectionEvent<T>> up;
-        protected SimpleList<T> data;
+        protected readonly SimpleList<T> data = new SimpleList<T>();
+        protected readonly SimpleList<T> oldData = new SimpleList<T>();
 
         public ReactiveCollection()
         {
-            this.data = new SimpleList<T>();
         }
 
         public void AddRange(IEnumerable<T> items)
@@ -171,11 +171,22 @@ namespace ZergRush.ReactiveCore
             data.RemoveAt(index);
             OnItemRemovedAt(index, up, item);
         }
-        
+
+        void SaveOldData() {
+            oldData.Clear();
+            foreach (var t in data)
+                oldData.Add(t);
+        }
         public void Reset(IReadOnlyList<T> newData)
         {
-            var oldData = data;
-            data = new SimpleList<T>(newData);
+            SaveOldData();
+            data.Clear();
+            if (newData != null) {
+                foreach (var t in newData)
+                    data.Add(t);
+            }
+            //var oldData = data;
+            //data = new SimpleList<T>(newData);
             OnItemsReset(newData, oldData, up);
         }
         
@@ -192,8 +203,13 @@ namespace ZergRush.ReactiveCore
         
         public void Reset(IEnumerable<T> val = null)
         {
-            var oldData = data;
-            data = val != null ? new SimpleList<T>(val) : new SimpleList<T>();
+            SaveOldData();
+            data.Clear();
+            if (val != null) {
+                foreach (var t in val)
+                    data.Add(t);
+            }
+            //data = val != null ? new SimpleList<T>(val) : new SimpleList<T>();
             if (oldData.Count == 0 && data.Count == 0) return;
 
             OnItemsReset(data, oldData, up);
