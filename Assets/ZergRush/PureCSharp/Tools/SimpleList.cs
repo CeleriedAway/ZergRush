@@ -180,10 +180,10 @@ public class SimpleList<T> : IList<T>, IReadOnlyList<T>
         var num = 0;
         if (capacity > data.Length)
         {
-            if (currentCount == 0)
+            if (data.Length == 0)
                 num = 4;
             else
-                num = currentCount * 2;
+                num = data.Length * 2;
         }
         if (num < capacity) num = capacity;
         Capacity = num;
