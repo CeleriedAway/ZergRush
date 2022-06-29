@@ -13,7 +13,7 @@ namespace ZergRush.Alive
         {
             if (alive)
             {
-                throw new Exception("You can not enlive living");
+                throw new ZergRushException("You can not enlive living");
             }
 
             alive = true;
@@ -29,7 +29,7 @@ namespace ZergRush.Alive
         {
             if (!alive)
             {
-                throw new Exception("You can not mortify dead");
+                throw new ZergRushException("You can not mortify dead");
             }
 
             for (var i = 0; i < items.Count; i++)
