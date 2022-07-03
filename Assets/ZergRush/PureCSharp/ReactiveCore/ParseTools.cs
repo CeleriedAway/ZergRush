@@ -31,6 +31,11 @@ public static class ParseTools
     }
     public static bool HasSuffixAndStrip(this string str, string suff, out string pref)
     {
+        if (str == null)
+        {
+            pref = str;
+            return false;
+        }
         if (str.EndsWith(suff))
         {
             pref = str.Substring(0, str.Length - suff.Length);
@@ -107,6 +112,7 @@ public static class ParseTools
         if (str == null) return null;
         var builder = new StringBuilder();
         str = str.Replace(".", "");
+        str = str.Replace("-", "");
         foreach (var s in str.Split(' '))
         {
             builder.Append(s.UpperFirstLetter());
