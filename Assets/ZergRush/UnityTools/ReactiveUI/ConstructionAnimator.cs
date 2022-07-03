@@ -7,6 +7,9 @@ namespace ZergRush.ReactiveUI
     public class TableDelegates<TView>
         where TView : ReusableView
     {
+        // Called when view is shown after creation or recycle
+        public Action<TView> onViewReady;
+        
         // Used to animate dynamic insertion somehow
         public Action<TView> onInsertAnimated;
 

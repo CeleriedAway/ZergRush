@@ -240,6 +240,11 @@ namespace ZergRush.ReactiveUI
             }
 
             delegates = delegates ?? new TableDelegates<TView>();
+            if (delegates.onViewReady != null)
+                show += (d, view) =>
+                {
+                    delegates.onViewReady(view);
+                };
             if (delegates.onInsertAnimated != null)
                 show += (d, view) =>
                 {
