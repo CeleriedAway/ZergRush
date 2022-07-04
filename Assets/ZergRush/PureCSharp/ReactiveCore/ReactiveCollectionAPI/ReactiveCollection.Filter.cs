@@ -133,8 +133,9 @@ namespace ZergRush.ReactiveCore
 
             protected override IDisposable StartListenAndRefill()
             {
+                var disp = new DoubleDisposable { first = connetions, second = collection.update.Subscribe(Process) };
                 ProperRefill();
-                return new DoubleDisposable { first = connetions, second = collection.update.Subscribe(Process) };
+                return disp;
             }
 
             protected override void RefillRaw()
@@ -229,8 +230,9 @@ namespace ZergRush.ReactiveCore
 
             protected override IDisposable StartListenAndRefill()
             {
+                var disp = collection.update.Subscribe(Process);
                 ProperRefill(collection);
-                return collection.update.Subscribe(Process);
+                return disp;
             }
 
             protected override void RefillRaw()

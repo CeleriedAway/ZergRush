@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using ZergRush.CodeGen;
 
 namespace ZergRush.ReactiveCore
 {
@@ -178,7 +179,7 @@ namespace ZergRush.ReactiveCore
 
             protected override IDisposable StartListenAndRefill()
             {
-                return cell.ListenUpdates(coll =>
+                var disp = cell.ListenUpdates(coll =>
                 {
                     if (coll == null)
                     {
@@ -201,6 +202,8 @@ namespace ZergRush.ReactiveCore
                         buffer.RemoveAt(index);
                     }
                 });
+                RefillRaw();
+                return disp;
             }
 
             protected override void RefillRaw()
@@ -251,7 +254,7 @@ namespace ZergRush.ReactiveCore
             void Insert(int realIndex, ICell<T> item)
             {
                 buffer.Insert(realIndex, item.value);
-                connetions.Insert(realIndex, item.ListenUpdates(val => { buffer[coll.IndexOf(item)] = val; }));
+                connetions.Insert(realIndex, item.ListenUpdates(val => UpdateCell(item, val)));
             }
 
             void Remove(int realIndex)
@@ -263,8 +266,19 @@ namespace ZergRush.ReactiveCore
             void Set(int realIndex, ICell<T> item)
             {
                 connetions[realIndex].Dispose();
-                connetions[realIndex] = item.ListenUpdates(val => { buffer[coll.IndexOf(item)] = val; });
+                connetions[realIndex] = item.ListenUpdates(val => UpdateCell(item, val));
                 buffer[realIndex] = item.value;
+            }
+
+            void UpdateCell(ICell<T> cell, T val)
+            {
+                var indexOf = coll.IndexOf(cell);
+                if (indexOf == -1)
+                {
+                    ErrorLogSink.errLog?.Invoke($"Collection of cells join error");
+                    return;
+                }
+                buffer[indexOf] = val;
             }
 
             void ProperRefill(IReadOnlyList<ICell<T>> newList)
@@ -273,7 +287,7 @@ namespace ZergRush.ReactiveCore
                 for (int i = 0; i < newList.Count; i++)
                 {
                     var cell = newList[i];
-                    connetions.Add(cell.ListenUpdates(val => { buffer[coll.IndexOf(cell)] = val; }));
+                    connetions.Add(cell.ListenUpdates(val => UpdateCell(cell, val)));
                 }
 
                 buffer.Reset(newList.Select(l => l.value));
@@ -304,12 +318,13 @@ namespace ZergRush.ReactiveCore
 
             protected override IDisposable StartListenAndRefill()
             {
-                ProperRefill(coll);
-                return new DoubleDisposable
+                var disp = new DoubleDisposable
                 {
                     first = connetions,
                     second = coll.update.Subscribe(Process)
                 };
+                ProperRefill(coll);
+                return disp;
             }
 
             protected override void RefillRaw()

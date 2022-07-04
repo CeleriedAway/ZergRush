@@ -11,8 +11,9 @@ namespace ZergRush.ReactiveCore
         [MustUseReturnValue("In most cases you should use returned value to disconnect from cell later")]
         public static IDisposable Bind<T>(this ICell<T> cell, Action<T> action)
         {
+            var disp = cell.ListenUpdates(action);
             action(cell.value);
-            return cell.ListenUpdates(action);
+            return disp;
         }
 
         /// Alternative API to easier connections collection

@@ -52,8 +52,9 @@ namespace ZergRush.ReactiveCore
 
             protected override IDisposable StartListenAndRefill()
             {
-                base.RefillBuffer();
-                return collection.update.Subscribe(Process);
+                var disp = collection.update.Subscribe(Process);
+                RefillBuffer();
+                return disp;
             }
 
             protected void RefillRaw(IReadOnlyList<T> list)

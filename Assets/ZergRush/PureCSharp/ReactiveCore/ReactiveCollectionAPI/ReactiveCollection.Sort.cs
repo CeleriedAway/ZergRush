@@ -61,8 +61,9 @@ namespace ZergRush.ReactiveCore
 
             protected override IDisposable StartListenAndRefill()
             {
+                var disp = collection.update.Subscribe(Process);
                 RefillRaw();
-                return collection.update.Subscribe(Process);
+                return disp;
             }
 
             protected override void RefillRaw()

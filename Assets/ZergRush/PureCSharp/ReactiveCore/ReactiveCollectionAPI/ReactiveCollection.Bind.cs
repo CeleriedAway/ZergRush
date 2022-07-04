@@ -111,8 +111,9 @@ namespace ZergRush.ReactiveCore
         public static IDisposable BindCollection<T>(this IReactiveCollection<T> list,
             Action<IReactiveCollectionEvent<T>> action)
         {
+            var disp = list.update.Subscribe(action);
             action(new ReactiveCollectionEvent<T> { type = ReactiveCollectionEventType.Reset, newData = list });
-            return list.update.Subscribe(action);
+            return disp;
         }
     }
 }

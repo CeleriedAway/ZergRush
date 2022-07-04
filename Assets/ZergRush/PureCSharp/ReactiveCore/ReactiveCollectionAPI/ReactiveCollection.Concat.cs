@@ -85,11 +85,10 @@ namespace ZergRush.ReactiveCore
 
             protected override IDisposable StartListenAndRefill()
             {
-                RefillBuffer();
                 var disp = new MultipleDisposable();
                 disp.Add(collection.update.Subscribe(Process));
                 disp.Add(collection2.update.Subscribe(Process2));
-
+                RefillBuffer();
                 return disp;
             }
 
