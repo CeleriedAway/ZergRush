@@ -157,7 +157,9 @@ namespace ZergRush.CodeGen
             var t = info.type;
             // info can be transformed because read from can do temp value wrapping for it
             Func<DataInfo, string> defaultContent = info1 =>
-                $"{info1.access}.{UpdateFuncName}({other}{t.OptPoolIfUpdatebleWithPoolSecondArg(pooled)});";
+            {
+                return $"{info1.access}.{UpdateFuncName}({other}{t.OptPoolIfUpdatebleWithPoolSecondArg(pooled)});";
+            };
             Action<MethodBuilder, DataInfo> baseReadCall = (s, info1) => s.content(defaultContent(info1));
 
             // if (info.realType.IsLivableSlot())
@@ -245,38 +247,38 @@ namespace ZergRush.CodeGen
             sink.content($"for (; i < crossCount; ++i)");
             sink.content($"{{");
             sink.indent++;
-            GenUpdateValueFromInstance(sink, new DataInfo {type = elementType,
-                    baseAccess = $"{accessPrefix}[i]", canBeNull = !elementType.IsValueType}, refInst,
-                pooled,
-                needTempVarThenAssign: elementType.IsValueType);
-            sink.indent--;
+                GenUpdateValueFromInstance(sink, new DataInfo {type = elementType,
+                        baseAccess = $"{accessPrefix}[i]", canBeNull = !elementType.IsValueType}, refInst,
+                    pooled,
+                    needTempVarThenAssign: elementType.IsValueType);
+                sink.indent--;
             sink.content($"}}");
             sink.content($"for (; i < {other}.Count; ++i)");
             sink.content($"{{");
             sink.indent++;
-            if (useAddCopyFunc)
-            {
-                CreateNewInstance(sink, DataInfo.WithTypeAndName(elementType, "inst"), $"{refInst}.{CodeGen.PolymorphClassIdGetter}", pooled, refInst, true);
-                sink.content($"self.AddCopy(inst, {refInst});");
-//                sink.content($"self.Add(null);");
-//                GenUpdateValueFromInstance(sink, new DataInfo {type = elementType, baseAccess = $"self[i]", sureIsNull = true},
-//                    refInst, pooled: pooled);
-            }
-            else
-            {
-                GenUpdateValueFromInstance(sink, new DataInfo {type = elementType, baseAccess = $"inst", sureIsNull = true},
-                    refInst, needCreateVar: true,
-                    pooled: pooled);
-                sink.content($"self.Add(inst);");
-            }
+                if (useAddCopyFunc)
+                {
+                    CreateNewInstance(sink, DataInfo.WithTypeAndName(elementType, "inst"), $"{refInst}.{CodeGen.PolymorphClassIdGetter}", pooled, refInst, true);
+                    sink.content($"self.AddCopy(inst, {refInst});");
+    //                sink.content($"self.Add(null);");
+    //                GenUpdateValueFromInstance(sink, new DataInfo {type = elementType, baseAccess = $"self[i]", sureIsNull = true},
+    //                    refInst, pooled: pooled);
+                }
+                else
+                {
+                    GenUpdateValueFromInstance(sink, new DataInfo {type = elementType, baseAccess = $"inst", canBeNull = true, sureIsNull = true},
+                        refInst, needCreateVar: true,
+                        pooled: pooled);
+                    sink.content($"self.Add(inst);");
+                }
             sink.indent--;
             sink.content($"}}");
             sink.content($"for (; i < oldCount; ++i)");
             sink.content($"{{");
             sink.indent++;
-            SinkRemovePostProcess(sink,
-                new DataInfo {type = elementType, baseAccess = $"self[{accessPrefix}.Count - 1]"}, pooled);
-            sink.content($"self.RemoveAt({accessPrefix}.Count - 1);");
+                SinkRemovePostProcess(sink,
+                    new DataInfo {type = elementType, baseAccess = $"self[{accessPrefix}.Count - 1]"}, pooled);
+                sink.content($"self.RemoveAt({accessPrefix}.Count - 1);");
             sink.indent--;
             sink.content($"}}");
         }

@@ -168,6 +168,11 @@ namespace ZergRush.Alive
         
         public void AddCopy(T item, T refData)
         {
+            if (refData == null)
+            {
+                items.Add(null);
+                return;
+            }
             items.Add(item);
             SetupItemHierarchy(item);
             item.UpdateFrom(refData);

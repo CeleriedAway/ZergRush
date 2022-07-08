@@ -52,6 +52,11 @@ namespace ZergRush.Alive
 
         public new void AddCopy(T item, T refData)
         {
+            if (refData == null)
+            {
+                items.Add(null);
+                return;
+            }
             items.Add(item);
             SetupItemHierarchy(item);
             
