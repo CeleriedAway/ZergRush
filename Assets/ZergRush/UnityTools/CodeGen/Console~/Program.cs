@@ -14,11 +14,7 @@ using ZergRush.CodeGen;
 
 class Programm
 {
-    public const string ROOT = @"..\..\..\..\..\..\..\..";
-    public static readonly string[] PROJECT_PATHS = {"Test"};
-    public static readonly string[] PROJECT_NAMES = {"Assembly-CSharp.csproj"};
-    public static readonly string SOLUTION = @"Test\Test.sln";
-
+    public static readonly string[] PROJECT_NAMES = {"Assembly-CSharp.csproj", "ZergRush.Core.csproj"};
 
     public static void Main()
     {
@@ -39,11 +35,11 @@ class Programm
             throw new ZergRushException();
         }
         
-        SyntaxAnalizeStuff(path, PROJECT_NAMES[0]);
+        SyntaxAnalizeStuff(path, PROJECT_NAMES);
     }
 
 
-    private static void SyntaxAnalizeStuff(string projectPath, string projectName)
+    private static void SyntaxAnalizeStuff(string projectPath, string[] projectName)
     {
         Console.WriteLine("\n\nFinding all files \n\nv v v v v v v");
         // var msWorkspace = MSBuildWorkspace.Create();
@@ -54,11 +50,24 @@ class Programm
         //
         // var classesByName = new Dictionary<string, ClassGroup>();
 
+        var allReferencePaths = new HashSet<string>();
+        var allProjectReference = new HashSet<string>();
+        var trees = projectName.SelectMany(p =>
+        {
+            var (allFilePaths, dlls, projs) =
+                TypeReader.FindAllFilesInProject(projectPath, p);
+            foreach (var dll in dlls)
+            {
+                allReferencePaths.Add(dll);
+            }
+            foreach (var pp in projs)
+            {
+                allProjectReference.Add(pp);
+            }
+            ShowEntireList(allFilePaths);
+            return allFilePaths.ConvertAll(ExtractSyntaxTree);
+        });
         // var references = apiProject.SelectMany(p => p.MetadataReferences.OfType<PortableExecutableReference>()).ToList();
-        var (allFilePaths, allReferencePaths, allProjectReference) =
-            TypeReader.FindAllFilesInProject(projectPath, projectName);
-        ShowEntireList(allFilePaths);
-        var trees = allFilePaths.ConvertAll(ExtractSyntaxTree);
 
         var pruned = trees.ConvertAll(TypeReader.PruneTree);
         var references = allReferencePaths
@@ -103,7 +112,7 @@ class Programm
 
                 foreach (var diagnostic in failures)
                 {
-                    throw new Exception($"Failed to compile code '{diagnostic.Id}'! : {diagnostic.GetMessage()}");
+                    Console.Error.WriteLine($"Failed to compile code '{diagnostic.Id}'! : {diagnostic.GetMessage()}");
                 }
 
                 throw new Exception("Unknown error while compiling code !");

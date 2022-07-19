@@ -10,24 +10,11 @@ namespace ZergRush.CodeGen
     {
         public static void ConsoleGen(List<Assembly> assemblies, bool stubs)
         {
-
-           // EditorUtility.DisplayProgressBar("Running codegen", "creating tasks", 0);
-
             var genDir = new DirectoryInfo(DefaultGenPath);
             if (genDir.Exists == false)
             {
                 genDir.Create();
             }
-
-            // TODO add namespace customization for more performance 
-            // bool IsGameType(Type t)
-            // {
-            //     var typeNamespace = t.Namespace;
-            //     var inProject = typeNamespace != null && (
-            //         typeNamespace.StartsWith("TWL") || typeNamespace.StartsWith("Game") ||
-            //         typeNamespace.StartsWith("Zerg"));
-            //     return inProject;
-            // }
             
             Console.WriteLine($"Order: {assemblies.Select(a => a.GetName().Name).PrintCollection()}");
             var typesEnumerable = assemblies.SelectMany(assembly => assembly.GetTypes());
