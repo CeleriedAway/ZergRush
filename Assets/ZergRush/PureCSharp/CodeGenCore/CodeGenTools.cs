@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -9,9 +9,9 @@ public static class CodeGenTools
     public static T GetAttribute<T>(this Type type) where T : Attribute
     {
         var customAttributes = type.GetCustomAttributes(typeof(T), false);
-        return customAttributes.Length > 0 ? (T) customAttributes[0] : null;
+        return customAttributes.Length > 0 ? (T)customAttributes[0] : null;
     }
-    
+
     public static bool HasAttribute<T>(this MemberInfo field) where T : Attribute
     {
         return Attribute.IsDefined(field, typeof(T));
@@ -55,19 +55,35 @@ public static class CodeGenTools
     public static string RealName(this Type t, bool withNamespace = false)
     {
         if (t == typeof(void)) return "void";
-        if (t == typeof(long)) return "long";
-        if (t == typeof(ulong)) return "ulong";
+
         if (t == typeof(int)) return "int";
         if (t == typeof(uint)) return "uint";
-        if (t == typeof(short)) return "short";
+
+        if(t == typeof(short)) return "short";
         if (t == typeof(ushort)) return "ushort";
+
+        if (t == typeof(long)) return "long";
+        if (t == typeof(ulong)) return "ulong";
+
         if (t == typeof(byte)) return "byte";
         if (t == typeof(sbyte)) return "sbyte";
+
+        if (t == typeof(float)) return "float";
+
+        if (t == typeof(double)) return "double";
+
+        if (t == typeof(decimal)) return "decimal";
+
         if (t == typeof(string)) return "string";
+        if (t == typeof(char)) return "char";
+
         if (t == typeof(bool)) return "bool";
+
+
         if (Nullable.GetUnderlyingType(t) != null)
         {
-            return RealName(Nullable.GetUnderlyingType(t)) + "?";
+            var valueToReturn = RealName(Nullable.GetUnderlyingType(t)) + "?"; ;
+            return valueToReturn;
         }
 
         var name = withNamespace ? t.NameWithNamespace() : t.Name;

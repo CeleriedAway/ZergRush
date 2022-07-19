@@ -38,6 +38,10 @@ namespace ZergRush.CodeGen
             {
                 return $"{name} != null ? {calcHash} : {RandomHash()}";
             }
+            if(Nullable.GetUnderlyingType(info.type) != null)
+            {
+                return $"{name}.HasValue ? (ulong){name}.Value.GetHashCode() : {RandomHash()}";
+            }
             else
             {
                 return calcHash;
