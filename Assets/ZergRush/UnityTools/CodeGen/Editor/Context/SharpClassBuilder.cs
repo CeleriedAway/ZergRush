@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-#if UNITY_EDITOR
-
 namespace ZergRush.CodeGen
 {
     public interface IBuilder
@@ -138,5 +136,3 @@ namespace ZergRush.CodeGen
         }
     }
 }
-
-#endif

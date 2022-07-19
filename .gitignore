@@ -1,0 +1,10 @@
+/Test/Library/
+/Test/ProjectSettings/
+/Test/Temp/
+/Test/UserSettings/
+/Test/.idea/
+/Test/Logs/
+/Test/obj/
+Assets/ZergRush/UnityTools/CodeGen/Console~/.idea/
+Assets/ZergRush/UnityTools/CodeGen/Console~/bin/
+Assets/ZergRush/UnityTools/CodeGen/Console~/obj/

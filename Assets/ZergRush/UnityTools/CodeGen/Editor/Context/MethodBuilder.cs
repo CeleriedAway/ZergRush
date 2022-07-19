@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Text;
 
-#if UNITY_EDITOR
-
 public enum MethodType
 {
     Instance,
@@ -152,5 +150,3 @@ namespace ZergRush.CodeGen
         }
     }
 }
-
-#endif

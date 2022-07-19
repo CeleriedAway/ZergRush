@@ -1,7 +1,4 @@
 ﻿using System.Collections.Generic;
-using UnityEngine;
-
-#if UNITY_EDITOR
 
 namespace ZergRush.CodeGen
 {
@@ -54,7 +51,7 @@ namespace ZergRush.CodeGen
         {
             if (builderFileNames.Contains(name))
             {
-                Debug.LogError($"builder: {name} is already created");
+                CodeGen.Error($"builder: {name} is already created");
             }
             var builder = new SharpCustomModule()
             {
@@ -83,4 +80,3 @@ namespace ZergRush.CodeGen
     }
 }
 
-#endif

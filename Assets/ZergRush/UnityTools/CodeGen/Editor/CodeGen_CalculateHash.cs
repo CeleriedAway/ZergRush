@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using UnityEngine;
 using ZergRush.CodeGen;
 
 namespace ZergRush.CodeGen
@@ -75,7 +74,7 @@ namespace ZergRush.CodeGen
                     }
                     if (sink.classType.IsAbstract == false)
                     {
-                        sink.content($"hash += ({HashTypeName}){Mathf.Abs(type.Name.GetHashCode())};");
+                        sink.content($"hash += ({HashTypeName}){Math.Abs(type.Name.GetHashCode())};");
                         sink.content(HashMixStatement("hash"));
                     }
                 },

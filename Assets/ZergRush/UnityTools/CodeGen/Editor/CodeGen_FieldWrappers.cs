@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using UnityEngine;
 
 namespace ZergRush.CodeGen
 {
@@ -85,9 +84,9 @@ namespace ZergRush.CodeGen
             {
                 foreach (var info in fieldsCodeReplace)
                 {
-                    Debug.Log($"Type: {info.Key} Field to replace: {info.Value.Select(i => i.name).PrintCollection()}");
+                    //Debug.Log($"Type: {info.Key} Field to replace: {info.Value.Select(i => i.name).PrintCollection()}");
                     var filePath = info.Value[0].file;
-                    Debug.Log($"Type: {info.Key} filePath: {filePath}");
+                    //Debug.Log($"Type: {info.Key} filePath: {filePath}");
 
                     var allText = File.ReadAllLines(filePath);
 
@@ -98,14 +97,14 @@ namespace ZergRush.CodeGen
                         allText[field.line - 1] = tagLine;
 
                         var targetLine = allText[field.line];
-                        Debug.Log($"replacing " + targetLine);
+                        //Debug.Log($"replacing " + targetLine);
                         var isPublic = targetLine.Contains("public") ? "public" : "";
                         var backingFieldName = "_" + field.name;
                         var whiteSpaceCount = 0;
                         ConsumeSpaces(ref whiteSpaceCount, targetLine);
                         targetLine = CodeGenTools.Indent(whiteSpaceCount / 4) +
                                      $"{isPublic} {field.type.RealName(true)} {field.name} {{ get {{ return {backingFieldName}; }} set {{ {backingFieldName} = value;}} }}";
-                        Debug.Log(targetLine);
+                        //Debug.Log(targetLine);
                         allText[field.line] = targetLine;
                     }
 

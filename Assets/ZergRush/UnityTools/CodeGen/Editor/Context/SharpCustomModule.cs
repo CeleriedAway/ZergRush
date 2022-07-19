@@ -3,10 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Linq;
-using UnityEngine;
 using ZergRush;
-
-#if UNITY_EDITOR
 
 namespace ZergRush.CodeGen
 {
@@ -83,5 +80,3 @@ namespace ZergRush.CodeGen
         }
     }
 }
-
-#endif

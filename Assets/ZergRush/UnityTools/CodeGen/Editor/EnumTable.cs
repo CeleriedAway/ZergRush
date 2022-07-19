@@ -2,10 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using UnityEngine;
 using ZergRush;
-
-#if UNITY_EDITOR
 
 namespace ZergRush.CodeGen
 {
@@ -138,8 +135,7 @@ namespace ZergRush.CodeGen
             }
             catch (Exception e)
             {
-                Debug.LogError("saving type table exception");
-                Debug.LogError(e);
+                ErrorLogSink.errLog?.Invoke("saving type table exception" + e.ToError());
             }
         }
 
@@ -162,13 +158,10 @@ namespace ZergRush.CodeGen
             }
             catch (Exception e)
             {
-                Debug.Log("loading type table exception");
-                Debug.Log(e);
+                // ignore
             }
 
             return new EnumTable();
         }
     }
 }
-
-#endif

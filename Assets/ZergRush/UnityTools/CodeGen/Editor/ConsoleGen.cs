@@ -136,7 +136,7 @@ namespace ZergRush.CodeGen
                 return;
             }
 
-          //  EditorUtility.DisplayProgressBar("Running codegen", "writing cs files", 0.5f);
+            //EditorUtility.DisplayProgressBar("Running codegen", "writing cs files", 0.5f);
 
             customContextFolders.Add(DefaultGenPath);
             customContextFolders.ForEach(genFolder =>

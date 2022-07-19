@@ -4,8 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using ZergRush.Alive;
-using UnityEditor;
-using UnityEngine;
 
 namespace ZergRush.CodeGen
 {
@@ -30,8 +28,7 @@ namespace ZergRush.CodeGen
 
         public static void Error(string err)
         {
-            Debug.LogError(err);
-            hasErrors = true;
+            ErrorLogSink.errLog?.Invoke(err);
         }
 
         enum Mode
@@ -267,14 +264,6 @@ namespace ZergRush.CodeGen
         // You shall not dare to try to unfuck this.
         public static void Gen(List<string> includeAssemblies, bool stubs)
         {
-            if (EditorApplication.isCompiling)
-            {
-                Debug.LogError("Application is compiling codegen run is not recomended");
-                return;
-            }
-
-            EditorUtility.DisplayProgressBar("Running codegen", "creating tasks", 0);
-
             var genDir = new DirectoryInfo(DefaultGenPath);
             if (genDir.Exists == false) {
                 genDir.Create();
@@ -293,7 +282,6 @@ namespace ZergRush.CodeGen
 
             var allAssemblies = AppDomain.CurrentDomain.GetAssemblies();
             var assemblies = includeAssemblies.Select(i => allAssemblies.FirstOrDefault(a => a.GetName().Name == i)).Where(a => a != null);
-            Debug.Log($"Order: {assemblies.Select(a => a.GetName().Name).PrintCollection()}");
             var typesEnumerable = assemblies.SelectMany(assembly => assembly.GetTypes());
 
             allTypesInAssemblies.Clear();
@@ -392,14 +380,6 @@ namespace ZergRush.CodeGen
             GeneratePolimorphismSupport();
             GeneratePolymorphicRootSupport();
             // Do not change anythign if there is any errors
-            if (hasErrors)
-            {
-                EditorUtility.ClearProgressBar();
-                return;
-            }
-
-            EditorUtility.DisplayProgressBar("Running codegen", "writing cs files", 0.5f);
-
             customContextFolders.Add(DefaultGenPath);
             customContextFolders.ForEach(genFolder =>
             {
@@ -425,9 +405,6 @@ namespace ZergRush.CodeGen
             {
                 context.Commit();
             }
-            AssetDatabase.Refresh();
-
-            EditorUtility.ClearProgressBar();
         }
     }
 }
