@@ -8,6 +8,7 @@ namespace ZergRush.CodeGen
         public static string CompareFuncName = "CompareCheck";
         public static string CompErrorFunc = "SerializationTools.LogCompError";
         public static string CompNullComp = "SerializationTools.CompareNull";
+        public static string CompNullNullbaleComp = "SerializationTools.CompareNullNullable";
         public static string CompRef = "SerializationTools.CompareRefs";
         public static string CompClassId = "SerializationTools.CompareClassId";
         public static string PrinterArg = "Action<string> printer";
@@ -23,7 +24,8 @@ namespace ZergRush.CodeGen
             {
                 if (info.canBeNull)
                 {
-                    sink.content($"if ({CompNullComp}(__path, {info.pathName}, {PrinterName}, {info.access}, {otherValueReader})) {{");
+                    var compNull = info.type.IsNullable() ? CompNullNullbaleComp : CompNullComp;
+                    sink.content($"if ({compNull}(__path, {info.pathName}, {PrinterName}, {info.access}, {otherValueReader})) {{");
                     sink.indent++;
                 }
                 if (info.type.CanBeAncestor())
@@ -111,7 +113,7 @@ namespace ZergRush.CodeGen
         
 		static bool IsAlmostPrimitive(this Type t)
 		{
-			return t.IsPrimitive || t.IsFix64();
+			return t.IsPrimitive || t.IsFix64() || t.IsNullablePrimitive();
 		}
     }
 }

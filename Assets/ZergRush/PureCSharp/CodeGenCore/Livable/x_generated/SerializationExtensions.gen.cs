@@ -154,7 +154,7 @@ public static partial class SerializationExtensions
             if (self[i] != other[i]) SerializationTools.LogCompError(__path, i.ToString(), printer, other[i], self[i]);
         }
     }
-    public static void UpdateFrom(this ZergRush.Alive.SerializableConnection self, ZergRush.Alive.SerializableConnection other) 
+    public static void UpdateFrom(ref this ZergRush.Alive.SerializableConnection self, ZergRush.Alive.SerializableConnection other) 
     {
         self.ownerId = other.ownerId;
         self.entityId = other.entityId;
@@ -166,11 +166,14 @@ public static partial class SerializationExtensions
         int crossCount = Math.Min(oldCount, other.Count);
         for (; i < crossCount; ++i)
         {
-            self[i] = other[i];
+            var __selfi = self[i];
+            __selfi.UpdateFrom(other[i]);
+            self[i] = __selfi;
         }
         for (; i < other.Count; ++i)
         {
-            var inst = other[i];
+            ZergRush.Alive.SerializableConnection inst = default;
+            inst.UpdateFrom(other[i]);
             self.Add(inst);
         }
         for (; i < oldCount; ++i)

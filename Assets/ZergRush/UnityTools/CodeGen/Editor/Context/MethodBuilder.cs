@@ -47,6 +47,7 @@ namespace ZergRush.CodeGen
         public bool async;
         public bool isDebug;
         public MethodAccess access = MethodAccess.Public;
+        public bool extensionRef;
 
         public bool doNotCallBaseMethod;
         public bool needBaseValCall;
@@ -145,7 +146,11 @@ namespace ZergRush.CodeGen
 
             sig += $"{(returnType != null ? returnType.RealName(true) : "")} {name}{(genericSuffix.Valid() ? $"{genericSuffix}" : "")}";
             
-            var funcFirstArg = type == MethodType.Extension ? $"this {classType.RealName(true)} self" : "";
+            string funcFirstArg;
+            if (type == MethodType.Extension)
+                funcFirstArg = $"{(extensionRef ? "ref " : "")}this {classType.RealName(true)} self";
+            else
+                funcFirstArg = "";
             sig += $"({CodeGenTools.MergeSig(funcFirstArg, args)}) {constraints}";
 
             return sig;

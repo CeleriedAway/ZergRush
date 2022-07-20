@@ -18,7 +18,8 @@ namespace ZergRush.CodeGen
         {
             None,
             Cell,
-            LivableSlot
+            LivableSlot,
+            Nullable,
         }
 
         static Mode GenMode(this Type t)
@@ -409,7 +410,7 @@ namespace ZergRush.CodeGen
                 {
                     member.canBeNull = true;
                 }
-
+                
                 // Make cell look like usual field in codegeneration process.
                 var isCell = member.type.IsCell();
                 if (isCell || member.type.IsLivableSlot())
@@ -418,6 +419,11 @@ namespace ZergRush.CodeGen
                     member.realType = member.type;
                     member.type = member.type.FirstGenericArg();
                     member.isValueWrapper = isCell ? ValueVrapperType.Cell : ValueVrapperType.LivableSlot;
+                }
+
+                if (member.type.IsNullable())
+                {
+                    member.canBeNull = true;
                 }
                 
                 //member.valueTransformer = member.type.FirstGenericArg().IsValueType ? n => n + ".valueRef" : n => n + ".value";
