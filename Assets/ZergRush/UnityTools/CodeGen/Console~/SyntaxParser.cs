@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection.Emit;
 using System.Text;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis;
@@ -9,63 +10,108 @@ using System.Xml;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using SF = Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
+
 public class TreePruner : CSharpSyntaxRewriter
 {
+    ExpressionStatementSyntax BuildException()
+    {
+        var exceptionExpr = SF.ObjectCreationExpression(SF.IdentifierName("NotImplementedException"))
+            .WithArgumentList(SF.ArgumentList())
+            .WithNewKeyword(SF.Token(SyntaxKind.NewKeyword));
+        var throwExc = SF.ThrowExpression(exceptionExpr);
+        var throwExcStat = SF.ExpressionStatement(throwExc).NormalizeWhitespace();
+
+        return throwExcStat;
+    }
+
+    public override SyntaxNode? VisitCompilationUnit(CompilationUnitSyntax node)
+    {
+        if (node.Usings.Any(us => us.Name.ToString() == "System")) return base.VisitCompilationUnit(node);
+        ;
+        node = node.AddUsings(SF.UsingDirective(SF.ParseName("System")).NormalizeWhitespace());
+        return base.VisitCompilationUnit(node);
+    }
+
     public override SyntaxNode? VisitPropertyDeclaration(PropertyDeclarationSyntax node)
     {
-        if (node.AccessorList == null) return node;
-        var getSetList = new List<AccessorDeclarationSyntax>();
-        if (node.AccessorList.Accessors.Any(a => a.Keyword.Kind() == SyntaxKind.GetKeyword))
-            getSetList.Add(SF.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
-                .WithSemicolonToken(SF.Token(SyntaxKind.SemicolonToken)));
+        if (node.ExpressionBody != null)
+        {
+            node = node.RemoveNode(node.ExpressionBody, SyntaxRemoveOptions.KeepNoTrivia)!
+                .WithSemicolonToken(SyntaxFactory.MissingToken(SyntaxKind.SemicolonToken)
+                    .WithLeadingTrivia(node.SemicolonToken.LeadingTrivia)
+                    .WithTrailingTrivia(node.SemicolonToken.TrailingTrivia));
+            node = node.WithAccessorList(
+                SF.AccessorList(
+                    SF.List(new List<AccessorDeclarationSyntax>()
+                        {
+                            SF.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
+                                .WithBody(SF.Block(BuildException()))
+                        }
+                    )
+                )
+            );
+            return base.VisitPropertyDeclaration(node);
+        }
 
+        if (node.AccessorList == null) return base.VisitPropertyDeclaration(node);
+        if (node.AccessorList.Accessors.Count == 0) return base.VisitPropertyDeclaration(node);
+        var i = node.AccessorList.Accessors.Count;
+        while (i > 0)
+        {
+            i--;
+            var oldAcc = node.AccessorList!.Accessors[i];
+            AccessorDeclarationSyntax newAcc;
+            if (oldAcc.ExpressionBody != null)
+            {
+                newAcc = oldAcc.RemoveNode(oldAcc.ExpressionBody, SyntaxRemoveOptions.KeepNoTrivia)!
+                    .WithSemicolonToken(SyntaxFactory.MissingToken(SyntaxKind.SemicolonToken)
+                        .WithLeadingTrivia(oldAcc.SemicolonToken.LeadingTrivia)
+                        .WithTrailingTrivia(oldAcc.SemicolonToken.TrailingTrivia));
 
-        if (node.AccessorList.Accessors.Any(a => a.Keyword.Kind() == SyntaxKind.SetKeyword))
-            getSetList.Add(SF.AccessorDeclaration(SyntaxKind.SetAccessorDeclaration)
-                .WithSemicolonToken(SF.Token(SyntaxKind.SemicolonToken)));
-        var list = SF.List(getSetList);
-        var al = SF.AccessorList(list);
-        return base.VisitPropertyDeclaration(node.ReplaceNode(node.AccessorList, al));
+                newAcc = newAcc.WithBody(SF.Block(BuildException()));
+                node = node.ReplaceNode(oldAcc, newAcc);
+                continue;
+            }
+
+            if (oldAcc.Body == null) continue;
+
+            newAcc = oldAcc.ReplaceNode(oldAcc.Body, SF.Block(BuildException()));
+            node = node.ReplaceNode(oldAcc, newAcc);
+        }
+        return base.VisitPropertyDeclaration(node);
     }
 
     public override SyntaxNode? VisitMethodDeclaration(MethodDeclarationSyntax node)
     {
-        var type = node.ReturnType;
-        var returnExpression = SF.DefaultExpression(type);
-        if (type is PredefinedTypeSyntax predefined)
-        {
-            if (predefined.Keyword.IsKind(SyntaxKind.VoidKeyword))
-                returnExpression = null;
-        }
+        var throwExcStat = BuildException();
 
-
-        var returnStatement = SF.ReturnStatement(default,
-            SF.Token(SyntaxKind.ReturnKeyword).WithTrailingTrivia(SF.Whitespace(" ")), returnExpression,
-            SyntaxFactory.Token(SyntaxKind.SemicolonToken));
         if (node.Body != null)
         {
-            var newBody = SF.Block(returnStatement);
+            var newBody = SF.Block(throwExcStat);
             return base.VisitMethodDeclaration(node.ReplaceNode(node.Body, newBody));
         }
 
-        if (node.ExpressionBody != null)
-        {
-            var newBody = SF.ArrowExpressionClause(returnExpression);
-            return base.VisitMethodDeclaration(node.ReplaceNode(node.ExpressionBody, newBody));
-        }
+        if (node.ExpressionBody == null) return base.VisitMethodDeclaration(node);
+        node = node.RemoveNode(node.ExpressionBody, SyntaxRemoveOptions.KeepNoTrivia)!
+            .WithSemicolonToken(SyntaxFactory.MissingToken(SyntaxKind.SemicolonToken)
+                .WithLeadingTrivia(node.SemicolonToken.LeadingTrivia)
+                .WithTrailingTrivia(node.SemicolonToken.TrailingTrivia));
 
-        return base.VisitMethodDeclaration(node);
+        return base.VisitMethodDeclaration(node.WithBody(SF.Block(throwExcStat)));
     }
 
     public override SyntaxNode? VisitConstructorDeclaration(ConstructorDeclarationSyntax node)
     {
-        if (node.Parent is StructDeclarationSyntax)
-            return base.VisitConstructorDeclaration(node);
+        var throwExcStat = BuildException();
+
         if (node.Body != null)
-            return base.VisitConstructorDeclaration(node.ReplaceNode(node.Body, SF.Block()));
-        if(node.ExpressionBody != null)
-            throw new NotImplementedException("WHY IN THE NAME OF GOD WOULD YOU USE EXPRESSION CONSTRUCTOR !??");
-        return base.VisitConstructorDeclaration(node);
+            return base.VisitConstructorDeclaration(node.ReplaceNode(node.Body, SF.Block(throwExcStat)));
+        if (node.ExpressionBody == null) return base.VisitConstructorDeclaration(node);
+        node = node.RemoveNode(node.ExpressionBody, SyntaxRemoveOptions.KeepNoTrivia)!
+            .WithSemicolonToken(SyntaxFactory.MissingToken(SyntaxKind.SemicolonToken)
+                .WithLeadingTrivia(node.SemicolonToken.LeadingTrivia)
+                .WithTrailingTrivia(node.SemicolonToken.TrailingTrivia));
+        return base.VisitConstructorDeclaration(node.WithBody(SF.Block(throwExcStat)));
     }
 }
 

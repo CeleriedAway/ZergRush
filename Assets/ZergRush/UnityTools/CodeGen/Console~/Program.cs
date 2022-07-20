@@ -70,6 +70,11 @@ class Programm
         // var references = apiProject.SelectMany(p => p.MetadataReferences.OfType<PortableExecutableReference>()).ToList();
 
         var pruned = trees.ConvertAll(TypeReader.PruneTree);
+        pruned.ForEach((t) =>
+        {
+            Console.WriteLine(t.ToString());
+            Console.WriteLine(t.FilePath);
+        });
         var references = allReferencePaths
             .ConvertAll((rPath) => MetadataReference.CreateFromFile(rPath));
         var allProjectReferencePaths = allProjectReference
@@ -83,6 +88,9 @@ class Programm
         references.AddRange(allProjectReferencePaths
             .ConvertAll((rPath) => MetadataReference.CreateFromFile(Path.GetFullPath(rPath))));
 
+        
+        //Throw Syntax Structure is incorrect so i'm reparsing tree //todo: fix and remove   
+        pruned = pruned.ConvertAll((tree) => SyntaxFactory.ParseSyntaxTree(tree.ToString()).WithFilePath(tree.FilePath));
         // var references = allReferencePaths.ConvertAll((rPath) => MetadataReference.CreateFromFile(rPath));
         var compilation = CSharpCompilation.Create("assembly", pruned, references);
 
