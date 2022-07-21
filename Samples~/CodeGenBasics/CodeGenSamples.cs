@@ -99,7 +99,7 @@ namespace ZergRush.Samples
             if (data.CalculateHash() != data2.CalculateHash())
             {
                 // and check for differences if hashes are not equal
-                data.CompareCheck(data2, new Stack<string>());
+                data.CompareCheck(data2);
             }
             
             // polymorphic construction example

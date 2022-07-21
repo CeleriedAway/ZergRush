@@ -39,8 +39,8 @@ namespace ZergRush.CodeGen
                 sink.content($"{stream}.Write({info.access}.{UIdFuncName}());");
                 return;
             }
-            else if (t.IsNullable())
-                sink.content($"{stream}.Write({info.access});");
+            else if (info.type.IsNullable())
+                sink.content($"{stream}.Write({info.access}.Value);");
             else if (t.IsRef())
                 sink.content($"{stream}.Write({info.access}.id);");
             else if (t.IsReferencableDataNode() && writeDataNodeAsId)
@@ -177,9 +177,27 @@ namespace ZergRush.CodeGen
             }
         }
 
+        public static bool IsTuple(this Type t)
+        {
+            return t.IsGenericType && t.Name.StartsWith("ValueTuple");
+        }
         public static bool IsNullable(this Type t)
         {
             return Nullable.GetUnderlyingType(t) != null;
+        }
+        
+        public static bool IsNullableReferenceType(this Type t)
+        {
+            var underlyingType = Nullable.GetUnderlyingType(t);
+            if (underlyingType != null && underlyingType.IsClass) return true;
+            return false;
+        }
+        
+        public static bool IsNullablePrimitive(this Type t)
+        {
+            var underlyingType = Nullable.GetUnderlyingType(t);
+            if (underlyingType != null && underlyingType.IsPrimitive) return true;
+            return false;
         }
 
         public static void GenReadValueFromStream(MethodBuilder sink, DataInfo info, string stream, bool pooled,
@@ -190,11 +208,9 @@ namespace ZergRush.CodeGen
 
             // info can be transformed because read from can do temp value wrapping for it
             Action<MethodBuilder, DataInfo> baseCall = (s, info1) =>
-                s.content(
-                    $"{info1.access}.{ReadFuncName}({stream}{(pooled && t.HasPooledDeserializeMethod() ? $", pool" : "")});");
+                s.content($"{info1.access}.{ReadFuncName}({stream}{(pooled && t.HasPooledDeserializeMethod() ? $", pool" : "")});");
             if (t.IsArray || t.IsImmutableType() || (t.IsValueType && t.IsControllable() == false))
-                baseCall = (s, info1) =>
-                    s.content($"{info1.access} = {stream}.{ReadNewInstanceOfImmutableType(t, pooled)};");
+                baseCall = (s, info1) => s.content($"{info1.access} = {stream}.{ReadNewInstanceOfImmutableType(t, pooled)};");
 
 
             GeneralReadFrom(sink, info,

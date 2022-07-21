@@ -17,7 +17,7 @@ namespace ZergRush.CodeGen
             bool useTempVarThenAssign = false, bool getDataNodeFromRootWithRefId = false)
         {
             var t = info.type;
-            var canBeNull = info.canBeNull && !t.IsValueType;
+            var canBeNull = info.canBeNull && (!t.IsValueType || t.IsNullable());
 
             var originalInfo = info;
             string tempVar = null; 
@@ -44,10 +44,9 @@ namespace ZergRush.CodeGen
                 sink.content($"{info.type.RealName(true)} {info.name} = default;");
             }
             
-            if (t.IsImmutableValueType() || t.IsValueType && t.IsControllable() == false)
+            if (t.IsImmutableValueType())
             {
                 sink.content($"{name} = {directReader};");
-                return;
             }
             else if (t.IsRef())
             {
@@ -167,7 +166,8 @@ namespace ZergRush.CodeGen
             //     sink.content($"{info.realAccess}.{updatemod} = true;");
             // }
 
-            if (t.IsValueType && !t.IsControllable() || info.immutableData || t.IsImmutableData())
+            
+            if (info.immutableData || t.IsImmutableData())
             {
                 sink.content($"{OptVar(needCreateVar)}{info.access} = {other};");
                 return;
@@ -213,7 +213,7 @@ namespace ZergRush.CodeGen
             if (t.IsPrimitive)
                 return $"Read{t.Name}()";
             if (t.IsNullable())
-                return $"ReadNullable{Nullable.GetUnderlyingType(t).Name}()";
+                return ReadNewInstanceOfImmutableType(Nullable.GetUnderlyingType(t), pooled);
             if (t == typeof(string))
                 return $"ReadString()";
             if (t == typeof(byte[]))
@@ -299,7 +299,11 @@ namespace ZergRush.CodeGen
             
             MethodBuilder sink = MakeGenMethod(type, flag, funcPrefix + UpdateFuncName, typeof(void),
                 $"{updateFromType.RealName(true)} {instanceName}{(pooled ? ", ObjectPool pool" : "")}");
-            
+
+            if (type.IsValueType)
+            {
+                sink.extensionRef = true;
+            }
 
             if (type.IsList())
             {
@@ -355,7 +359,7 @@ namespace ZergRush.CodeGen
                     {
                         GenUpdateValueFromInstance(sink, memberInfo,
                             memberInfo.valueTransformer($"{otherName}.{memberInfo.baseAccess}"), pooled,
-                            needTempVarThenAssign: memberInfo.realType.IsCell() || memberInfo.realType.IsLivableSlot());
+                            needTempVarThenAssign: memberInfo.sharpMemberInfo is PropertyInfo || memberInfo.realType.IsCell() || memberInfo.realType.IsLivableSlot());
                     });
             }
         }

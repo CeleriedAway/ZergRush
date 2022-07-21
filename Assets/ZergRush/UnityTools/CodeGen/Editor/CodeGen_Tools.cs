@@ -182,8 +182,7 @@ namespace ZergRush.CodeGen
 		}
         public static bool IsImmutableType(this Type t)
         {
-	        return t.IsPrimitive || t.IsEnum || t == typeof(string)
-	               || t == typeof(byte[]) || t.IsFix64() || t.IsNullable();
+	        return t.IsPrimitive || t.IsEnum || t == typeof(string) || t.IsFix64() || (t.IsNullable() && Nullable.GetUnderlyingType(t).IsImmutableType()) || t.HasAttribute<Immutable>();
         }
         public static bool IsStruct(this Type t)
         {
@@ -287,7 +286,7 @@ namespace ZergRush.CodeGen
         {
 			if (Nullable.GetUnderlyingType(t) != null)
 			{
-				return UniqueName(Nullable.GetUnderlyingType(t)) + "?";
+				return UniqueName(Nullable.GetUnderlyingType(t), withNamespace) + "Nullable";
 			}
 
 			var name = (string)null;
@@ -307,7 +306,7 @@ namespace ZergRush.CodeGen
 			if (t.IsGenericType)
 			{
 				name = name.Substring(0, name.Length - 2);
-				name += $"_{t.GetGenericArguments().Select(a => a.RealName(!a.IsGenericParameter && withNamespace)).PrintCollection("_")}";
+				name += $"_{t.GetGenericArguments().Select(a => a.UniqueName(!a.IsGenericParameter && withNamespace)).PrintCollection("_")}";
 			}
 			return name;
         }

@@ -135,7 +135,7 @@ public class GenPolymorphicNode : Attribute
 {
 }
 
-[AttributeUsage(AttributeTargets.Class | AttributeTargets.Field | AttributeTargets.Property)]
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Field | AttributeTargets.Property)]
 public class Immutable : Attribute
 {
 }

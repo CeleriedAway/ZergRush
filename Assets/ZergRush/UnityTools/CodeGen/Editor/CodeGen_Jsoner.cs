@@ -21,6 +21,12 @@ namespace ZergRush.CodeGen
         public static void WriteJsonValueStatement(MethodBuilder sink, DataInfo info, bool inList, bool writeDataNodeAsId = false)
         {
             var t = info.type;
+            bool isNullable = false;
+            if (t.IsNullable())
+            {
+                isNullable = true;
+                t = Nullable.GetUnderlyingType(t);
+            }
             
             if (t.IsConfig() == false) RequestGen(t, sink.classType, GenTaskFlags.JsonSerialization);
             
@@ -53,11 +59,6 @@ namespace ZergRush.CodeGen
             {
                 sink.content($"writer.WriteValue({info.access}.ToBase64());");
             }
-            else if (t.IsNullable())
-            {
-                sink.content($"if ({info.access} == null) writer.WriteNull(); " +
-                             $"else writer.WriteValue(({Nullable.GetUnderlyingType(info.type).Name}){info.access});");
-            }
             else if (t.IsConfig() && info.insideConfigStorage == false)
             {
                 sink.content($"writer.WriteValue({info.access}.{UIdFuncName}().ToString());");
@@ -72,7 +73,7 @@ namespace ZergRush.CodeGen
             }
             else if (t.IsPrimitive || t.IsString())
             {
-                sink.content($"writer.WriteValue({info.access});");
+                sink.content($"writer.WriteValue({info.access}{(isNullable ? ".Value" : "")});");
             }
             else if (t.IsEnum)
             {
@@ -105,7 +106,7 @@ namespace ZergRush.CodeGen
             {
                 baseCall = (s, info1) => s.content($"{info1.access} = ({t.RealName()}) reader.Value;");
             }
-            if (t == typeof(byte[]))
+            if ((t.IsValueType && t.IsControllable() == false) || t == typeof(byte[]))
             {
                 baseCall = (s, info1) => s.content($"{info1.access} = {DirectJsonImmutableTypeReader(t)};");
             }
