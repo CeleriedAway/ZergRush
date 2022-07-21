@@ -45,7 +45,7 @@ namespace ZergRush.ReactiveCore
                 var itemConnections = new Connections();
                 if (itemConnectionsDict.ContainsKey(item))
                 {
-                    ErrorLogSink.errLog?.Invoke(
+                    LogSink.errLog?.Invoke(
                         "it seems item is already loaded, this function wont work if elements repeated in the collection");
                     return;
                 }

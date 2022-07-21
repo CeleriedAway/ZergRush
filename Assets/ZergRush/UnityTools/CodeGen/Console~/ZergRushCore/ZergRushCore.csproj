@@ -13,9 +13,6 @@
       <Content Include="..\..\..\..\PureCSharp\CodeGenCore\CodeGenTools.cs.meta">
         <Link>PureCSharp\CodeGenCore\CodeGenTools.cs.meta</Link>
       </Content>
-      <Content Include="..\..\..\..\PureCSharp\CodeGenCore\ErrorLogSink.cs.meta">
-        <Link>PureCSharp\CodeGenCore\ErrorLogSink.cs.meta</Link>
-      </Content>
       <Content Include="..\..\..\..\PureCSharp\CodeGenCore\GenerationTags.cs.meta">
         <Link>PureCSharp\CodeGenCore\GenerationTags.cs.meta</Link>
       </Content>
@@ -394,9 +391,6 @@
       <Compile Include="..\..\..\..\PureCSharp\CodeGenCore\CodeGenTools.cs">
         <Link>PureCSharp\CodeGenCore\CodeGenTools.cs</Link>
       </Compile>
-      <Compile Include="..\..\..\..\PureCSharp\CodeGenCore\ErrorLogSink.cs">
-        <Link>PureCSharp\CodeGenCore\ErrorLogSink.cs</Link>
-      </Compile>
       <Compile Include="..\..\..\..\PureCSharp\CodeGenCore\GenerationTags.cs">
         <Link>PureCSharp\CodeGenCore\GenerationTags.cs</Link>
       </Compile>
@@ -534,6 +528,9 @@
       </Compile>
       <Compile Include="..\..\..\..\PureCSharp\CodeGenCore\Livable\__OldRefList.cs">
         <Link>PureCSharp\CodeGenCore\Livable\__OldRefList.cs</Link>
+      </Compile>
+      <Compile Include="..\..\..\..\PureCSharp\CodeGenCore\LogSink.cs">
+        <Link>PureCSharp\CodeGenCore\LogSink.cs</Link>
       </Compile>
       <Compile Include="..\..\..\..\PureCSharp\CodeGenCore\SerializationTools.Base.cs">
         <Link>PureCSharp\CodeGenCore\SerializationTools.Base.cs</Link>

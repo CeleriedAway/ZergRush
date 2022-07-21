@@ -70,7 +70,7 @@ namespace ZergRush.Alive
                 var entity = _root.RecallMayBe(id);
                 if (entity == null)
                 {
-                    ErrorLogSink.errLog?.Invoke($"recalling id not found {id}");
+                    LogSink.errLog?.Invoke($"recalling id not found {id}");
                     data.Add(null);
                 }
                 else if (entity is T t)
@@ -80,7 +80,7 @@ namespace ZergRush.Alive
                 }
                 else
                 {
-                    ErrorLogSink.errLog?.Invoke($"entity recalled is other type, expected:{typeof(T)} got:{entity.GetType()}");
+                    LogSink.errLog?.Invoke($"entity recalled is other type, expected:{typeof(T)} got:{entity.GetType()}");
                     data.Add(null);
                 }
             }
@@ -355,7 +355,7 @@ namespace ZergRush.Alive
                 var id = ids[i];
                 if (i >= mirroringList.data.Count || i < 0)
                 {
-                    ErrorLogSink.errLog?.Invoke($"asdf {mirroringList.GetHashCode()} {this.GetHashCode()} {i} {mirroringList.data.Count}");
+                    LogSink.errLog?.Invoke($"asdf {mirroringList.GetHashCode()} {this.GetHashCode()} {i} {mirroringList.data.Count}");
                     break;
                 }
                 if (id == 0 || mirroringList.data[i] == null) data.Add(null);
@@ -364,7 +364,7 @@ namespace ZergRush.Alive
                     var e = root.RecallMayBe<T>(id);
                     if (e == null)
                     {
-                        ErrorLogSink.errLog?.Invoke($"entity form {this} with id:{id} data:{mirroringList.data.PrintCollection()}");
+                        LogSink.errLog?.Invoke($"entity form {this} with id:{id} data:{mirroringList.data.PrintCollection()}");
                     }
                     data.Add(e);
                 }

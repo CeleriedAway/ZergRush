@@ -78,7 +78,7 @@ namespace ZergRush.CodeGen
                     }
                     if (sink.classType.IsAbstract == false)
                     {
-                        sink.content($"hash += ({HashTypeName}){Math.Abs(type.Name.GetHashCode())};");
+                        sink.content($"hash += ({HashTypeName}){Math.Abs((int)type.Name.CalculateHash())};");
                         sink.content(HashMixStatement("hash"));
                     }
                 },

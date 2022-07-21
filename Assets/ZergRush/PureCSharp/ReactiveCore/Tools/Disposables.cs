@@ -163,7 +163,7 @@ namespace ZergRush
             if (!Remove(item))
             {
                 #if UNITY_EDITOR
-                ErrorLogSink.errLog?.Invoke("this connection not found");
+                LogSink.errLog?.Invoke("this connection not found");
                 #endif
             }
         }

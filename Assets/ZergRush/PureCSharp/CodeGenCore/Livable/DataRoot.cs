@@ -113,7 +113,7 @@ namespace ZergRush.Alive
             {
                 if (id != ((IReferencableFromDataRoot) val).Id)
                 {
-                    ErrorLogSink.errLog?.Invoke("fuck up");
+                    LogSink.errLog?.Invoke("fuck up");
                 }
                 return val;
             }

@@ -22,7 +22,6 @@ class Programm
         var path = ".";
         const int triesMax = 30;
 
-        ErrorLogSink.errLog = str => Console.Error.WriteLine(str);
         while (tries < triesMax)
         {
             var strings = Directory.GetFiles(path);
@@ -103,7 +102,7 @@ class Programm
 
 
         var ass = AppDomain.CurrentDomain.GetAssemblies().ToList();
-        CodeGen.ConsoleGen(new List<Assembly>
+        CodeGen.RawGen(new List<Assembly>
         {
             ass.Find(a => a.FullName.StartsWith("ZergRushCore")),
             assembly,

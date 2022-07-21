@@ -40,7 +40,7 @@ namespace ZergRush.Alive
         {
             if (dead)
             {
-                if (ErrorLogSink.errLog != null) ErrorLogSink.errLog("Destroy called twice");
+                if (LogSink.errLog != null) LogSink.errLog("Destroy called twice");
                 return;
             }
             dead = true;

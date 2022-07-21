@@ -275,7 +275,7 @@ namespace ZergRush.ReactiveCore
                 var indexOf = coll.IndexOf(cell);
                 if (indexOf == -1)
                 {
-                    ErrorLogSink.errLog?.Invoke($"Collection of cells join error");
+                    LogSink.errLog?.Invoke($"Collection of cells join error");
                     return;
                 }
                 buffer[indexOf] = val;

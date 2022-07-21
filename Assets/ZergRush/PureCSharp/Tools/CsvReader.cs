@@ -252,7 +252,7 @@ namespace GameTools
                 }
                 catch (Exception e)
                 {
-                    ErrorLogSink.errLog($"{e}, at row " + rowIndex + " " + e.ToError());
+                    LogSink.errLog($"{e}, at row " + rowIndex + " " + e.ToError());
                 }
             }
 

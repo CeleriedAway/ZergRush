@@ -38,7 +38,7 @@ public static partial class SerializationExtensions
     public static ulong CalculateHash(this ZergRush.Alive.ConfigStorageList<ZergRush.Alive.SomeItemFromConfig> self) 
     {
         System.UInt64 hash = 345093625;
-        hash += (ulong)38819158;
+        hash += (ulong)577616926;
         hash += hash << 11; hash ^= hash >> 7;
         var size = self.Count;
         for (int i = 0; i < size; i++)

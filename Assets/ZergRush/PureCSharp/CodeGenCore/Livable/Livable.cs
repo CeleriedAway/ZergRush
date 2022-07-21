@@ -143,7 +143,7 @@ namespace ZergRush.Alive
                 var obj = root.RecallMayBe<IStaticallyModifiable>(connection.ownerId);
                 if (obj == null)
                 {
-                    ErrorLogSink.errLog?.Invoke($"can't find IStaticallyModifiable obj with id {connection.ownerId} simple recall: {root.RecallMayBe(connection.ownerId)}");
+                    LogSink.errLog?.Invoke($"can't find IStaticallyModifiable obj with id {connection.ownerId} simple recall: {root.RecallMayBe(connection.ownerId)}");
                     continue;
                 }
                 obj.DisposeAffect(connection.entityId);
@@ -155,11 +155,11 @@ namespace ZergRush.Alive
         {
             if (conn.entityId == 0)
             {
-                ErrorLogSink.errLog?.Invoke("static connection entity id is 0");
+                LogSink.errLog?.Invoke("static connection entity id is 0");
             }
             if (conn.ownerId == 0)
             {
-                ErrorLogSink.errLog?.Invoke("static connection owner id is 0");
+                LogSink.errLog?.Invoke("static connection owner id is 0");
             }
             connections.Add(conn);
         }

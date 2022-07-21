@@ -8,7 +8,7 @@ namespace ZergRush.CodeGen
 {
     public static partial class CodeGen
     {
-        public static void ConsoleGen(List<Assembly> assemblies, bool stubs)
+        public static void RawGen(List<Assembly> assemblies, bool stubs)
         {
             var genDir = new DirectoryInfo(DefaultGenPath);
             if (genDir.Exists == false)
@@ -119,7 +119,7 @@ namespace ZergRush.CodeGen
             // Do not change anythign if there is any errors
             if (hasErrors)
             {
-                Console.WriteLine("error occured");
+                LogSink.errLog("error occured");
                 return;
             }
 
@@ -153,9 +153,7 @@ namespace ZergRush.CodeGen
                 context.Commit();
             }
 
-            //AssetDatabase.Refresh();
-
-            //EditorUtility.ClearProgressBar();
+            LogSink.log("codegen complete");
         }
     }
 }

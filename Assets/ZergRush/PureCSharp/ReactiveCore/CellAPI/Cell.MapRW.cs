@@ -103,7 +103,7 @@ namespace ZergRush.ReactiveCore
             var f = obj.GetType().GetField(fieldName);
             if (f == null)
             {
-                ErrorLogSink.errLog?.Invoke($"field {fieldName} is not found in obj {obj}");
+                LogSink.errLog?.Invoke($"field {fieldName} is not found in obj {obj}");
                 return null;
             }
 

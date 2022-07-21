@@ -135,7 +135,7 @@ namespace ZergRush.CodeGen
             }
             catch (Exception e)
             {
-                ErrorLogSink.errLog?.Invoke("saving type table exception" + e.ToError());
+                LogSink.errLog?.Invoke("saving type table exception" + e.ToError());
             }
         }
 

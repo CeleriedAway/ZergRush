@@ -34,7 +34,7 @@ namespace ZergRush {
         public virtual ulong CalculateHash() 
         {
             System.UInt64 hash = 345093625;
-            hash += (ulong)78752802;
+            hash += (ulong)502686759;
             hash += hash << 11; hash ^= hash >> 7;
             hash += SeedArray.CalculateHash();
             hash += hash << 11; hash ^= hash >> 7;
