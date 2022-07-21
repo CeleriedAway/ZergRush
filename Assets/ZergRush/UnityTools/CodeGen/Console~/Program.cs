@@ -14,14 +14,15 @@ using ZergRush.CodeGen;
 
 class Programm
 {
-    public static readonly string[] PROJECT_NAMES = {"Assembly-CSharp.csproj", "ZergRush.Core.csproj"};
+    public static readonly string[] PROJECT_NAMES = {"Assembly-CSharp.csproj"};
 
     public static void Main()
     {
         var tries = 0;
         var path = ".";
         const int triesMax = 30;
-        
+
+        ErrorLogSink.errLog = str => Console.Error.WriteLine(str);
         while (tries < triesMax)
         {
             var strings = Directory.GetFiles(path);
@@ -77,6 +78,8 @@ class Programm
         });
         var references = allReferencePaths
             .ConvertAll((rPath) => MetadataReference.CreateFromFile(rPath));
+        var fullPath = Path.GetFullPath("../../../ZergRushCore/bin/debug/net6.0/ZergRushCore.dll");
+        references.Add(MetadataReference.CreateFromFile(fullPath));
         var allProjectReferencePaths = allProjectReference
             .ConvertAll((rPath) => @$"{projectPath}\{TypeReader.GetOutPath(rPath)}")
             .Where((rPath) =>
@@ -85,8 +88,8 @@ class Programm
                 Console.WriteLine($"No such file {rPath}");
                 return false;
             }).ToList();
-        references.AddRange(allProjectReferencePaths
-            .ConvertAll((rPath) => MetadataReference.CreateFromFile(Path.GetFullPath(rPath))));
+        // references.AddRange(allProjectReferencePaths
+        //     .ConvertAll((rPath) => MetadataReference.CreateFromFile(Path.GetFullPath(rPath))));
 
         
         //Throw Syntax Structure is incorrect so i'm reparsing tree //todo: fix and remove   
@@ -99,9 +102,11 @@ class Programm
             throw new NullReferenceException("Assembly is null");
 
 
+        var ass = AppDomain.CurrentDomain.GetAssemblies().ToList();
         CodeGen.ConsoleGen(new List<Assembly>
         {
-            assembly
+            ass.Find(a => a.FullName.StartsWith("ZergRushCore")),
+            assembly,
         }, false);
     }
 

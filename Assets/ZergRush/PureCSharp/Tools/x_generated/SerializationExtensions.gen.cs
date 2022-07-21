@@ -39,7 +39,7 @@ public static partial class SerializationExtensions
     public static ulong CalculateHash(this System.Int32[] self) 
     {
         System.UInt64 hash = 345093625;
-        hash += (ulong)546861222;
+        hash += (ulong)763850089;
         hash += hash << 11; hash ^= hash >> 7;
         var size = self.Length;
         for (int i = 0; i < size; i++)

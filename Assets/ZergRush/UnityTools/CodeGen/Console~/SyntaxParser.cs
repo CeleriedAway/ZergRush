@@ -152,6 +152,7 @@ public static partial class TypeReader
                     {
                         attr = childNode.Attributes?.Item(0);
                         if (attr?.Value == null) continue;
+                        if (attr.Value.EndsWith(".gen.cs")) continue;
                         files.Add($@"{projectPath}\{attr.Value}");
                         continue;
                     }

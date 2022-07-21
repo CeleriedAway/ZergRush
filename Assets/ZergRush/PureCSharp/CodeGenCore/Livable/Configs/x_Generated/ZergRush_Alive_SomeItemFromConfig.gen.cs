@@ -27,7 +27,7 @@ namespace ZergRush.Alive {
         {
             var baseVal = base.CalculateHash();
             System.UInt64 hash = baseVal;
-            hash += (ulong)1704679389;
+            hash += (ulong)338525818;
             hash += hash << 11; hash ^= hash >> 7;
             hash += (ulong)id.CalculateHash();
             hash += hash << 11; hash ^= hash >> 7;

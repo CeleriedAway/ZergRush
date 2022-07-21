@@ -28,6 +28,7 @@ namespace ZergRush.CodeGen
 
         public static void Error(string err)
         {
+            hasErrors = true;
             ErrorLogSink.errLog?.Invoke(err);
         }
 
