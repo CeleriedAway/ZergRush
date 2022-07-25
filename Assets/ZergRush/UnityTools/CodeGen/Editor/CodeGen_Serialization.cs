@@ -172,6 +172,10 @@ namespace ZergRush.CodeGen
             }
             else
             {
+                if (type.IsControllable())
+                {
+                    sinkWriter.classBuilder.inheritance(nameof(IBinarySerializable));
+                }
                 type.ProcessMembers(GenTaskFlags.Serialize, true,
                     info => { GenWriteValueToStream(sinkWriter, info, writerName); });
             }
@@ -374,6 +378,11 @@ namespace ZergRush.CodeGen
             }
             else
             {
+                if (type.IsControllable())
+                {
+                    sinkReader.classBuilder.inheritance(nameof(IBinaryDeserializable));
+                }
+                
                 bool immutableMode = type.IsStruct() && !type.IsControllable();
                 if (immutableMode)
                     sinkReader.content($"var self = new {type.RealName(true)}();");

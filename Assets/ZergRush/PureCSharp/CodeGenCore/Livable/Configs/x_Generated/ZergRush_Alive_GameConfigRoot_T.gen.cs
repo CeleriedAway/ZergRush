@@ -7,7 +7,7 @@ using Newtonsoft.Json;
 #if !INCLUDE_ONLY_CODE_GENERATION
 namespace ZergRush.Alive {
 
-    public partial class GameConfigRoot<T> : IHashable, IJsonSerializable
+    public partial class GameConfigRoot<T> : IBinaryDeserializable, IBinarySerializable, IHashable, IJsonSerializable
     {
         public virtual void Deserialize(BinaryReader reader) 
         {

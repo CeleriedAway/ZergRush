@@ -7,7 +7,7 @@ using Newtonsoft.Json;
 #if !INCLUDE_ONLY_CODE_GENERATION
 namespace ZergRush {
 
-    public partial class ZergRandom : IUpdatableFrom<ZergRush.ZergRandom>, IHashable, ICompareChechable<ZergRush.ZergRandom>, IJsonSerializable
+    public partial class ZergRandom : IUpdatableFrom<ZergRush.ZergRandom>, IBinaryDeserializable, IBinarySerializable, IHashable, ICompareChechable<ZergRush.ZergRandom>, IJsonSerializable
     {
         public virtual void UpdateFrom(ZergRush.ZergRandom other) 
         {
