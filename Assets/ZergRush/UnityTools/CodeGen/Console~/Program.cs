@@ -16,7 +16,7 @@ class Programm
 {
     public static readonly string[] PROJECT_NAMES = {"Assembly-CSharp.csproj"};
 
-    public static void Main()
+    public static void Main(string[] args)
     {
         var tries = 0;
         var path = ".";
@@ -77,6 +77,7 @@ class Programm
         });
         var references = allReferencePaths
             .ConvertAll((rPath) => MetadataReference.CreateFromFile(rPath));
+        Console.WriteLine(Directory.GetCurrentDirectory());
         var fullPath = Path.GetFullPath("../../../ZergRushCore/bin/debug/net6.0/ZergRushCore.dll");
         references.Add(MetadataReference.CreateFromFile(fullPath));
         var allProjectReferencePaths = allProjectReference
