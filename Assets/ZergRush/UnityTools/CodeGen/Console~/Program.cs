@@ -14,7 +14,11 @@ using ZergRush.CodeGen;
 
 class Programm
 {
-    public static readonly string[] PROJECT_NAMES = {"Assembly-CSharp.csproj"};
+    public static readonly string[] PROJECT_NAMES =
+    {
+        "Assembly-CSharp.csproj",
+        "Assembly-CSharp-firstpass.csproj",
+    };
 
     public static void Main(string[] args)
     {
@@ -67,6 +71,7 @@ class Programm
             ShowEntireList(allFilePaths);
             return allFilePaths.ConvertAll(ExtractSyntaxTree);
         });
+        
         // var references = apiProject.SelectMany(p => p.MetadataReferences.OfType<PortableExecutableReference>()).ToList();
 
         var pruned = trees.ConvertAll(TypeReader.PruneTree);

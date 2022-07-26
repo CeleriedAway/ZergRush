@@ -14,7 +14,7 @@ namespace ZergRush.Alive
      *     To make it referensable add "int id;" field and [HasRefId] tag on the class
      */
     [GenTask(GenTaskFlags.NodePack & ~GenTaskFlags.PolymorphicConstruction), GenInLocalFolder]
-    public abstract partial class DataNode : IDataNode
+    public abstract partial class DataNode : IDataNode, IReferencableFromDataRoot
     {
         bool dead;
         [GenIgnore] public DataRoot root;
@@ -88,9 +88,16 @@ namespace ZergRush.Alive
 //        }
         
         [GenIgnore] EventStream _destroyEvent;
+        
+        // Use HasRefId class tag for codegen to generate Id logic
+        public virtual int Id
+        {
+            get => throw new NotImplementedException();
+            set => throw new NotImplementedException();
+        }
     }
 
-    public interface IDataNode
+    public interface IDataNode : IReferencableFromDataRoot
     {
         IEventStream destroyEvent { get; }
         bool IsInHierarchy { get; }

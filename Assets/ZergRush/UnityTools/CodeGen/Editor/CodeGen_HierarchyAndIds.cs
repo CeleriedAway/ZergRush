@@ -18,10 +18,10 @@ namespace ZergRush.CodeGen
             if (type.HasAttribute<HasRefId>())
             {
                 var classSink = GenClassSink(type);
+                classSink.inheritance(nameof(IReferencableFromDataRoot));
                 var checkAlive = ""; //type.IsLivableGen() ? "if (alive) " : "";
-                classSink.content("public int Id { get { return id; } set { id = value; " + checkAlive +
+                classSink.content("public override int Id { get { return id; } set { id = value; " + checkAlive +
                                   "root?.ForceId(value, this); } }");
-                classSink.inheritance(typeof(IReferencableFromDataRoot).Name);
             }
 
             // Auto id generation on creation
