@@ -19,7 +19,7 @@ public class TreePruner : CSharpSyntaxRewriter
             .WithArgumentList(SF.ArgumentList())
             .WithNewKeyword(SF.Token(SyntaxKind.NewKeyword));
         var throwExc = SF.ThrowExpression(exceptionExpr);
-        var throwExcStat = SF.ExpressionStatement(throwExc).NormalizeWhitespace();
+        var throwExcStat = SF.ExpressionStatement(throwExc).NormalizeWhitespace().WithTrailingTrivia(SF.ElasticCarriageReturnLineFeed);
 
         return throwExcStat;
     }
@@ -45,12 +45,12 @@ public class TreePruner : CSharpSyntaxRewriter
                     SF.List(new List<AccessorDeclarationSyntax>()
                         {
                             SF.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
-                                .WithBody(SF.Block(BuildException()))
+                                .WithBody(SF.Block(BuildException())).WithTrailingTrivia(SF.ElasticCarriageReturnLineFeed)
                         }
                     )
                 )
             );
-            return base.VisitPropertyDeclaration(node);
+            return base.VisitPropertyDeclaration(node.WithTrailingTrivia(SF.ElasticCarriageReturnLineFeed));
         }
 
         if (node.AccessorList == null) return base.VisitPropertyDeclaration(node);
@@ -68,17 +68,17 @@ public class TreePruner : CSharpSyntaxRewriter
                         .WithLeadingTrivia(oldAcc.SemicolonToken.LeadingTrivia)
                         .WithTrailingTrivia(oldAcc.SemicolonToken.TrailingTrivia));
 
-                newAcc = newAcc.WithBody(SF.Block(BuildException()));
+                newAcc = newAcc.WithBody(SF.Block(BuildException()).WithTrailingTrivia(SF.ElasticCarriageReturnLineFeed));
                 node = node.ReplaceNode(oldAcc, newAcc);
                 continue;
             }
 
             if (oldAcc.Body == null) continue;
 
-            newAcc = oldAcc.ReplaceNode(oldAcc.Body, SF.Block(BuildException()));
+            newAcc = oldAcc.ReplaceNode(oldAcc.Body, SF.Block(BuildException()).WithTrailingTrivia(SF.ElasticCarriageReturnLineFeed));
             node = node.ReplaceNode(oldAcc, newAcc);
         }
-        return base.VisitPropertyDeclaration(node);
+        return base.VisitPropertyDeclaration(node.WithTrailingTrivia(SF.ElasticCarriageReturnLineFeed));
     }
 
     public override SyntaxNode? VisitMethodDeclaration(MethodDeclarationSyntax node)
@@ -88,7 +88,7 @@ public class TreePruner : CSharpSyntaxRewriter
         if (node.Body != null)
         {
             var newBody = SF.Block(throwExcStat);
-            return base.VisitMethodDeclaration(node.ReplaceNode(node.Body, newBody));
+            return base.VisitMethodDeclaration(node.ReplaceNode(node.Body, newBody).WithTrailingTrivia(SF.ElasticCarriageReturnLineFeed));
         }
 
         if (node.ExpressionBody == null) return base.VisitMethodDeclaration(node);
@@ -97,7 +97,7 @@ public class TreePruner : CSharpSyntaxRewriter
                 .WithLeadingTrivia(node.SemicolonToken.LeadingTrivia)
                 .WithTrailingTrivia(node.SemicolonToken.TrailingTrivia));
 
-        return base.VisitMethodDeclaration(node.WithBody(SF.Block(throwExcStat)));
+        return base.VisitMethodDeclaration(node.WithBody(SF.Block(throwExcStat)).WithTrailingTrivia(SF.ElasticCarriageReturnLineFeed));
     }
 
     public override SyntaxNode? VisitConstructorDeclaration(ConstructorDeclarationSyntax node)
@@ -111,7 +111,7 @@ public class TreePruner : CSharpSyntaxRewriter
             .WithSemicolonToken(SyntaxFactory.MissingToken(SyntaxKind.SemicolonToken)
                 .WithLeadingTrivia(node.SemicolonToken.LeadingTrivia)
                 .WithTrailingTrivia(node.SemicolonToken.TrailingTrivia));
-        return base.VisitConstructorDeclaration(node.WithBody(SF.Block(throwExcStat)));
+        return base.VisitConstructorDeclaration(node.WithBody(SF.Block(throwExcStat)).WithTrailingTrivia(SF.ElasticCarriageReturnLineFeed));
     }
 }
 
