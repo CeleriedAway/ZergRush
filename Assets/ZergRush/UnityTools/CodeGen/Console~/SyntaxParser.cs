@@ -15,7 +15,7 @@ public class TreePruner : CSharpSyntaxRewriter
 {
     ExpressionStatementSyntax BuildException()
     {
-        var exceptionExpr = SF.ObjectCreationExpression(SF.IdentifierName("NotImplementedException"))
+        var exceptionExpr = SF.ObjectCreationExpression(SF.IdentifierName("System.NotImplementedException"))//
             .WithArgumentList(SF.ArgumentList())
             .WithNewKeyword(SF.Token(SyntaxKind.NewKeyword));
         var throwExc = SF.ThrowExpression(exceptionExpr);
@@ -24,13 +24,13 @@ public class TreePruner : CSharpSyntaxRewriter
         return throwExcStat;
     }
 
-    public override SyntaxNode? VisitCompilationUnit(CompilationUnitSyntax node)
-    {
-        if (node.Usings.Any(us => us.Name.ToString() == "System")) return base.VisitCompilationUnit(node);
-        ;
-        node = node.AddUsings(SF.UsingDirective(SF.ParseName("System")).NormalizeWhitespace());
-        return base.VisitCompilationUnit(node);
-    }
+    // public override SyntaxNode? VisitCompilationUnit(CompilationUnitSyntax node)
+    // {
+    //     if (node.Usings.Any(us => us.Name.ToString() == "System")) return base.VisitCompilationUnit(node);
+    //     ;
+    //     node = node.AddUsings(SF.UsingDirective(SF.ParseName("System")).NormalizeWhitespace());
+    //     return base.VisitCompilationUnit(node);
+    // }
 
     public override SyntaxNode? VisitPropertyDeclaration(PropertyDeclarationSyntax node)
     {
