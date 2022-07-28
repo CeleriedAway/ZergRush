@@ -38,9 +38,6 @@
       <Content Include="..\..\..\..\PureCSharp\CodeGenCore\Interfaces\ILivable.cs.meta">
         <Link>PureCSharp\CodeGenCore\Interfaces\ILivable.cs.meta</Link>
       </Content>
-      <Content Include="..\..\..\..\PureCSharp\CodeGenCore\Interfaces\ILivableModification.cs.meta">
-        <Link>PureCSharp\CodeGenCore\Interfaces\ILivableModification.cs.meta</Link>
-      </Content>
       <Content Include="..\..\..\..\PureCSharp\CodeGenCore\Interfaces\IPolymorphable.cs.meta">
         <Link>PureCSharp\CodeGenCore\Interfaces\IPolymorphable.cs.meta</Link>
       </Content>
@@ -413,9 +410,6 @@
       <Compile Include="..\..\..\..\PureCSharp\CodeGenCore\Interfaces\ILivable.cs">
         <Link>PureCSharp\CodeGenCore\Interfaces\ILivable.cs</Link>
       </Compile>
-      <Compile Include="..\..\..\..\PureCSharp\CodeGenCore\Interfaces\ILivableModification.cs">
-        <Link>PureCSharp\CodeGenCore\Interfaces\ILivableModification.cs</Link>
-      </Compile>
       <Compile Include="..\..\..\..\PureCSharp\CodeGenCore\Interfaces\IPolymorphable.cs">
         <Link>PureCSharp\CodeGenCore\Interfaces\IPolymorphable.cs</Link>
       </Compile>
@@ -705,7 +699,7 @@
 
     <ItemGroup>
       <PackageReference Include="JetBrains.Annotations" Version="2022.1.0" />
-      <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+      <PackageReference Include="Newtonsoft.Json" Version="10.0.1" />
     </ItemGroup>
 
 </Project>

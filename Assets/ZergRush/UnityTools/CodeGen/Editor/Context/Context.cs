@@ -47,7 +47,7 @@ namespace ZergRush.CodeGen
             return builder;
         }
 
-        public SharpCustomModule createSharpCustomModule(string name)
+        public SharpCustomModule createSharpCustomModule(string name, string suffix = "gen")
         {
             if (builderFileNames.Contains(name))
             {
@@ -57,7 +57,7 @@ namespace ZergRush.CodeGen
             {
                 name = name,
                 path = pathToSharp,
-                suffix = "gen",
+                suffix = suffix,
                 stubMode = stubModel
             };
             builderFileNames.Add(name);
