@@ -11,6 +11,9 @@ using Microsoft.CodeAnalysis;
 using ZergRush;
 using ZergRush.CodeGen;
 
+#if UNITY_EDITOR
+#endif
+
 
 class Programm
 {
@@ -18,6 +21,8 @@ class Programm
     {
         "Assembly-CSharp.csproj",
         "Assembly-CSharp-firstpass.csproj",
+        "ZergRush.Unity.csproj",
+        
     };
 
     public static void Main(string[] args)
@@ -56,7 +61,7 @@ class Programm
 
         var allReferencePaths = new HashSet<string>();
         var allProjectReference = new HashSet<string>();
-        var trees = projectName.SelectMany(p =>
+        var files = projectName.SelectMany(p =>
         {
             var (allFilePaths, dlls, projs) =
                 TypeReader.FindAllFilesInProject(projectPath, p);
@@ -69,19 +74,25 @@ class Programm
                 allProjectReference.Add(pp);
             }
             ShowEntireList(allFilePaths);
-            return allFilePaths.ConvertAll(ExtractSyntaxTree);
+            return allFilePaths;
         });
-        
+
+        var trees = new List<SyntaxTree>();
+        foreach (var file in files)
+        {
+            var tree = ExtractSyntaxTree(file);
+            trees.Add(tree);
+        }
+        //trees = trees.Concat(Directory.EnumerateFiles("../../", "*.cs", SearchOption.AllDirectories).Select(ExtractSyntaxTree));
         // var references = apiProject.SelectMany(p => p.MetadataReferences.OfType<PortableExecutableReference>()).ToList();
 
         var pruned = trees.ConvertAll(TypeReader.PruneTree);
         pruned.ForEach((t) =>
         {
-            Console.WriteLine(t.ToString());
             Console.WriteLine(t.FilePath);
         });
-        var references = allReferencePaths
-            .ConvertAll((rPath) => MetadataReference.CreateFromFile(rPath));
+        var references = allReferencePaths.ConvertAll((rPath) => MetadataReference.CreateFromFile(rPath));
+        
         Console.WriteLine(Directory.GetCurrentDirectory());
         var fullPath = Path.GetFullPath("../../../ZergRushCore/bin/debug/net6.0/ZergRushCore.dll");
         references.Add(MetadataReference.CreateFromFile(fullPath));
@@ -93,13 +104,9 @@ class Programm
                 Console.WriteLine($"No such file {rPath}");
                 return false;
             }).ToList();
-        // references.AddRange(allProjectReferencePaths
-        //     .ConvertAll((rPath) => MetadataReference.CreateFromFile(Path.GetFullPath(rPath))));
-
         
         //Throw Syntax Structure is incorrect so i'm reparsing tree //todo: fix and remove   
         pruned = pruned.ConvertAll((tree) => SyntaxFactory.ParseSyntaxTree(tree.ToString()).WithFilePath(tree.FilePath));
-        // var references = allReferencePaths.ConvertAll((rPath) => MetadataReference.CreateFromFile(rPath));
         var compilation = CSharpCompilation.Create("assembly", pruned, references);
 
         var assembly = Compile(compilation);
@@ -130,7 +137,8 @@ class Programm
 
                 foreach (var diagnostic in failures)
                 {
-                    Console.Error.WriteLine($"Failed to compile code '{diagnostic.Id}'! : {diagnostic.GetMessage()}");
+                    Console.Error.WriteLine($"Failed to compile code '{diagnostic.Id}'! : {diagnostic.GetMessage()} " +
+                                            $"in\n{diagnostic.Location.SourceTree.FilePath} {diagnostic.Location.SourceSpan.ToString()}");
                 }
 
                 throw new Exception("Unknown error while compiling code !");
