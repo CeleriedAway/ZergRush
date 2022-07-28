@@ -126,8 +126,7 @@ class Programm
     {
         using (var ms = new MemoryStream())
         {
-            compilation =
-                compilation.WithOptions(compilation.Options.WithOutputKind(OutputKind.DynamicallyLinkedLibrary));
+            compilation = compilation.WithOptions(compilation.Options.WithOutputKind(OutputKind.DynamicallyLinkedLibrary));
             var result = compilation.Emit(ms);
             if (!result.Success)
             {

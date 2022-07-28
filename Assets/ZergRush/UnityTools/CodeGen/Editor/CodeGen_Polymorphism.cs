@@ -160,6 +160,9 @@ namespace ZergRush.CodeGen
                 var enumName = node.PolymorphicRootTypeEnumName();
 
                 var module = nodeClass.module;
+                var c = new GeneratorContext(new GenInfo {sharpGenPath = module.path}, false);
+                contexts.Add(enumName, c);
+                module = c.createSharpCustomModule($"{enumName}", "enum");
                 module.content("");
                 if (!string.IsNullOrEmpty(nodeClass.namespaceName))
                 {

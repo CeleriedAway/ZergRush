@@ -56,7 +56,7 @@ namespace ZergRush.CodeGen
             bool contextWasNull = context == null;
             if (contextWasNull)
                 context = new GeneratorContext(new GenInfo { sharpGenPath = genScriptFolderWithSlashAtTheEnd }, false);
-            var commandTableModule = context.createSharpCustomModule(enumName);
+            var commandTableModule = context.createSharpCustomModule(enumName, "enum");
             PrintEnum(commandTableModule, enumName, table.records.Keys, key => table.records[key], comment: comment);
             if (contextWasNull)
                 context.Commit();
