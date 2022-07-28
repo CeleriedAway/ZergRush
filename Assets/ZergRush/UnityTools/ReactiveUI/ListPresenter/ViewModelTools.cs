@@ -17,18 +17,23 @@ namespace ZergRush.CodeGen
             }
 
             var coll = collection as List<T2> ?? collection.ToList();
-            
+            int oldCnt = buffer.Count;
             while (buffer.Count > coll.Count)
             {
                 buffer.TakeLast();
             }
-            while (buffer.Count < coll.Count)
-            {
-                buffer.Add(new T());
-            }
             for (int i = 0; i < coll.Count; i++)
             {
-                buffer[i].UpdateFrom(coll[i]);
+                var inst = new T();
+                inst.UpdateFrom(coll[i]);
+                if (i < oldCnt)
+                {
+                    buffer[i] = inst;
+                }
+                else
+                {
+                    buffer.Add(inst);
+                }
             }
         }
         

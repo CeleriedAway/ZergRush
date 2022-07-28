@@ -8,6 +8,14 @@ using ZergRush;
 
 public static class ParseTools
 {
+    public static string TakeString(this string str , int cnt)
+    {
+        return new string(str.Take(cnt).ToArray());
+    }
+    public static string TakeLastString(this string str , int cnt)
+    {
+        return new string(str.TakeLast(cnt).ToArray());
+    }
     public static bool IsNullOrWhitespace(this string str)
     {
         return String.IsNullOrWhiteSpace(str);
