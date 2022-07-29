@@ -13,13 +13,13 @@ using SF = Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 public class TreePruner : CSharpSyntaxRewriter
 {
-    ExpressionStatementSyntax BuildException()
+    ThrowStatementSyntax BuildException()
     {
-        var exceptionExpr = SF.ObjectCreationExpression(SF.IdentifierName("System.NotImplementedException"))//
+        var exceptionExpr = SF.ObjectCreationExpression(SF.ParseName("System.NotImplementedException"))//
             .WithArgumentList(SF.ArgumentList())
             .WithNewKeyword(SF.Token(SyntaxKind.NewKeyword));
         var throwExc = SF.ThrowExpression(exceptionExpr);
-        var throwExcStat = SF.ExpressionStatement(throwExc).NormalizeWhitespace().WithTrailingTrivia(SF.ElasticCarriageReturnLineFeed);
+        var throwExcStat = SF.ThrowStatement(exceptionExpr).NormalizeWhitespace().WithTrailingTrivia(SF.ElasticCarriageReturnLineFeed);
 
         return throwExcStat;
     }

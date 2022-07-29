@@ -102,7 +102,7 @@ class Programm
             }).ToList();
         
         //Throw Syntax Structure is incorrect so i'm reparsing tree //todo: fix and remove   
-        pruned = pruned.ConvertAll((tree) => SyntaxFactory.ParseSyntaxTree(tree.ToString()).WithFilePath(tree.FilePath));
+        //pruned = pruned.ConvertAll((tree) => SyntaxFactory.ParseSyntaxTree(tree.ToString()).WithFilePath(tree.FilePath));
         var compilation = CSharpCompilation.Create("assembly", pruned, references);
 
         var assembly = Compile(compilation);
