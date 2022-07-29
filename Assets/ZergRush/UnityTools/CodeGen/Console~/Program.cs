@@ -22,7 +22,6 @@ class Programm
         "Assembly-CSharp.csproj",
         "Assembly-CSharp-firstpass.csproj",
         "ZergRush.Unity.csproj",
-        
     };
 
     public static void Main(string[] args)
@@ -46,7 +45,6 @@ class Programm
         
         SyntaxAnalizeStuff(path, PROJECT_NAMES);
     }
-
 
     private static void SyntaxAnalizeStuff(string projectPath, string[] projectName)
     {
@@ -83,8 +81,6 @@ class Programm
             var tree = ExtractSyntaxTree(file);
             trees.Add(tree);
         }
-        //trees = trees.Concat(Directory.EnumerateFiles("../../", "*.cs", SearchOption.AllDirectories).Select(ExtractSyntaxTree));
-        // var references = apiProject.SelectMany(p => p.MetadataReferences.OfType<PortableExecutableReference>()).ToList();
 
         var pruned = trees.ConvertAll(TypeReader.PruneTree);
         pruned.ForEach((t) =>

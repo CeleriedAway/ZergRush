@@ -135,7 +135,13 @@ public static partial class TypeReader
         var projects = new List<string>();
         var xDoc = new XmlDocument(); // Creating Document
         XmlNode? attr;
-        xDoc.Load($@"{projectPath}\{projectFile}"); // Loading standart assembly
+        var filename = Path.Combine(projectPath, projectFile);
+        if (File.Exists(filename) == false)
+        {
+            Console.Error.WriteLine($"can't find project {filename}");
+            goto ret;
+        }
+        xDoc.Load(filename); // Loading standart assembly
 
         var xRoot = xDoc.DocumentElement; // Extracting root element
         if (xRoot == null)
@@ -177,6 +183,7 @@ public static partial class TypeReader
             }
         }
 
+        ret:
         return (files, references, projects);
     }
 
