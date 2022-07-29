@@ -23,6 +23,7 @@ class Programm
         "Assembly-CSharp-firstpass.csproj",
         "ZergRush.Unity.csproj",
     };
+    private static string ProjectFilePath = string.Empty;
 
     public static void Main(string[] args)
     {
@@ -33,7 +34,11 @@ class Programm
         while (tries < triesMax)
         {
             var strings = Directory.GetFiles(path);
-            if (strings.Any(f => f.EndsWith(PROJECT_NAMES[0]))) break;
+            if (strings.Any(f => f.EndsWith(PROJECT_NAMES[0])))
+            {
+                ProjectFilePath = Path.GetDirectoryName(Path.GetFullPath(strings.First()));
+                break;
+            }
             path += Path.DirectorySeparatorChar + "..";
             tries++;
         }
@@ -116,6 +121,27 @@ class Programm
             ass.Find(a => a.FullName.StartsWith("ZergRushCore")),
             assembly,
         }, false);
+    }
+
+
+    private static string CheckLinkPath(string path)
+    {
+        if (Path.IsPathRooted(path))
+        {
+            return path;
+        }
+        else
+        {
+            var file = Path.Combine(ProjectFilePath, path);
+            if (File.Exists(file))
+            {
+                return file;
+            }
+            else
+            {
+                throw new Exception($"File \"{path}\" cant be found in project path. Current project path is \"{ProjectFilePath}\"");
+            }
+        }
     }
 
     private static Assembly? Compile(Compilation compilation)
