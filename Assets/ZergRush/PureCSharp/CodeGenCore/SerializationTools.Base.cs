@@ -8,6 +8,31 @@ using ZergRush.Alive;
 
 public static partial class SerializationTools
 {
+    public static void SkipObj(this JsonTextReader reader)
+    {
+        reader.Read();
+        if (reader.TokenType == JsonToken.StartObject)
+        {
+            int objCount = 1;
+            while (reader.Read())
+            {
+                if (reader.TokenType == JsonToken.StartObject) objCount++;
+                else if (reader.TokenType == JsonToken.EndObject) objCount--;
+                if (objCount == 0) break;
+            }
+        }
+        else if (reader.TokenType == JsonToken.StartArray)
+        {
+            int objCount = 1;
+            while (reader.Read())
+            {
+                if (reader.TokenType == JsonToken.StartArray) objCount++;
+                else if (reader.TokenType == JsonToken.EndArray) objCount--;
+                if (objCount == 0) break;
+            }
+        }
+    }
+        
     public static T DeserializeSource<T>(byte[] data, T instance = null) where T : class, ISerializable, new()
     {
         instance = DeserializeFromBytes(data, instance);
