@@ -22,8 +22,8 @@ class Programm
         "Assembly-CSharp.csproj",
         "Assembly-CSharp-firstpass.csproj",
         "ZergRush.Unity.csproj",
-        
     };
+    private static string ProjectFilePath = string.Empty;
 
     public static void Main(string[] args)
     {
@@ -34,7 +34,11 @@ class Programm
         while (tries < triesMax)
         {
             var strings = Directory.GetFiles(path);
-            if (strings.Any(f => f.EndsWith(PROJECT_NAMES[0]))) break;
+            if (strings.Any(f => f.EndsWith(PROJECT_NAMES[0])))
+            {
+                ProjectFilePath = Path.GetDirectoryName(Path.GetFullPath(strings.First()));
+                break;
+            }
             path += Path.DirectorySeparatorChar + "..";
             tries++;
         }
@@ -46,7 +50,6 @@ class Programm
         
         SyntaxAnalizeStuff(path, PROJECT_NAMES);
     }
-
 
     private static void SyntaxAnalizeStuff(string projectPath, string[] projectName)
     {
@@ -83,8 +86,6 @@ class Programm
             var tree = ExtractSyntaxTree(file);
             trees.Add(tree);
         }
-        //trees = trees.Concat(Directory.EnumerateFiles("../../", "*.cs", SearchOption.AllDirectories).Select(ExtractSyntaxTree));
-        // var references = apiProject.SelectMany(p => p.MetadataReferences.OfType<PortableExecutableReference>()).ToList();
 
         var pruned = trees.ConvertAll(TypeReader.PruneTree);
         pruned.ForEach((t) =>
@@ -106,7 +107,7 @@ class Programm
             }).ToList();
         
         //Throw Syntax Structure is incorrect so i'm reparsing tree //todo: fix and remove   
-        pruned = pruned.ConvertAll((tree) => SyntaxFactory.ParseSyntaxTree(tree.ToString()).WithFilePath(tree.FilePath));
+        //pruned = pruned.ConvertAll((tree) => SyntaxFactory.ParseSyntaxTree(tree.ToString()).WithFilePath(tree.FilePath));
         var compilation = CSharpCompilation.Create("assembly", pruned, references);
 
         var assembly = Compile(compilation);
@@ -120,6 +121,27 @@ class Programm
             ass.Find(a => a.FullName.StartsWith("ZergRushCore")),
             assembly,
         }, false);
+    }
+
+
+    private static string CheckLinkPath(string path)
+    {
+        if (Path.IsPathRooted(path))
+        {
+            return path;
+        }
+        else
+        {
+            var file = Path.Combine(ProjectFilePath, path);
+            if (File.Exists(file))
+            {
+                return file;
+            }
+            else
+            {
+                throw new Exception($"File \"{path}\" cant be found in project path. Current project path is \"{ProjectFilePath}\"");
+            }
+        }
     }
 
     private static Assembly? Compile(Compilation compilation)
