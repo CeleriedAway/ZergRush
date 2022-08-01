@@ -65,6 +65,7 @@ namespace ZergRush {
                 case "inextp":
                 inextp = (int)(Int64)reader.Value;
                 break;
+                default: reader.SkipObj(); break;
             }
         }
         public virtual void WriteJsonFields(JsonTextWriter writer) 

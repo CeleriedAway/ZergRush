@@ -75,6 +75,7 @@ namespace ZergRush.Alive {
                 case "__parent_id":
                 __parent_id = (int)(Int64)reader.Value;
                 break;
+                default: reader.SkipObj(); break;
             }
         }
         public virtual void WriteJsonFields(JsonTextWriter writer) 

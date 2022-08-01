@@ -34,6 +34,7 @@ namespace ZergRush.Alive {
         {
             switch(__name)
             {
+                default: reader.SkipObj(); break;
             }
         }
         public virtual void WriteJsonFields(JsonTextWriter writer) 

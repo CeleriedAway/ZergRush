@@ -70,6 +70,7 @@ namespace ZergRush.Alive {
                 case "__entityIdFactory":
                 __entityIdFactory = (int)(Int64)reader.Value;
                 break;
+                default: reader.SkipObj(); break;
             }
         }
         public override void WriteJsonFields(JsonTextWriter writer) 

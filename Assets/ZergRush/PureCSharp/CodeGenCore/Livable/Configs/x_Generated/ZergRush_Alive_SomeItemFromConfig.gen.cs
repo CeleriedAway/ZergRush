@@ -61,6 +61,7 @@ namespace ZergRush.Alive {
                 case "name":
                 name = (string) reader.Value;
                 break;
+                default: reader.SkipObj(); break;
             }
         }
         public override void WriteJsonFields(JsonTextWriter writer) 
