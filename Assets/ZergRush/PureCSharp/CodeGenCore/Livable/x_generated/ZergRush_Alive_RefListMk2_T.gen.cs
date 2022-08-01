@@ -24,6 +24,7 @@ namespace ZergRush.Alive {
                 case "ids":
                 ids.ReadFromJson(reader);
                 break;
+                default: reader.SkipObj(); break;
             }
         }
         public void WriteJsonFields(JsonTextWriter writer) 

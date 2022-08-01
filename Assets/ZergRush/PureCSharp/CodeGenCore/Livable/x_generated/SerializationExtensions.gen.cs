@@ -57,6 +57,7 @@ public static partial class SerializationExtensions
                     case "connections":
                     self.connections.ReadFromJson(reader);
                     break;
+                    default: reader.SkipObj(); break;
                 }
             }
             else if (reader.TokenType == JsonToken.EndObject) { break; }
@@ -272,6 +273,7 @@ public static partial class SerializationExtensions
                     case "entityId":
                     self.entityId = (int)(Int64)reader.Value;
                     break;
+                    default: reader.SkipObj(); break;
                 }
             }
             else if (reader.TokenType == JsonToken.EndObject) { break; }
