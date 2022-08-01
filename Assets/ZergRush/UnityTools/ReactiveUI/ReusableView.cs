@@ -10,9 +10,9 @@ namespace ZergRush.ReactiveUI
     public class ReusableView : ConnectableMonoBehaviour
     {
         protected RectTransform _rect;
-        public RectTransform rectTransform { get { return _rect ?? (_rect = GetComponent<RectTransform>()); } }
+        public RectTransform rectTransform { get { return _rect == null ? (_rect = GetComponent<RectTransform>()) : _rect; } }
         private Transform _tr;
-        public Transform tr { get { return _tr ?? (_tr = transform); } }
+        public Transform tr { get { return _tr == null ? (_tr = transform) : _tr; } }
         public IDisposable currentMoveAnimation;
         [NonSerialized] public int indexInModel;
         // for some inner impl
