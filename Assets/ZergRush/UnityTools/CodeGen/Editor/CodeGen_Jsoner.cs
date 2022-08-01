@@ -352,6 +352,7 @@ namespace ZergRush.CodeGen
                         ReadJsonValueStatement(sinkReader, info, false);
                         sinkReader.content($"break;");
                     });
+                    sinkReader.content($"default: {readerName}.{nameof(SerializationTools.SkipObj)}(); break;");
                 sinkReader.closeBrace();
 
                 if (externalMode)
