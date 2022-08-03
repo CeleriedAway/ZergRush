@@ -10,7 +10,6 @@ public static partial class SerializationTools
 {
     public static void SkipObj(this JsonTextReader reader)
     {
-        reader.Read();
         if (reader.TokenType == JsonToken.StartObject)
         {
             int objCount = 1;
@@ -356,7 +355,10 @@ public static partial class SerializationTools
             {
                 var name = (string)reader.Value;
                 reader.Read();
-                t.ReadFromJsonField(reader, name);
+                if (!t.ReadFromJsonField(reader, name))
+                {
+                    reader.SkipObj();
+                }
             }
             else if (reader.TokenType == JsonToken.EndObject)
             {

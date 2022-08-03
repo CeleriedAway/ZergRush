@@ -62,7 +62,7 @@ namespace ZergRush.Alive {
             __path.Pop();
             if (__parent_id != other.__parent_id) SerializationTools.LogCompError(__path, "__parent_id", printer, other.__parent_id, __parent_id);
         }
-        public virtual void ReadFromJsonField(JsonTextReader reader, string __name) 
+        public virtual bool ReadFromJsonField(JsonTextReader reader, string __name) 
         {
             switch(__name)
             {
@@ -75,8 +75,9 @@ namespace ZergRush.Alive {
                 case "__parent_id":
                 __parent_id = (int)(Int64)reader.Value;
                 break;
-                default: reader.SkipObj(); break;
+                default: return false; break;
             }
+            return true;
         }
         public virtual void WriteJsonFields(JsonTextWriter writer) 
         {

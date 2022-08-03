@@ -176,13 +176,14 @@ namespace ZergRush.CodeGen
             const string writerName = "writer";
             const string readerName = "reader";
 
+            var retType = typeof(bool);
 
             var accessPrefix = type.AccessPrefixInGeneratedFunction();
             if (type.IsList() || type.IsArray)
             {
                 var listNeedAuxId = type.IsModifiableLivableList();
                 
-                var returnTypeForReadMethod = type.IsArray ? type : Void;
+                var returnTypeForReadMethod = type.IsArray ? type : retType;
                 var sinkReader = MakeGenMethod(type, GenTaskFlags.JsonSerialization, funcPrefix + JsonReadFuncName, returnTypeForReadMethod, $"JsonTextReader {readerName}");
                 var sinkWriter = MakeGenMethod(type, GenTaskFlags.JsonSerialization, funcPrefix + JsonWriteFuncName, Void, $"JsonTextWriter {writerName}");
                 
@@ -268,10 +269,11 @@ namespace ZergRush.CodeGen
                 if (type.IsDataList()) sinkReader.content($"self.{updatemod} = false;");
                 
                 if (type.IsArray) sinkReader.content($"return self;");
+                else sinkReader.content("return true;");
             }
             else if (type.IsDictionary())
             {
-                var sinkReader = MakeGenMethod(type, GenTaskFlags.JsonSerialization, funcPrefix + JsonReadFuncName, Void, $"JsonTextReader {readerName}");
+                var sinkReader = MakeGenMethod(type, GenTaskFlags.JsonSerialization, funcPrefix + JsonReadFuncName, retType, $"JsonTextReader {readerName}");
                 var sinkWriter = MakeGenMethod(type, GenTaskFlags.JsonSerialization, funcPrefix + JsonWriteFuncName, Void, $"JsonTextWriter {writerName}");
                 var keyType = type.FirstGenericArg();
                 var valType = type.SecondGenericArg();
@@ -310,6 +312,7 @@ namespace ZergRush.CodeGen
                     sinkReader.content($"reader.ReadSkipComments();"); // end keyval obj
                     sinkReader.content($"{accessPrefix}.Add(key, val);");
                 sinkReader.closeBrace();
+                sinkReader.content("return true;");
             }
             else
             {
@@ -318,22 +321,26 @@ namespace ZergRush.CodeGen
                 
                 string readerFuncName = funcPrefix + JsonReadFuncName + (!externalMode ? "Field" : "") +
                                         (immutableMode ? type.UniqueName() : "");
-                var sinkReader = MakeGenMethod(type, GenTaskFlags.JsonSerialization, readerFuncName, immutableMode ? type : Void,
+                var sinkReader = MakeGenMethod(type, GenTaskFlags.JsonSerialization, readerFuncName, immutableMode ? type : retType,
                     $"{(immutableMode ? "this " : "")}JsonTextReader {readerName}{(!externalMode ? ", string __name" : "")}", immutableMode);
                 var sinkWriter = MakeGenMethod(type, GenTaskFlags.JsonSerialization, funcPrefix + JsonWriteFuncName + (!externalMode ? "Fields" : ""), Void, $"JsonTextWriter {writerName}");
+
+                if (sinkReader.needBaseValCall)
+                {
+                    sinkReader.content($"if (base.{readerFuncName}({readerName}, __name)) return true;");
+                    sinkReader.needBaseValCall = false;
+                }
                 
                 if (immutableMode) sinkReader.content($"var self = new {type.RealName(true)}();");
 
                 if (externalMode)
                 {
-                    
                     sinkReader.content($"while (reader.Read())");
                     sinkReader.openBrace();
                     sinkReader.content($"if (reader.TokenType == JsonToken.PropertyName)");
                     sinkReader.openBrace();
                     sinkReader.content($"var __name = (string) reader.Value;");
                     sinkReader.content($"reader.Read();");
-                    
                     sinkWriter.content($"writer.WriteStartObject();");
                 }
                 
@@ -352,7 +359,7 @@ namespace ZergRush.CodeGen
                         ReadJsonValueStatement(sinkReader, info, false);
                         sinkReader.content($"break;");
                     });
-                    sinkReader.content($"default: {readerName}.{nameof(SerializationTools.SkipObj)}(); break;");
+                    if (!immutableMode) sinkReader.content($"default: return false; break;");
                 sinkReader.closeBrace();
 
                 if (externalMode)
@@ -364,6 +371,7 @@ namespace ZergRush.CodeGen
                 }
                 
                 if (immutableMode) sinkReader.content("return self;");
+                if (!immutableMode) sinkReader.content($"return true;");
             }
         }
     }
