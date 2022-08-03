@@ -30,12 +30,13 @@ namespace ZergRush.Alive {
         {
 
         }
-        public virtual void ReadFromJsonField(JsonTextReader reader, string __name) 
+        public virtual bool ReadFromJsonField(JsonTextReader reader, string __name) 
         {
             switch(__name)
             {
-                default: reader.SkipObj(); break;
+                default: return false; break;
             }
+            return true;
         }
         public virtual void WriteJsonFields(JsonTextWriter writer) 
         {

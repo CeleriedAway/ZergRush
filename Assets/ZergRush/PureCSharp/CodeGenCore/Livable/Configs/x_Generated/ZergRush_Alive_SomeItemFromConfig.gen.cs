@@ -47,9 +47,9 @@ namespace ZergRush.Alive {
             id = string.Empty;
             name = string.Empty;
         }
-        public override void ReadFromJsonField(JsonTextReader reader, string __name) 
+        public override bool ReadFromJsonField(JsonTextReader reader, string __name) 
         {
-            base.ReadFromJsonField(reader,__name);
+            if (base.ReadFromJsonField(reader, __name)) return true;
             switch(__name)
             {
                 case "id":
@@ -61,8 +61,9 @@ namespace ZergRush.Alive {
                 case "name":
                 name = (string) reader.Value;
                 break;
-                default: reader.SkipObj(); break;
+                default: return false; break;
             }
+            return true;
         }
         public override void WriteJsonFields(JsonTextWriter writer) 
         {

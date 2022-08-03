@@ -62,16 +62,17 @@ namespace ZergRush.Alive {
             var otherConcrete = (ZergRush.Alive.DataRoot)other;
             if (__entityIdFactory != otherConcrete.__entityIdFactory) SerializationTools.LogCompError(__path, "__entityIdFactory", printer, otherConcrete.__entityIdFactory, __entityIdFactory);
         }
-        public override void ReadFromJsonField(JsonTextReader reader, string __name) 
+        public override bool ReadFromJsonField(JsonTextReader reader, string __name) 
         {
-            base.ReadFromJsonField(reader,__name);
+            if (base.ReadFromJsonField(reader, __name)) return true;
             switch(__name)
             {
                 case "__entityIdFactory":
                 __entityIdFactory = (int)(Int64)reader.Value;
                 break;
-                default: reader.SkipObj(); break;
+                default: return false; break;
             }
+            return true;
         }
         public override void WriteJsonFields(JsonTextWriter writer) 
         {

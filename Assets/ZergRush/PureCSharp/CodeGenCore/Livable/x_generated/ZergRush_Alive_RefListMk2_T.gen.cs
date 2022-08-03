@@ -17,15 +17,16 @@ namespace ZergRush.Alive {
         {
             ids.Serialize(writer);
         }
-        public void ReadFromJsonField(JsonTextReader reader, string __name) 
+        public bool ReadFromJsonField(JsonTextReader reader, string __name) 
         {
             switch(__name)
             {
                 case "ids":
                 ids.ReadFromJson(reader);
                 break;
-                default: reader.SkipObj(); break;
+                default: return false; break;
             }
+            return true;
         }
         public void WriteJsonFields(JsonTextWriter writer) 
         {

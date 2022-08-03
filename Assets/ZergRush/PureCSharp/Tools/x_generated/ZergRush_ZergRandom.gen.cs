@@ -52,7 +52,7 @@ namespace ZergRush {
             if (inext != other.inext) SerializationTools.LogCompError(__path, "inext", printer, other.inext, inext);
             if (inextp != other.inextp) SerializationTools.LogCompError(__path, "inextp", printer, other.inextp, inextp);
         }
-        public virtual void ReadFromJsonField(JsonTextReader reader, string __name) 
+        public virtual bool ReadFromJsonField(JsonTextReader reader, string __name) 
         {
             switch(__name)
             {
@@ -65,8 +65,9 @@ namespace ZergRush {
                 case "inextp":
                 inextp = (int)(Int64)reader.Value;
                 break;
-                default: reader.SkipObj(); break;
+                default: return false; break;
             }
+            return true;
         }
         public virtual void WriteJsonFields(JsonTextWriter writer) 
         {

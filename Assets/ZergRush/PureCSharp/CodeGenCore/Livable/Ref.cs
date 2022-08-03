@@ -113,9 +113,9 @@ namespace ZergRush.Alive
             base.WriteJsonFields(writer);
         }
 
-        public override void ReadFromJsonField(JsonTextReader reader, string name)
+        public override bool ReadFromJsonField(JsonTextReader reader, string name)
         {
-            base.ReadFromJsonField(reader, name);
+            return base.ReadFromJsonField(reader, name);
         }
 
         public int getConnectionCount => up == null ? 0 : up.getConnectionCount;
