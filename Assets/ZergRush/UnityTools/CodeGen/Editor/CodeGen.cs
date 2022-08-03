@@ -262,7 +262,6 @@ namespace ZergRush.CodeGen
 
         static bool stubMode = false;
         
-        // You shall not dare to try to unfuck this.
         public static void Gen(List<string> includeAssemblies, bool stubs)
         {
             var allAssemblies = AppDomain.CurrentDomain.GetAssemblies();
@@ -272,44 +271,3 @@ namespace ZergRush.CodeGen
     }
 }
 
-            // Lenses... Curently not needed
-//            foreach (var type in typesList)
-//            {
-//                foreach (var member in type.GetMembersForCodeGen(GenTaskFlags.None))
-//                {
-//                    if (member.isReference)
-//                    {
-//                        var sink = GenClassSink(type);
-//                        sink.content(
-//                            $"\tstatic Action<object, object> {SetterName(member.name)} = (self, obj) => (({type.RealName(true)})other).{member.name} = ({member.type.RealName(true)})(obj);");
-//                    }
-//                }
-//            }
-
-
-
-
-//                        if (type.IsToolBased())
-//                        {
-//                            // Iterate static data
-//                            sink.content($"if (this.{ToolPrototypeIdGetter}() != {otherName}.{ToolPrototypeIdGetter}())");
-//                            sink.content("{");
-//                            sink.indentLevel++;
-//                            sink.content($"{ToolResetFunc}();");
-//                            processMembers((path, mt, memberInfo, valTransformer) =>
-//                            {
-//                                if (mt.IsLoadableConfig() == false) return;
-//                                GenUpdateValueFrom(sink, mt, path,
-//                                    valTransformer($"{otherName}.{memberInfo.name}"), memberInfo.canBeNull, memberInfo.isStatic);
-//                            }, GenTaskFlags.UpdateFrom);
-//                            sink.content($"{ToolInitFuncName}();");
-//                            sink.indentLevel--;
-//                            sink.content("}");
-//                            
-//                            processMembers((path, mt, memberInfo, valTransformer) =>
-//                            {
-//                                if (mt.IsLoadableConfig()) return;
-//                                GenUpdateValueFrom(sink, mt, path,
-//                                    valTransformer($"{otherName}.{memberInfo.name}"), memberInfo.canBeNull, memberInfo.isStatic, memberInfo.isReference);
-//                            }, GenTaskFlags.UpdateFrom);
-//                        }

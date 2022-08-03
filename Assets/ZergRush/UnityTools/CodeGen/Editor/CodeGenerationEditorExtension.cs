@@ -15,9 +15,13 @@ namespace ZergRush.CodeGen
     {
         private static readonly List<string> includeAssemblies = new List<string>
         {
-            "ZergRush.Unity.csproj",
-            "Assembly-CSharp.csproj",
-            "Assembly-CSharp-firstpass.csproj",
+            "ZergRush.Core",
+            "ZergRush.Unity",
+            "ClientServerShared",
+            "SharedCode",
+            "AGameServerShared",
+            "Assembly-CSharp",
+            "Assembly-CSharp-Editor",
         };
 
         [MenuItem("Code Gen/Run CodeGen #&c")]
