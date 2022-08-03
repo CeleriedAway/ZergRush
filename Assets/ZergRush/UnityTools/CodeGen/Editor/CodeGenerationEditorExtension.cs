@@ -46,7 +46,7 @@ namespace ZergRush.CodeGen
             }
             RunProcessAndReadLogs(path,
                 $" {string.Join(' ', includeAssemblies)}", 
-                @"Packages\ZergRush\Assets\ZergRush\UnityTools\CodeGen\Console~\bin\Debug\net6.0-windows");
+                Path.GetDirectoryName(path));
         }
 
         static void RunProcessAndReadLogs(string fileName, string args, [JetBrains.Annotations.CanBeNull] string dir)
@@ -60,7 +60,8 @@ namespace ZergRush.CodeGen
             si.FileName = fileName; 
             si.Arguments = args;
             if (dir != null)
-                si.WorkingDirectory = dir;
+                si.WorkingDirectory = Path.GetFullPath(dir);
+            
             p.ErrorDataReceived += (_, e) =>
             {
                 if (e.Data != null) Debug.LogError(e.Data);

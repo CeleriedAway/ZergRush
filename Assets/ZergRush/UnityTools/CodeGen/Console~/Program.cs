@@ -19,14 +19,20 @@ class Programm
 {
     public static readonly string[] PROJECT_NAMES =
     {
-        "Assembly-CSharp.csproj",
-        "Assembly-CSharp-firstpass.csproj",
-        "ZergRush.Unity.csproj",
+        "Assembly-CSharp",
+        "Assembly-CSharp-firstpass",
+        "ZergRush.Unity",
     };
+    
     private static string ProjectFilePath = string.Empty;
 
     public static void Main(string[] args)
     {
+        if (args.Length == 0)
+        {
+            args = PROJECT_NAMES;
+        }
+        args = args.Select(p => p + ".csproj").ToArray();
         var tries = 0;
         var path = ".";
         const int triesMax = 30;
@@ -34,7 +40,7 @@ class Programm
         while (tries < triesMax)
         {
             var strings = Directory.GetFiles(path);
-            if (strings.Any(f => f.EndsWith(PROJECT_NAMES[0])))
+            if (strings.Any(f => f.EndsWith(args[0])))
             {
                 ProjectFilePath = Path.GetDirectoryName(Path.GetFullPath(strings.First()));
                 break;
@@ -48,7 +54,7 @@ class Programm
             throw new ZergRushException();
         }
         
-        SyntaxAnalizeStuff(path, PROJECT_NAMES);
+        SyntaxAnalizeStuff(path, args);
     }
 
     private static void SyntaxAnalizeStuff(string projectPath, string[] projectName)
