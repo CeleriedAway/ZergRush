@@ -15,128 +15,103 @@ namespace ZergRush.CodeGen
     {
         private static readonly List<string> includeAssemblies = new List<string>
         {
-            "ZergRush.Core",
-            "ZergRush.Unity",
-            "CodeGen",
-            "ClientServerShared",
-            "SharedCode",
-            "Assembly-CSharp",
-            "Assembly-CSharp-Editor",
-            "AGameServerShared"
+            "ZergRush.Unity.csproj",
+            "Assembly-CSharp.csproj",
+            "Assembly-CSharp-firstpass.csproj",
         };
 
         [MenuItem("Code Gen/Run CodeGen #&c")]
         public static void GenCode()
         {
             GenerateInner(includeAssemblies);
-        }
-
-        [MenuItem("Code Gen/Generate Stubs #&s")]
-        public static void GenStubs()
-        {
-            GenerateInner(includeAssemblies, onlyStubs: true);
+            AssetDatabase.Refresh();
         }
 
         [MenuItem("Code Gen/Run CodeGen Experimental#&c")]
         public static void GenCodeExperimental()
         {
-            Process p = new Process();
-            var oh = new OutputHandler();
-            oh.Setup(p);
-            var si = p.StartInfo;
-            si.FileName =
-                @"Packages\ZergRush\Assets\ZergRush\UnityTools\CodeGen\Console~\bin\Debug\net6.0-windows\ConsoleGen.exe";
-            si.Arguments = $" {string.Join(' ', includeAssemblies)}";
-
-            si.WorkingDirectory =
-                @"Packages\ZergRush\Assets\ZergRush\UnityTools\CodeGen\Console~\bin\Debug\net6.0-windows";
-            p.Start();
-            oh.Start();
-            p.WaitForExit();
-            oh.Output(
-                (sb) => Debug.Log(string.Join('\n', sb)),
-                (sbe) => Debug.LogError(string.Join('\n', sbe)));
+            var path = ExePath();
+            if (File.Exists(path) == false)
+            {
+                RunCompilation();
+                if (File.Exists(path) == false)
+                {
+                    Debug.LogError("compilation did not produce exe");
+                    return;
+                }
+            }
+            RunProcessAndReadLogs(path,
+                $" {string.Join(' ', includeAssemblies)}", 
+                @"Packages\ZergRush\Assets\ZergRush\UnityTools\CodeGen\Console~\bin\Debug\net6.0-windows");
         }
 
+        static void RunProcessAndReadLogs(string fileName, string args, [JetBrains.Annotations.CanBeNull] string dir)
+        {
+            Process p = new Process();
+            var si = p.StartInfo;
+            si.UseShellExecute = false;
+            si.CreateNoWindow = true;
+            si.RedirectStandardOutput = true;
+            si.RedirectStandardError = true;
+            si.FileName = fileName; 
+            si.Arguments = args;
+            if (dir != null)
+                si.WorkingDirectory = dir;
+            p.ErrorDataReceived += (_, e) =>
+            {
+                if (e.Data != null) Debug.LogError(e.Data);
+            };
+            p.OutputDataReceived += (_, e) =>
+            {
+                if (e.Data != null) Debug.Log(e.Data);
+            };
+            
+            p.Start();
+            p.BeginErrorReadLine();
+            p.BeginOutputReadLine();
+            p.WaitForExit();
+        }
 
         public static void GenerateInner(List<string> assemblies, bool onlyStubs = false)
         {
             Debug.Log("GenCode called");
             CodeGen.Gen(assemblies, onlyStubs);
         }
-    }
 
-    public class OutputHandler
-    {
-        private Process process;
-        List<string> sb = new(), sbe = new();
-
-        public void Setup(Process p)
+        static string SearchSolution(string path)
         {
-            process = p;
-            var si = p.StartInfo;
-            si.UseShellExecute = false;
-            si.CreateNoWindow = true;
-            si.RedirectStandardOutput = true;
-            si.RedirectStandardError = true;
-            p.ErrorDataReceived += (_, e) => { sbe.Add(e.Data); };
-            p.OutputDataReceived += (_, e) => { sb.Add(e.Data); };
-        }
-
-        public void Start()
-        {
-            process.BeginErrorReadLine();
-            process.BeginOutputReadLine();
-        }
-
-        public void Output(Action<List<string>> outHandler, Action<List<string>> errHandler)
-        {
-            outHandler(sb);
-            errHandler(sbe);
-        }
-    }
-
-    public class Builder
-    {
-        private static string SolutionFileExtention = ".sln";
-        private static string BuildFolderName = "AutoBuild";
-
-        private static string GetProjectPath()
-        {
-            return Application.dataPath.Replace("/Assets", "");
-        }
-
-        private static string[] GetSolutionFilePath()
-        {
-            var solutionFolder = Application.dataPath.Replace("/Assets", @"\Packages\ZergRush\Assets\ZergRush\UnityTools\CodeGen\Console~");
-            var filesInDirectory = Directory.GetFiles(solutionFolder)
-                .Where(item => Path.GetExtension(item) == SolutionFileExtention).ToArray();
-            if (filesInDirectory.Length <= 0)
+            foreach (var enumerateFile in Directory.GetFiles(path, "ConsoleGen.sln", SearchOption.AllDirectories))
             {
-                throw new System.Exception("This project not contain solution file (*.sln) to run compilation!");
+                return enumerateFile;
             }
-
-            return filesInDirectory;
+            throw new ZergRushException($"cant find zergrush solution file at path {path}");
         }
 
-        private static string CreateAndGetBUildFolder()
+        private static string GetSolutionFilePath()
         {
-            var buildPath = Path.Combine(GetProjectPath(), BuildFolderName);
-            if (!Directory.Exists(buildPath))
+            string solutionFolder;
+            var packagePath = Path.Combine("Packages", "ZergRush", "Assets", "ZergRush", "UnityTools", "CodeGen");
+            if (Directory.Exists(packagePath))
             {
-                Directory.CreateDirectory(buildPath);
+                solutionFolder = SearchSolution(packagePath);
             }
-
-            return buildPath;
+            else
+            {
+                solutionFolder = SearchSolution("Assets");
+            }
+            return solutionFolder;
         }
 
+        static string ExePath()
+        {
+            var d = Path.GetDirectoryName(GetSolutionFilePath());
+            return Path.Combine(d, "bin", "Debug", "net6.0-windows", "ConsoleGen.exe");
+        }
 
-        [MenuItem("Compilation/Run")]
+        [MenuItem("Code Gen/Compile Run")]
         public static void RunCompilation()
         {
-            var solutions = GetSolutionFilePath();
-            var buildFolder = CreateAndGetBUildFolder();
-
+            var solution = GetSolutionFilePath();
             var frameworkVersions = Path.Combine(Path.GetPathRoot(Environment.SystemDirectory), "Windows",
                 "Microsoft.NET", "Framework64");
             var installedVersions = Directory.GetDirectories(frameworkVersions).Where(x => x.Contains("v"));
@@ -151,20 +126,7 @@ namespace ZergRush.CodeGen
                     Debug.Log(compilerFile);
                 }
             }
-
-            var cmdProcess = new Process();
-            var oh = new OutputHandler();
-            oh.Setup(cmdProcess);
-            cmdProcess.StartInfo.FileName = "cmd.exe";
-
-            cmdProcess.StartInfo.Arguments = "/C " + compilers.Last() + " " + solutions.Last();
-
-            cmdProcess.Start();
-            oh.Start();
-            cmdProcess.WaitForExit();
-            oh.Output(
-                (sb) => Debug.Log(string.Join('\n', sb)),
-                (sbe) => Debug.LogError(string.Join('\n', sbe)));
+            RunProcessAndReadLogs("cmd.exe", "/C " + compilers.Last() + " " + solution, null);
         }
     }
 }
