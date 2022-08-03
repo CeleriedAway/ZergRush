@@ -97,6 +97,24 @@ class Programm
         Console.WriteLine(Directory.GetCurrentDirectory());
         var fullPath = Path.GetFullPath("../../../ZergRushCore/bin/debug/net6.0/ZergRushCore.dll");
         references.Add(MetadataReference.CreateFromFile(fullPath));
+
+        Dictionary<string, Assembly> loadedAssemblies = new Dictionary<string, Assembly>();
+        foreach (var portableExecutableReference in references)
+        {
+            if (File.Exists(portableExecutableReference.FilePath) == false)
+            {
+                Console.Error.WriteLine(portableExecutableReference.FilePath + " does not exists");
+            }
+            try
+            {
+                var a = AppDomain.CurrentDomain.Load(File.ReadAllBytes(portableExecutableReference.FilePath));
+                loadedAssemblies[a.FullName] = a;
+            }
+            catch (Exception e)
+            {
+            }
+        }
+        
         var allProjectReferencePaths = allProjectReference
             .ConvertAll((rPath) => @$"{projectPath}\{TypeReader.GetOutPath(rPath)}")
             .Where((rPath) =>
@@ -109,12 +127,19 @@ class Programm
         //Throw Syntax Structure is incorrect so i'm reparsing tree //todo: fix and remove   
         //pruned = pruned.ConvertAll((tree) => SyntaxFactory.ParseSyntaxTree(tree.ToString()).WithFilePath(tree.FilePath));
         var compilation = CSharpCompilation.Create("assembly", pruned, references);
-
+        var asm = Assembly.GetCallingAssembly();
+        compilation = compilation.AddReferences(MetadataReference.CreateFromFile(asm.Location));
+        
+        AppDomain.CurrentDomain.AssemblyResolve += (sender, args) =>
+        {
+            //Console.WriteLine($"!!!!!!!! {args.Name} {args.RequestingAssembly}");
+            return loadedAssemblies[args.Name];
+        };
+        
         var assembly = Compile(compilation);
         if (assembly == null)
             throw new NullReferenceException("Assembly is null");
-
-
+            
         var ass = AppDomain.CurrentDomain.GetAssemblies().ToList();
         CodeGen.RawGen(new List<Assembly>
         {
