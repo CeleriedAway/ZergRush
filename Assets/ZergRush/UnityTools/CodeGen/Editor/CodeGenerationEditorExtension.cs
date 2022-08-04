@@ -30,6 +30,13 @@ namespace ZergRush.CodeGen
             GenerateInner(includeAssemblies);
             AssetDatabase.Refresh();
         }
+        
+        [MenuItem("Code Gen/Run CodeGen Stub #&c")]
+        public static void GenCodeStubs()
+        {
+            GenerateInner(includeAssemblies, true);
+            AssetDatabase.Refresh();
+        }
 
         [MenuItem("Code Gen/Run CodeGen Experimental#&c")]
         public static void GenCodeExperimental()
