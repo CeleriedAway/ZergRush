@@ -31,7 +31,7 @@ namespace ZergRush.CodeGen
             AssetDatabase.Refresh();
         }
         
-        [MenuItem("Code Gen/Run CodeGen Stub #&c")]
+        [MenuItem("Code Gen/Run CodeGen Stub #&s")]
         public static void GenCodeStubs()
         {
             GenerateInner(includeAssemblies, true);
