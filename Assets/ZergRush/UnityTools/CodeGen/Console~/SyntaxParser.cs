@@ -13,6 +13,17 @@ using SF = Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 public class TreePruner : CSharpSyntaxRewriter
 {
+    public List<string> InterfacePruneException = new List<string>
+    {
+        "INetEventListener",
+        "IDeliveryEventListener",
+        "INtpEventListener",
+        "INatPunchListener",
+        "ICell",
+        "IHasSkeletonDataAsset",
+        "IReferencableFromDataRoot"
+    };
+    
     ThrowStatementSyntax BuildException()
     {
         var exceptionExpr = SF.ObjectCreationExpression(SF.ParseName("System.NotImplementedException"))//
@@ -31,6 +42,22 @@ public class TreePruner : CSharpSyntaxRewriter
     //     node = node.AddUsings(SF.UsingDirective(SF.ParseName("System")).NormalizeWhitespace());
     //     return base.VisitCompilationUnit(node);
     // }
+
+    /*
+    public override SyntaxNode? VisitClassDeclaration(ClassDeclarationSyntax node)
+    {
+        var n = node.WithMembers(new SyntaxList<MemberDeclarationSyntax>(node.Members.Where(m =>
+            !(m is MethodDeclarationSyntax method && method.ExplicitInterfaceSpecifier != null))));
+        return base.VisitClassDeclaration(n);
+    }
+    */
+
+    public override SyntaxNode? VisitInterfaceDeclaration(InterfaceDeclarationSyntax node)
+    {
+        if (InterfacePruneException.Contains(node.Identifier.Text))
+            return base.VisitInterfaceDeclaration(node);
+        return base.VisitInterfaceDeclaration(node.WithMembers(new SyntaxList<MemberDeclarationSyntax>()));
+    }
 
     public override SyntaxNode? VisitPropertyDeclaration(PropertyDeclarationSyntax node)
     {
@@ -158,7 +185,7 @@ public static partial class TypeReader
                     {
                         attr = childNode.Attributes?.Item(0);
                         if (attr?.Value == null) continue;
-                        if (attr.Value.EndsWith(".gen.cs")) continue;
+                        if (projectFile.Contains("ZergRush.Core") == false && attr.Value.EndsWith(".gen.cs")) continue;
                         files.Add($@"{projectPath}\{attr.Value}");
                         continue;
                     }

@@ -54,6 +54,7 @@ namespace ZergRush.CodeGen
             RunProcessAndReadLogs(path,
                 $" {string.Join(' ', includeAssemblies)}", 
                 Path.GetDirectoryName(path));
+            AssetDatabase.Refresh();
         }
 
         static void RunProcessAndReadLogs(string fileName, string args, [JetBrains.Annotations.CanBeNull] string dir)

@@ -21,7 +21,7 @@ class Programm
     {
         "Assembly-CSharp",
         "Assembly-CSharp-firstpass",
-        "ZergRush.Unity",
+        "ZergRush.Core",
     };
     
     private static string ProjectFilePath = string.Empty;
@@ -53,8 +53,16 @@ class Programm
         {
             throw new ZergRushException();
         }
+
+        List<string> exclude = new List<string>
+        {
+            "UnityEngine",
+            "ZergRush.Core",
+        };
+
+        var projects = Directory.GetFiles(path).Where(f => f.EndsWith(".csproj") && !exclude.Any(e => f.Contains(e)));
         
-        SyntaxAnalizeStuff(path, args);
+        SyntaxAnalizeStuff(path, projects.Select(f => Path.GetFileName(f)).ToArray());
     }
 
     private static void SyntaxAnalizeStuff(string projectPath, string[] projectName)
@@ -84,11 +92,12 @@ class Programm
             }
             ShowEntireList(allFilePaths);
             return allFilePaths;
-        });
+        }).ToHashSet();
 
         var trees = new List<SyntaxTree>();
         foreach (var file in files)
         {
+            if (File.Exists(file) == false) continue;
             var tree = ExtractSyntaxTree(file);
             trees.Add(tree);
         }
@@ -98,7 +107,7 @@ class Programm
         {
             Console.WriteLine(t.FilePath);
         });
-        var references = allReferencePaths.ConvertAll((rPath) => MetadataReference.CreateFromFile(rPath));
+        var references = allReferencePaths.Where(f => File.Exists(f)).ConvertAll((rPath) => MetadataReference.CreateFromFile(rPath));
         
         Console.WriteLine(Directory.GetCurrentDirectory());
         var fullPath = Path.GetFullPath("../../../ZergRushCore/bin/debug/net6.0/ZergRushCore.dll");
@@ -204,7 +213,11 @@ class Programm
 
     public static SyntaxTree ExtractSyntaxTree(string filePath)
     {
-        var tree = SyntaxFactory.ParseSyntaxTree(System.IO.File.ReadAllText(filePath));
+        var tree = SyntaxFactory.ParseSyntaxTree(System.IO.File.ReadAllText(filePath), new CSharpParseOptions(preprocessorSymbols: new string[]
+        {
+            "UNITY_EDITOR",
+            "UNITY_2019_1_OR_NEWER"
+        }));
         return tree.WithFilePath(filePath);
     }
 
