@@ -11,7 +11,21 @@ namespace ZergRush
         {
             return !String.IsNullOrEmpty(str);
         }
-        
+
+        public static ulong CalculateHash(this string array)
+        {
+            if (array == null) return 1234567;
+            ulong hash = 0;
+            for (int i = 0; i < array.Length; i++)
+            {
+                hash += array[i];
+                hash += hash << 10;
+                hash ^= hash >> 7;
+            }
+
+            return hash;
+        }
+
         public static TV TryGetOrNew<TK, TV>(this Dictionary<TK, TV> dict, TK key)
             where TV : new()
         {
@@ -245,9 +259,10 @@ namespace ZergRush
                 if (func(x1)) lTrue.Add(x1);
                 else lFalse.Add(x1);
             }
+
             return (lTrue, lFalse);
         }
-        
+
         public static void ZipIterate<T1, T2>(this IEnumerable<T1> coll1, IEnumerable<T2> coll2, Action<T1, T2> func)
         {
             var it1 = coll1.GetEnumerator();
@@ -364,9 +379,10 @@ namespace ZergRush
                     result.Add(list.TakeAt(i));
                 }
             }
+
             return result;
         }
-        
+
         public static T TakeAt<T>(this IList<T> list, int index)
         {
             var t = list[index];
@@ -424,6 +440,7 @@ namespace ZergRush
         {
             return list.Where(e => e is T2).Cast<T2>();
         }
+
         public static T2 FindCast<T, T2>(this IEnumerable<T> list) where T2 : class
         {
             return list.Find(e => e is T2) as T2;
@@ -462,16 +479,17 @@ namespace ZergRush
         {
             return Enum.GetValues(typeof(T)).Cast<int>();
         }
-        
+
         public static bool IsPowerOfTwo(this int val)
         {
             if (val < 0) val = -val;
             return (val & (val - 1)) == 0;
         }
-        
+
         public static IEnumerable<TEnum> DecomposeToBasicValues<TEnum>(this TEnum value)
         {
-            return GetEnumValuesInt<TEnum>().Where(v => v.IsPowerOfTwo() && ((int)(object)value & v) != 0).Cast<TEnum>();
+            return GetEnumValuesInt<TEnum>().Where(v => v.IsPowerOfTwo() && ((int) (object) value & v) != 0)
+                .Cast<TEnum>();
         }
 
 
@@ -725,11 +743,12 @@ namespace ZergRush
             return max;
         }
 
-        public static IEnumerable<T2> MapAndFilterNulls<T, T2>(this IReadOnlyList<T> items, Func<T, T2> select) where T2 : class
+        public static IEnumerable<T2> MapAndFilterNulls<T, T2>(this IReadOnlyList<T> items, Func<T, T2> select)
+            where T2 : class
         {
             return items.Select(select).Where(v => v != null);
         }
-        
+
         public static List<T> Filter<T>(this List<T> items, Func<T, bool> filter)
         {
             List<T> filtered = new List<T>();
@@ -738,6 +757,7 @@ namespace ZergRush
                 if (filter(item))
                     filtered.Add(item);
             }
+
             return filtered;
         }
 
@@ -852,7 +872,7 @@ namespace ZergRush
                 res.Add(convert(item));
             return res;
         }
-        
+
         public static List<T> GetReversed<T>(this IEnumerable<T> list)
         {
             List<T> res = new List<T>();
@@ -860,6 +880,5 @@ namespace ZergRush
                 res.Insert(0, item);
             return res;
         }
-
     }
 }

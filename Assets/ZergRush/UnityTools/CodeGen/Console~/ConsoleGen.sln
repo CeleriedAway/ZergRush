@@ -5,8 +5,6 @@ VisualStudioVersion = 17.1.32421.90
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleGen", "ConsoleGen.csproj", "{1F65B34E-F84A-4777-A88C-9F7C40105746}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZergRushCore", "ZergRushCore\ZergRushCore.csproj", "{CC081AF6-D8D1-4AA8-B6EA-11B4A27462FA}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -23,10 +21,6 @@ Global
 		{CFA8944F-A2E9-BBCF-898A-F19F5BF55DEA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B630DCFD-BD14-A005-B992-0D4D97595EFB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{B630DCFD-BD14-A005-B992-0D4D97595EFB}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{CC081AF6-D8D1-4AA8-B6EA-11B4A27462FA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{CC081AF6-D8D1-4AA8-B6EA-11B4A27462FA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{CC081AF6-D8D1-4AA8-B6EA-11B4A27462FA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{CC081AF6-D8D1-4AA8-B6EA-11B4A27462FA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

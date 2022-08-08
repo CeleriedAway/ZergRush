@@ -91,8 +91,9 @@ public class GenInLocalFolder : GenTargetFolder
         var path = Path.GetDirectoryName(sourceFilePath);
         return Path.Combine(path, $"{dir}");
     }
-    
-    public GenInLocalFolder(string dir = "x_generated", [CallerFilePath] string sourceFilePath = "") : base(GetPath(dir, sourceFilePath), 100)
+
+    public GenInLocalFolder(string dir = "x_generated", [CallerFilePath] string sourceFilePath = "") : base(
+        GetPath(dir, sourceFilePath), 100)
     {
         //Debug.Log("~~~~~~~~~" + folder);
     }
@@ -100,7 +101,8 @@ public class GenInLocalFolder : GenTargetFolder
 
 public class GenZergRushFolder : GenInLocalFolder
 {
-    public GenZergRushFolder(string dir = "x_generated", [CallerFilePath] string sourceFilePath = "") : base(dir, sourceFilePath)
+    public GenZergRushFolder(string dir = "x_generated", [CallerFilePath] string sourceFilePath = "") : base(dir,
+        sourceFilePath)
     {
         priority = 10000;
     }
@@ -243,4 +245,14 @@ public class UIDComponent : Attribute
 [AttributeUsage(AttributeTargets.Method)]
 public class CodeGenExtension : Attribute
 {
+}
+
+/// <summary>
+/// An attribute used to define which config is responsible for storing config members for this hierarchy.
+/// </summary>
+[AttributeUsage(AttributeTargets.Class)]
+public class ConfigRootType : Attribute
+{
+    public Type type;
+    public ConfigRootType(Type type) => this.type = type;
 }

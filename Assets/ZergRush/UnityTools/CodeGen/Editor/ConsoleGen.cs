@@ -21,6 +21,14 @@ namespace ZergRush.CodeGen
 
             allTypesInAssemblies.Clear();
             allTypesInAssemblies.AddRange(typesEnumerable.ToList());
+            allTypesInAssemblies.Sort((t1, t2) =>
+            {
+                if (t1.Namespace == null || t2.Namespace == null) return 0;
+                var c1 = t1.Namespace.Contains("ZergRush");
+                var c2 = t2.Namespace.Contains("ZergRush");
+                if (c1 ^ c2) return -c1.CompareTo(c2);
+                return 0;
+            });
 
             typeGenRequested.Clear();
             tasks.Clear();

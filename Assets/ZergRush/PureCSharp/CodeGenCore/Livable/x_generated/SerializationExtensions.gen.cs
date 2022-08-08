@@ -3,76 +3,12 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 using ZergRush.Alive;
+using ZergRush;
 using Newtonsoft.Json;
 #if !INCLUDE_ONLY_CODE_GENERATION
 
 public static partial class SerializationExtensions
 {
-    public static void UpdateFrom(this ZergRush.Alive.StaticConnections self, ZergRush.Alive.StaticConnections other) 
-    {
-        self.ownerId = other.ownerId;
-        self.connections.UpdateFrom(other.connections);
-    }
-    public static void Deserialize(this ZergRush.Alive.StaticConnections self, BinaryReader reader) 
-    {
-        self.ownerId = reader.ReadInt32();
-        self.connections.Deserialize(reader);
-    }
-    public static void Serialize(this ZergRush.Alive.StaticConnections self, BinaryWriter writer) 
-    {
-        writer.Write(self.ownerId);
-        self.connections.Serialize(writer);
-    }
-    public static ulong CalculateHash(this ZergRush.Alive.StaticConnections self) 
-    {
-        System.UInt64 hash = 345093625;
-        hash += (ulong)1300247783;
-        hash += hash << 11; hash ^= hash >> 7;
-        hash += (System.UInt64)self.ownerId;
-        hash += hash << 11; hash ^= hash >> 7;
-        hash += self.connections.CalculateHash();
-        hash += hash << 11; hash ^= hash >> 7;
-        return hash;
-    }
-    public static void CompareCheck(this ZergRush.Alive.StaticConnections self, ZergRush.Alive.StaticConnections other, Stack<string> __path, Action<string> printer) 
-    {
-        if (self.ownerId != other.ownerId) SerializationTools.LogCompError(__path, "ownerId", printer, other.ownerId, self.ownerId);
-        __path.Push("connections");
-        self.connections.CompareCheck(other.connections, __path, printer);
-        __path.Pop();
-    }
-    public static bool ReadFromJson(this ZergRush.Alive.StaticConnections self, JsonTextReader reader) 
-    {
-        while (reader.Read())
-        {
-            if (reader.TokenType == JsonToken.PropertyName)
-            {
-                var __name = (string) reader.Value;
-                reader.Read();
-                switch(__name)
-                {
-                    case "ownerId":
-                    self.ownerId = (int)(Int64)reader.Value;
-                    break;
-                    case "connections":
-                    self.connections.ReadFromJson(reader);
-                    break;
-                    default: return false; break;
-                }
-            }
-            else if (reader.TokenType == JsonToken.EndObject) { break; }
-        }
-        return true;
-    }
-    public static void WriteJson(this ZergRush.Alive.StaticConnections self, JsonTextWriter writer) 
-    {
-        writer.WriteStartObject();
-        writer.WritePropertyName("ownerId");
-        writer.WriteValue(self.ownerId);
-        writer.WritePropertyName("connections");
-        self.connections.WriteJson(writer);
-        writer.WriteEndObject();
-    }
     public static void Deserialize(this System.Collections.Generic.List<int> self, BinaryReader reader) 
     {
         var size = reader.ReadInt32();
@@ -156,6 +92,71 @@ public static partial class SerializationExtensions
         {
             if (self[i] != other[i]) SerializationTools.LogCompError(__path, i.ToString(), printer, other[i], self[i]);
         }
+    }
+    public static void UpdateFrom(this ZergRush.Alive.StaticConnections self, ZergRush.Alive.StaticConnections other) 
+    {
+        self.ownerId = other.ownerId;
+        self.connections.UpdateFrom(other.connections);
+    }
+    public static void Deserialize(this ZergRush.Alive.StaticConnections self, BinaryReader reader) 
+    {
+        self.ownerId = reader.ReadInt32();
+        self.connections.Deserialize(reader);
+    }
+    public static void Serialize(this ZergRush.Alive.StaticConnections self, BinaryWriter writer) 
+    {
+        writer.Write(self.ownerId);
+        self.connections.Serialize(writer);
+    }
+    public static ulong CalculateHash(this ZergRush.Alive.StaticConnections self) 
+    {
+        System.UInt64 hash = 345093625;
+        hash += (ulong)1300247783;
+        hash += hash << 11; hash ^= hash >> 7;
+        hash += (System.UInt64)self.ownerId;
+        hash += hash << 11; hash ^= hash >> 7;
+        hash += self.connections.CalculateHash();
+        hash += hash << 11; hash ^= hash >> 7;
+        return hash;
+    }
+    public static void CompareCheck(this ZergRush.Alive.StaticConnections self, ZergRush.Alive.StaticConnections other, Stack<string> __path, Action<string> printer) 
+    {
+        if (self.ownerId != other.ownerId) SerializationTools.LogCompError(__path, "ownerId", printer, other.ownerId, self.ownerId);
+        __path.Push("connections");
+        self.connections.CompareCheck(other.connections, __path, printer);
+        __path.Pop();
+    }
+    public static bool ReadFromJson(this ZergRush.Alive.StaticConnections self, JsonTextReader reader) 
+    {
+        while (reader.Read())
+        {
+            if (reader.TokenType == JsonToken.PropertyName)
+            {
+                var __name = (string) reader.Value;
+                reader.Read();
+                switch(__name)
+                {
+                    case "ownerId":
+                    self.ownerId = (int)(Int64)reader.Value;
+                    break;
+                    case "connections":
+                    self.connections.ReadFromJson(reader);
+                    break;
+                    default: return false; break;
+                }
+            }
+            else if (reader.TokenType == JsonToken.EndObject) { break; }
+        }
+        return true;
+    }
+    public static void WriteJson(this ZergRush.Alive.StaticConnections self, JsonTextWriter writer) 
+    {
+        writer.WriteStartObject();
+        writer.WritePropertyName("ownerId");
+        writer.WriteValue(self.ownerId);
+        writer.WritePropertyName("connections");
+        self.connections.WriteJson(writer);
+        writer.WriteEndObject();
     }
     public static void UpdateFrom(ref this ZergRush.Alive.SerializableConnection self, ZergRush.Alive.SerializableConnection other) 
     {

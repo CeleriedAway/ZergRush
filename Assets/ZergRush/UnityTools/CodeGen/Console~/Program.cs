@@ -57,7 +57,6 @@ class Programm
         List<string> exclude = new List<string>
         {
             "UnityEngine",
-            "ZergRush.Core",
         };
 
         var projects = Directory.GetFiles(path).Where(f => f.EndsWith(".csproj") && !exclude.Any(e => f.Contains(e)));
@@ -68,20 +67,12 @@ class Programm
     private static void SyntaxAnalizeStuff(string projectPath, string[] projectName)
     {
         Console.WriteLine("\n\nFinding all files \n\nv v v v v v v");
-        // var msWorkspace = MSBuildWorkspace.Create();
-        //
-        // var loader = new MSBuildProjectLoader(msWorkspace);
-        //
-        // var apiProject = loader.LoadProjectInfoAsync(path).Result;
-        //
-        // var classesByName = new Dictionary<string, ClassGroup>();
 
         var allReferencePaths = new HashSet<string>();
         var allProjectReference = new HashSet<string>();
         var files = projectName.SelectMany(p =>
         {
-            var (allFilePaths, dlls, projs) =
-                TypeReader.FindAllFilesInProject(projectPath, p);
+            var (allFilePaths, dlls, projs) = TypeReader.FindAllFilesInProject(projectPath, p);
             foreach (var dll in dlls)
             {
                 allReferencePaths.Add(dll);
@@ -103,15 +94,11 @@ class Programm
         }
 
         var pruned = trees.ConvertAll(TypeReader.PruneTree);
-        pruned.ForEach((t) =>
-        {
-            Console.WriteLine(t.FilePath);
-        });
+        // pruned.ForEach((t) =>
+        // {
+        //     Console.WriteLine(t.FilePath);
+        // });
         var references = allReferencePaths.Where(f => File.Exists(f)).ConvertAll((rPath) => MetadataReference.CreateFromFile(rPath));
-        
-        Console.WriteLine(Directory.GetCurrentDirectory());
-        var fullPath = Path.GetFullPath("../../../ZergRushCore/bin/debug/net6.0/ZergRushCore.dll");
-        references.Add(MetadataReference.CreateFromFile(fullPath));
 
         Dictionary<string, Assembly> loadedAssemblies = new Dictionary<string, Assembly>();
         foreach (var portableExecutableReference in references)
@@ -130,21 +117,7 @@ class Programm
             }
         }
         
-        var allProjectReferencePaths = allProjectReference
-            .ConvertAll((rPath) => @$"{projectPath}\{TypeReader.GetOutPath(rPath)}")
-            .Where((rPath) =>
-            {
-                if (File.Exists(rPath)) return true;
-                Console.WriteLine($"No such file {rPath}");
-                return false;
-            }).ToList();
-        
-        //Throw Syntax Structure is incorrect so i'm reparsing tree //todo: fix and remove   
-        //pruned = pruned.ConvertAll((tree) => SyntaxFactory.ParseSyntaxTree(tree.ToString()).WithFilePath(tree.FilePath));
         var compilation = CSharpCompilation.Create("assembly", pruned, references);
-        var asm = Assembly.GetCallingAssembly();
-        compilation = compilation.AddReferences(MetadataReference.CreateFromFile(asm.Location));
-        
         AppDomain.CurrentDomain.AssemblyResolve += (sender, args) =>
         {
             //Console.WriteLine($"!!!!!!!! {args.Name} {args.RequestingAssembly}");
@@ -152,15 +125,10 @@ class Programm
         };
         
         var assembly = Compile(compilation);
-        if (assembly == null)
-            throw new NullReferenceException("Assembly is null");
-            
-        var ass = AppDomain.CurrentDomain.GetAssemblies().ToList();
-        CodeGen.RawGen(new List<Assembly>
-        {
-            ass.Find(a => a.FullName.StartsWith("ZergRushCore")),
-            assembly,
-        }, false);
+        if (assembly == null) throw new NullReferenceException("Assembly is null");
+
+        var cg = assembly.GetTypes().Find(t => t.Name == "CodeGen");
+        cg.GetMethod("RawGen").Invoke(null, new []{(object) new List<Assembly>{assembly}, (object)false});
     }
 
 
@@ -213,11 +181,13 @@ class Programm
 
     public static SyntaxTree ExtractSyntaxTree(string filePath)
     {
-        var tree = SyntaxFactory.ParseSyntaxTree(System.IO.File.ReadAllText(filePath), new CSharpParseOptions(preprocessorSymbols: new string[]
+        var preprocessorSymbols = new string[]
         {
             "UNITY_EDITOR",
             "UNITY_2019_1_OR_NEWER"
-        }));
+        };
+        if (filePath.Contains("LogSink.cs")) preprocessorSymbols = new string[]{};
+        var tree = SyntaxFactory.ParseSyntaxTree(System.IO.File.ReadAllText(filePath), new CSharpParseOptions(preprocessorSymbols: preprocessorSymbols));
         return tree.WithFilePath(filePath);
     }
 

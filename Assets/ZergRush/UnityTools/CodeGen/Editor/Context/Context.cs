@@ -36,6 +36,7 @@ namespace ZergRush.CodeGen
             extensionSink = createSharpClass("SerializationExtensions", isStatic: true, isPartial:true);
             extensionSink.usingSink("System.IO");
             extensionSink.usingSink("ZergRush.Alive");
+            extensionSink.usingSink("ZergRush");
         }
 
         public SharpClassBuilder createSharpClass(string name, string fileName = "", string namespaceName = "", 

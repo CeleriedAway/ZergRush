@@ -17,16 +17,6 @@
         public virtual ulong UId() => 0;
     }
     
-    /// <summary>
-    /// An attribute used to define which config is responsible for storing config members for this hierarchy.
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Class)]
-    public class ConfigRootType : Attribute
-    {
-        public Type type;
-        public ConfigRootType(Type type) => this.type = type;
-    }
-    
     #region Example
     
     [ConfigRootType(typeof(GameConfigExample)), GenInLocalFolder]

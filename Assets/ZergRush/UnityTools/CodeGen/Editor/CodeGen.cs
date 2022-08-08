@@ -98,6 +98,7 @@ namespace ZergRush.CodeGen
                 isPartial: true, isStruct: t.IsValueType, isSealed: false);
             classSink.stubMode = stubMode;
             classSink.usingSink("ZergRush.Alive");
+            classSink.usingSink("ZergRush");
             classSink.context = context;
             classes[t.UniqueName()] = classSink;
 

@@ -158,11 +158,6 @@ public static partial class SerializationTools
         return val;
     }
 
-    internal static bool Valid(this string str)
-    {
-        return !String.IsNullOrEmpty(str);
-    }
-
     public static void Write(this BinaryWriter r, ISerializable data)
     {
         data.Serialize(r);
@@ -243,20 +238,6 @@ public static partial class SerializationTools
             hash += array[i];
             hash += hash << 10;
             hash ^= hash >> 6;
-        }
-
-        return hash;
-    }
-
-    public static ulong CalculateHash(this string array)
-    {
-        if (array == null) return 1234567;
-        ulong hash = 0;
-        for (int i = 0; i < array.Length; i++)
-        {
-            hash += array[i];
-            hash += hash << 10;
-            hash ^= hash >> 7;
         }
 
         return hash;

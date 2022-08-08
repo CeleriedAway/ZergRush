@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection.Emit;
@@ -145,8 +146,22 @@ public class TreePruner : CSharpSyntaxRewriter
 
 public static partial class TypeReader
 {
+    static List<string> exceptions = new List<string>
+    {
+        "GenerationTags",
+        "CodeGenTools.cs",
+        "ContainerExtension",
+        "CodeGen.",
+        "LogSink.cs",
+        Path.Combine("UnityTools", "CodeGen", "Editor")
+    };
     public static SyntaxTree PruneTree(SyntaxTree original)
     {
+        if (exceptions.Any(e => original.FilePath.Contains(e, StringComparison.InvariantCultureIgnoreCase)))
+        {
+            //Console.WriteLine($"Skipping {original.FilePath}");
+            return original;
+        }
         var originalRoot = original.GetRoot();
         var tp = new TreePruner();
         var newRoot = tp.Visit(originalRoot);
