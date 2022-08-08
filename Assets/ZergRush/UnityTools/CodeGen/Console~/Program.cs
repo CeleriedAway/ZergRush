@@ -8,8 +8,6 @@ using System.Linq;
 using System.Reflection;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis;
-using ZergRush;
-using ZergRush.CodeGen;
 
 #if UNITY_EDITOR
 #endif
@@ -51,7 +49,7 @@ class Programm
 
         if (tries >= triesMax)
         {
-            throw new ZergRushException();
+            throw new InvalidOperationException();
         }
 
         List<string> exclude = new List<string>
@@ -98,7 +96,7 @@ class Programm
         // {
         //     Console.WriteLine(t.FilePath);
         // });
-        var references = allReferencePaths.Where(f => File.Exists(f)).ConvertAll((rPath) => MetadataReference.CreateFromFile(rPath));
+        var references = allReferencePaths.Where(f => File.Exists(f)).Select((rPath) => MetadataReference.CreateFromFile(rPath));
 
         Dictionary<string, Assembly> loadedAssemblies = new Dictionary<string, Assembly>();
         foreach (var portableExecutableReference in references)
@@ -127,7 +125,7 @@ class Programm
         var assembly = Compile(compilation);
         if (assembly == null) throw new NullReferenceException("Assembly is null");
 
-        var cg = assembly.GetTypes().Find(t => t.Name == "CodeGen");
+        var cg = assembly.GetTypes().First(t => t.Name == "CodeGen");
         cg.GetMethod("RawGen").Invoke(null, new []{(object) new List<Assembly>{assembly}, (object)false});
     }
 

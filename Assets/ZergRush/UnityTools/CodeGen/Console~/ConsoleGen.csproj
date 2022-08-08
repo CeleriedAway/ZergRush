@@ -30,8 +30,4 @@
     <None Remove="ZergRushCore\**" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="ZergRushCore\ZergRushCore.csproj" />
-  </ItemGroup>
-
 </Project>
