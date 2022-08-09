@@ -8,14 +8,8 @@ namespace ZergRush.CodeGen
 {
     public static partial class CodeGen
     {
-        public static void RawGen(List<Assembly> assemblies, bool stubs)
+        public static void RawGen(List<Assembly> assemblies, string defaultPath, bool stubs)
         {
-            var genDir = new DirectoryInfo(DefaultGenPath);
-            if (genDir.Exists == false)
-            {
-                genDir.Create();
-            }
-
             Console.WriteLine($"Order: {assemblies.Select(a => a.GetName().Name).PrintCollection()}");
             var typesEnumerable = assemblies.SelectMany(assembly => assembly.GetTypes());
 
@@ -60,12 +54,15 @@ namespace ZergRush.CodeGen
             hasErrors = false;
 
             stubMode = stubs;
-            contexts[DefaultGenPath] = new GeneratorContext(new GenInfo {sharpGenPath = DefaultGenPath}, stubMode);
+            defaultContext = new GeneratorContext(new GenInfo {sharpGenPath = defaultPath}, stubMode);
+            contexts[defaultPath] = defaultContext;
+            customContextFolders.Add(defaultPath);
 
             foreach (var typeAndPriority in priorityList)
             {
                 var typeInAssembly = typeAndPriority.t;
-                
+
+                LogSink.log($"Gen type: {typeInAssembly.Name}");
                 RegisterTypeContext(typeInAssembly, null);
                 foreach (var methodInfo in typeInAssembly.GetMethods(BindingFlags.Public | BindingFlags.NonPublic |
                                                            BindingFlags.Static))
@@ -153,7 +150,6 @@ namespace ZergRush.CodeGen
 
             //EditorUtility.DisplayProgressBar("Running codegen", "writing cs files", 0.5f);
 
-            customContextFolders.Add(DefaultGenPath);
             customContextFolders.ForEach(genFolder =>
             {
                 if (Directory.Exists(genFolder) == false)
@@ -178,6 +174,7 @@ namespace ZergRush.CodeGen
 
             foreach (var context in contexts.Values)
             {
+                LogSink.log($"commit context {context.pathToSharp}");
                 context.Commit();
             }
 

@@ -7,6 +7,16 @@ namespace ZergRush
 {
     public static partial class Utils
     {
+        public static bool IsNullOrWhitespace(this string str)
+        {
+            return String.IsNullOrWhiteSpace(str);
+        }
+
+        public static bool IsNullOrEmpty(this string str)
+        {
+            return String.IsNullOrEmpty(str);
+        }
+
         public static bool Valid(this string str)
         {
             return !String.IsNullOrEmpty(str);

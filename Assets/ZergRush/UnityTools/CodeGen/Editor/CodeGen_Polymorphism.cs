@@ -424,6 +424,7 @@ namespace ZergRush.CodeGen
             if (pooled)
             {
                 sink.usingSink("ZergRush.Alive");
+                sink.usingSink("ZergRush");
             }
 
             // Array with constructors

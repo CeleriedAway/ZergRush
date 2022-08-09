@@ -129,7 +129,7 @@ class Programm
         if (assembly == null) throw new NullReferenceException("Assembly is null");
 
         var cg = assembly.GetTypes().First(t => t.Name == "CodeGen");
-        cg.GetMethod("RawGen").Invoke(null, new []{(object) new List<Assembly>{assembly}, (object)false});
+        cg.GetMethod("RawGen").Invoke(null, new []{(object) new List<Assembly>{assembly}, Path.Combine(projectPath, "Assets", "zGenerated"), (object)false});
     }
 
 

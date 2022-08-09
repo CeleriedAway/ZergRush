@@ -14,9 +14,7 @@ namespace ZergRush.CodeGen
         static Dictionary<string, GenTaskFlags> typeNameRequested = new Dictionary<string, GenTaskFlags>();
         static Queue<GenerationTask> tasks = new Queue<GenerationTask>();
 
-        const string DefaultGenPath = "Assets/zGenerated/";
-
-        public static GeneratorContext defaultContext => contexts[DefaultGenPath];
+        public static GeneratorContext defaultContext;
         public static Dictionary<string, GeneratorContext> contexts = new Dictionary<string, GeneratorContext>();
         public static Dictionary<Type, GeneratorContext> contextsForTypes = new Dictionary<Type, GeneratorContext>();
         
@@ -260,6 +258,10 @@ namespace ZergRush.CodeGen
             {
                 contextsForTypes[type] = contextsForTypes[requester];
             }
+            else
+            {
+                contextsForTypes[type] = defaultContext;
+            }
         }
 
         static bool stubMode = false;
@@ -268,7 +270,7 @@ namespace ZergRush.CodeGen
         {
             var allAssemblies = AppDomain.CurrentDomain.GetAssemblies();
             var assemblies = includeAssemblies.Select(i => allAssemblies.FirstOrDefault(a => a.GetName().Name == i)).Where(a => a != null);
-            RawGen(assemblies.ToList(), stubs);
+            RawGen(assemblies.ToList(), "Assets/zGenerated", stubs);
         }
     }
 }

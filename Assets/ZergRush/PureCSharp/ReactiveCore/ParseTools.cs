@@ -8,16 +8,6 @@ using ZergRush;
 
 public static class ParseTools
 {
-    public static bool IsNullOrWhitespace(this string str)
-    {
-        return String.IsNullOrWhiteSpace(str);
-    }
-
-    public static bool IsNullOrEmpty(this string str)
-    {
-        return String.IsNullOrEmpty(str);
-    }
-
     public static bool HasPrefixAndStrip(this string str, string prefix, out string suff)
     {
         if (str.StartsWith(prefix))

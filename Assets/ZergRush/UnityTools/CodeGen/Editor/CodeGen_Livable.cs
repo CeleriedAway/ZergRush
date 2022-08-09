@@ -79,6 +79,7 @@ namespace ZergRush.CodeGen
             sinkMortify.doNotCallBaseMethod = true;
             
             sinkEnlive.classBuilder.usingSink("ZergRush.Alive");
+            sinkEnlive.classBuilder.usingSink("ZergRush");
             
             //string rootName = "root";
 

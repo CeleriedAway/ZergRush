@@ -14,15 +14,18 @@ using SF = Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 public class TreePruner : CSharpSyntaxRewriter
 {
-    public List<string> InterfacePruneException = new List<string>
+    public List<string> InterfacePrune = new List<string>
     {
-        "INetEventListener",
-        "IDeliveryEventListener",
-        "INtpEventListener",
-        "INatPunchListener",
-        "ICell",
-        "IHasSkeletonDataAsset",
-        "IReferencableFromDataRoot"
+        "IUpdatableFrom",
+        "IBinaryDeserializable",
+        "IBinarySerializable",
+        "IHashable",
+        "ICompareChechable",
+        "IJsonSerializable",
+        "IGameCommandModelRoot",
+        "IGameCommandExecuter",
+        "IPolymorphable",
+        "IArgBasedEntity"
     };
     
     ThrowStatementSyntax BuildException()
@@ -55,8 +58,7 @@ public class TreePruner : CSharpSyntaxRewriter
 
     public override SyntaxNode? VisitInterfaceDeclaration(InterfaceDeclarationSyntax node)
     {
-        if (InterfacePruneException.Contains(node.Identifier.Text))
-            return base.VisitInterfaceDeclaration(node);
+        if (InterfacePrune.Contains(node.Identifier.Text) == false) return base.VisitInterfaceDeclaration(node);
         return base.VisitInterfaceDeclaration(node.WithMembers(new SyntaxList<MemberDeclarationSyntax>()));
     }
 
@@ -152,6 +154,7 @@ public static partial class TypeReader
         "ContainerExtension",
         "CodeGen.",
         "LogSink.cs",
+        "Arg.cs",
         Path.Combine("UnityTools", "CodeGen", "Editor")
     };
     public static SyntaxTree PruneTree(SyntaxTree original)
