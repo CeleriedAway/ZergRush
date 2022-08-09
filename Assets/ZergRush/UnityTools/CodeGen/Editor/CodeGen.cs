@@ -235,15 +235,15 @@ namespace ZergRush.CodeGen
             return method;
         }
         
-        public static GeneratorContext ProcessTypeContext(Type type)
+        public static void RegisterTypeContext(Type type, Type requester)
         {
+            if (contextsForTypes.ContainsKey(type)) return;
             if (type.HasAttribute<GenTargetFolder>())
             {
                 var genTargetFolder = type.GetAttribute<GenTargetFolder>();
                 if (genTargetFolder.folder == null)
                 {
                     contextsForTypes[type] = defaultContext;
-                    return defaultContext;
                 }
                 if (contexts.TryGetValue(genTargetFolder.folder, out var c) == false)
                 {
@@ -254,11 +254,12 @@ namespace ZergRush.CodeGen
                     c = generatorContext;
                 }
                 contextsForTypes[type] = c;
-
-                return c;
+                return;
             }
-
-            return contexts[DefaultGenPath];
+            if (requester != null)
+            {
+                contextsForTypes[type] = contextsForTypes[requester];
+            }
         }
 
         static bool stubMode = false;

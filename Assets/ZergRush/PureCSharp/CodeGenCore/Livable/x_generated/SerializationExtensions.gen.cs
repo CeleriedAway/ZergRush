@@ -9,90 +9,6 @@ using Newtonsoft.Json;
 
 public static partial class SerializationExtensions
 {
-    public static void Deserialize(this System.Collections.Generic.List<int> self, BinaryReader reader) 
-    {
-        var size = reader.ReadInt32();
-        if(size > 1000) throw new ZergRushCorruptedOrInvalidDataLayout();
-        self.Capacity = size;
-        for (int i = 0; i < size; i++)
-        {
-            int val = default;
-            val = reader.ReadInt32();
-            self.Add(val);
-        }
-    }
-    public static void Serialize(this System.Collections.Generic.List<int> self, BinaryWriter writer) 
-    {
-        writer.Write(self.Count);
-        for (int i = 0; i < self.Count; i++)
-        {
-            {
-                writer.Write(self[i]);
-            }
-        }
-    }
-    public static bool ReadFromJson(this System.Collections.Generic.List<int> self, JsonTextReader reader) 
-    {
-        if (reader.TokenType != JsonToken.StartArray) throw new JsonSerializationException("Bad Json Format");
-        while (reader.Read())
-        {
-            if (reader.TokenType == JsonToken.EndArray) { break; }
-            int val = default;
-            val = (int)(Int64)reader.Value;
-            self.Add(val);
-        }
-        return true;
-    }
-    public static void WriteJson(this System.Collections.Generic.List<int> self, JsonTextWriter writer) 
-    {
-        writer.WriteStartArray();
-        for (int i = 0; i < self.Count; i++)
-        {
-            writer.WriteValue(self[i]);
-        }
-        writer.WriteEndArray();
-    }
-    public static void UpdateFrom(this System.Collections.Generic.List<int> self, System.Collections.Generic.List<int> other) 
-    {
-        int i = 0;
-        int oldCount = self.Count;
-        int crossCount = Math.Min(oldCount, other.Count);
-        for (; i < crossCount; ++i)
-        {
-            self[i] = other[i];
-        }
-        for (; i < other.Count; ++i)
-        {
-            var inst = other[i];
-            self.Add(inst);
-        }
-        for (; i < oldCount; ++i)
-        {
-            self.RemoveAt(self.Count - 1);
-        }
-    }
-    public static ulong CalculateHash(this System.Collections.Generic.List<int> self) 
-    {
-        System.UInt64 hash = 345093625;
-        hash += (ulong)910491146;
-        hash += hash << 11; hash ^= hash >> 7;
-        var size = self.Count;
-        for (int i = 0; i < size; i++)
-        {
-            hash += (System.UInt64)self[i];
-            hash += hash << 11; hash ^= hash >> 7;
-        }
-        return hash;
-    }
-    public static void CompareCheck(this System.Collections.Generic.List<int> self, System.Collections.Generic.List<int> other, Stack<string> __path, Action<string> printer) 
-    {
-        if (self.Count != other.Count) SerializationTools.LogCompError(__path, "Count", printer, other.Count, self.Count);
-        var count = Math.Min(self.Count, other.Count);
-        for (int i = 0; i < count; i++)
-        {
-            if (self[i] != other[i]) SerializationTools.LogCompError(__path, i.ToString(), printer, other[i], self[i]);
-        }
-    }
     public static void UpdateFrom(this ZergRush.Alive.StaticConnections self, ZergRush.Alive.StaticConnections other) 
     {
         self.ownerId = other.ownerId;
@@ -309,6 +225,90 @@ public static partial class SerializationExtensions
         for (int i = 0; i < self.Count; i++)
         {
             self[i].WriteJson(writer);
+        }
+        writer.WriteEndArray();
+    }
+    public static void UpdateFrom(this System.Collections.Generic.List<int> self, System.Collections.Generic.List<int> other) 
+    {
+        int i = 0;
+        int oldCount = self.Count;
+        int crossCount = Math.Min(oldCount, other.Count);
+        for (; i < crossCount; ++i)
+        {
+            self[i] = other[i];
+        }
+        for (; i < other.Count; ++i)
+        {
+            var inst = other[i];
+            self.Add(inst);
+        }
+        for (; i < oldCount; ++i)
+        {
+            self.RemoveAt(self.Count - 1);
+        }
+    }
+    public static ulong CalculateHash(this System.Collections.Generic.List<int> self) 
+    {
+        System.UInt64 hash = 345093625;
+        hash += (ulong)910491146;
+        hash += hash << 11; hash ^= hash >> 7;
+        var size = self.Count;
+        for (int i = 0; i < size; i++)
+        {
+            hash += (System.UInt64)self[i];
+            hash += hash << 11; hash ^= hash >> 7;
+        }
+        return hash;
+    }
+    public static void CompareCheck(this System.Collections.Generic.List<int> self, System.Collections.Generic.List<int> other, Stack<string> __path, Action<string> printer) 
+    {
+        if (self.Count != other.Count) SerializationTools.LogCompError(__path, "Count", printer, other.Count, self.Count);
+        var count = Math.Min(self.Count, other.Count);
+        for (int i = 0; i < count; i++)
+        {
+            if (self[i] != other[i]) SerializationTools.LogCompError(__path, i.ToString(), printer, other[i], self[i]);
+        }
+    }
+    public static void Deserialize(this System.Collections.Generic.List<int> self, BinaryReader reader) 
+    {
+        var size = reader.ReadInt32();
+        if(size > 1000) throw new ZergRushCorruptedOrInvalidDataLayout();
+        self.Capacity = size;
+        for (int i = 0; i < size; i++)
+        {
+            int val = default;
+            val = reader.ReadInt32();
+            self.Add(val);
+        }
+    }
+    public static void Serialize(this System.Collections.Generic.List<int> self, BinaryWriter writer) 
+    {
+        writer.Write(self.Count);
+        for (int i = 0; i < self.Count; i++)
+        {
+            {
+                writer.Write(self[i]);
+            }
+        }
+    }
+    public static bool ReadFromJson(this System.Collections.Generic.List<int> self, JsonTextReader reader) 
+    {
+        if (reader.TokenType != JsonToken.StartArray) throw new JsonSerializationException("Bad Json Format");
+        while (reader.Read())
+        {
+            if (reader.TokenType == JsonToken.EndArray) { break; }
+            int val = default;
+            val = (int)(Int64)reader.Value;
+            self.Add(val);
+        }
+        return true;
+    }
+    public static void WriteJson(this System.Collections.Generic.List<int> self, JsonTextWriter writer) 
+    {
+        writer.WriteStartArray();
+        for (int i = 0; i < self.Count; i++)
+        {
+            writer.WriteValue(self[i]);
         }
         writer.WriteEndArray();
     }

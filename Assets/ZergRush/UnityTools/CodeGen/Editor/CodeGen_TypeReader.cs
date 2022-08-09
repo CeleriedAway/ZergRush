@@ -137,7 +137,8 @@ namespace ZergRush.CodeGen
             if (t == typeof(object)) return;
             if (t == Void || t.IsPrimitive || t.IsNullable() || t.IsEnum || t.IsGenericParameter || t == typeof(string) ||
                 t == typeof(byte[])) return;
-
+            
+            RegisterTypeContext(t, requester);
             if (requester != null) typeRequestMap.TryGetOrNew(t).AddIfNotContains(requester);
 
             if (t.IsGenericTypeDecl() && allowGenericDeclRegister == false)
@@ -156,7 +157,6 @@ namespace ZergRush.CodeGen
             {
                 if ((flags & ~registered) == 0) return;
             }
-
 
             if (t.IsInterface) return;
 
