@@ -11,36 +11,36 @@ public static partial class SerializationExtensions
 {
     public static void UpdateFrom(this ZergRush.Alive.StaticConnections self, ZergRush.Alive.StaticConnections other) 
     {
-        self.ownerId = other.ownerId;
         self.connections.UpdateFrom(other.connections);
+        self.ownerId = other.ownerId;
     }
     public static void Deserialize(this ZergRush.Alive.StaticConnections self, BinaryReader reader) 
     {
-        self.ownerId = reader.ReadInt32();
         self.connections.Deserialize(reader);
+        self.ownerId = reader.ReadInt32();
     }
     public static void Serialize(this ZergRush.Alive.StaticConnections self, BinaryWriter writer) 
     {
-        writer.Write(self.ownerId);
         self.connections.Serialize(writer);
+        writer.Write(self.ownerId);
     }
     public static ulong CalculateHash(this ZergRush.Alive.StaticConnections self) 
     {
         System.UInt64 hash = 345093625;
         hash += (ulong)1300247783;
         hash += hash << 11; hash ^= hash >> 7;
-        hash += (System.UInt64)self.ownerId;
-        hash += hash << 11; hash ^= hash >> 7;
         hash += self.connections.CalculateHash();
+        hash += hash << 11; hash ^= hash >> 7;
+        hash += (System.UInt64)self.ownerId;
         hash += hash << 11; hash ^= hash >> 7;
         return hash;
     }
     public static void CompareCheck(this ZergRush.Alive.StaticConnections self, ZergRush.Alive.StaticConnections other, Stack<string> __path, Action<string> printer) 
     {
-        if (self.ownerId != other.ownerId) SerializationTools.LogCompError(__path, "ownerId", printer, other.ownerId, self.ownerId);
         __path.Push("connections");
         self.connections.CompareCheck(other.connections, __path, printer);
         __path.Pop();
+        if (self.ownerId != other.ownerId) SerializationTools.LogCompError(__path, "ownerId", printer, other.ownerId, self.ownerId);
     }
     public static bool ReadFromJson(this ZergRush.Alive.StaticConnections self, JsonTextReader reader) 
     {
@@ -52,11 +52,11 @@ public static partial class SerializationExtensions
                 reader.Read();
                 switch(__name)
                 {
-                    case "ownerId":
-                    self.ownerId = (int)(Int64)reader.Value;
-                    break;
                     case "connections":
                     self.connections.ReadFromJson(reader);
+                    break;
+                    case "ownerId":
+                    self.ownerId = (int)(Int64)reader.Value;
                     break;
                     default: return false; break;
                 }
@@ -68,16 +68,16 @@ public static partial class SerializationExtensions
     public static void WriteJson(this ZergRush.Alive.StaticConnections self, JsonTextWriter writer) 
     {
         writer.WriteStartObject();
-        writer.WritePropertyName("ownerId");
-        writer.WriteValue(self.ownerId);
         writer.WritePropertyName("connections");
         self.connections.WriteJson(writer);
+        writer.WritePropertyName("ownerId");
+        writer.WriteValue(self.ownerId);
         writer.WriteEndObject();
     }
     public static void UpdateFrom(ref this ZergRush.Alive.SerializableConnection self, ZergRush.Alive.SerializableConnection other) 
     {
-        self.ownerId = other.ownerId;
         self.entityId = other.entityId;
+        self.ownerId = other.ownerId;
     }
     public static void UpdateFrom(this System.Collections.Generic.List<ZergRush.Alive.SerializableConnection> self, System.Collections.Generic.List<ZergRush.Alive.SerializableConnection> other) 
     {
@@ -104,8 +104,8 @@ public static partial class SerializationExtensions
     public static ZergRush.Alive.SerializableConnection ReadZergRush_Alive_SerializableConnection(this BinaryReader reader) 
     {
         var self = new ZergRush.Alive.SerializableConnection();
-        self.ownerId = reader.ReadInt32();
         self.entityId = reader.ReadInt32();
+        self.ownerId = reader.ReadInt32();
         return self;
     }
     public static void Deserialize(this System.Collections.Generic.List<ZergRush.Alive.SerializableConnection> self, BinaryReader reader) 
@@ -122,8 +122,8 @@ public static partial class SerializationExtensions
     }
     public static void Serialize(this ZergRush.Alive.SerializableConnection self, BinaryWriter writer) 
     {
-        writer.Write(self.ownerId);
         writer.Write(self.entityId);
+        writer.Write(self.ownerId);
     }
     public static void Serialize(this System.Collections.Generic.List<ZergRush.Alive.SerializableConnection> self, BinaryWriter writer) 
     {
@@ -140,9 +140,9 @@ public static partial class SerializationExtensions
         System.UInt64 hash = 345093625;
         hash += (ulong)1980239909;
         hash += hash << 11; hash ^= hash >> 7;
-        hash += (System.UInt64)self.ownerId;
-        hash += hash << 11; hash ^= hash >> 7;
         hash += (System.UInt64)self.entityId;
+        hash += hash << 11; hash ^= hash >> 7;
+        hash += (System.UInt64)self.ownerId;
         hash += hash << 11; hash ^= hash >> 7;
         return hash;
     }
@@ -161,8 +161,8 @@ public static partial class SerializationExtensions
     }
     public static void CompareCheck(this ZergRush.Alive.SerializableConnection self, ZergRush.Alive.SerializableConnection other, Stack<string> __path, Action<string> printer) 
     {
-        if (self.ownerId != other.ownerId) SerializationTools.LogCompError(__path, "ownerId", printer, other.ownerId, self.ownerId);
         if (self.entityId != other.entityId) SerializationTools.LogCompError(__path, "entityId", printer, other.entityId, self.entityId);
+        if (self.ownerId != other.ownerId) SerializationTools.LogCompError(__path, "ownerId", printer, other.ownerId, self.ownerId);
     }
     public static void CompareCheck(this System.Collections.Generic.List<ZergRush.Alive.SerializableConnection> self, System.Collections.Generic.List<ZergRush.Alive.SerializableConnection> other, Stack<string> __path, Action<string> printer) 
     {
@@ -186,11 +186,11 @@ public static partial class SerializationExtensions
                 reader.Read();
                 switch(__name)
                 {
-                    case "ownerId":
-                    self.ownerId = (int)(Int64)reader.Value;
-                    break;
                     case "entityId":
                     self.entityId = (int)(Int64)reader.Value;
+                    break;
+                    case "ownerId":
+                    self.ownerId = (int)(Int64)reader.Value;
                     break;
                 }
             }
@@ -201,10 +201,10 @@ public static partial class SerializationExtensions
     public static void WriteJson(this ZergRush.Alive.SerializableConnection self, JsonTextWriter writer) 
     {
         writer.WriteStartObject();
-        writer.WritePropertyName("ownerId");
-        writer.WriteValue(self.ownerId);
         writer.WritePropertyName("entityId");
         writer.WriteValue(self.entityId);
+        writer.WritePropertyName("ownerId");
+        writer.WriteValue(self.ownerId);
         writer.WriteEndObject();
     }
     public static bool ReadFromJson(this System.Collections.Generic.List<ZergRush.Alive.SerializableConnection> self, JsonTextReader reader) 
