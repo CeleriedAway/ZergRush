@@ -143,7 +143,6 @@ public class TreePruner : CSharpSyntaxRewriter
     }
 }
 
-
 public static partial class TypeReader
 {
     static List<string> exceptions = new List<string>
@@ -168,6 +167,30 @@ public static partial class TypeReader
         return newRoot.SyntaxTree.WithFilePath(original.FilePath);
     }
 
+    public static List<string> ProjectDefines(string filename)
+    {
+        var xDoc = new XmlDocument(); // Creating Document
+        XmlNode? attr;
+        xDoc.Load(filename); // Loading standart assembly
+
+        var xRoot = xDoc.DocumentElement; // Extracting root element
+        if (xRoot == null) throw new NullReferenceException();
+
+        var list = xRoot.GetElementsByTagName("DefineConstants");
+
+        return list[0].InnerText.Split(";").Select(s => s.Trim()).ToList();
+
+        foreach (var node in xRoot.OfType<XmlElement>())
+        {
+            if (!(node is {Name: "ItemGroup"})) continue;
+            foreach (var childNode in node.Cast<XmlNode?>().Where(childNode => childNode != null))
+            {
+                switch (childNode.Name)
+                {
+                }
+            }
+        }
+    }
 
     public static (List<string>, List<string>, List<string>) FindAllFilesInProject(string projectPath,
         string projectFile)

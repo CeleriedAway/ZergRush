@@ -68,6 +68,9 @@ class Programm
 
         var allReferencePaths = new HashSet<string>();
         var allProjectReference = new HashSet<string>();
+
+        var defines = TypeReader.ProjectDefines(Path.Combine(projectPath, PROJECT_NAMES[0] + ".csproj")).ToArray();
+        
         var files = projectName.SelectMany(p =>
         {
             var (allFilePaths, dlls, projs) = TypeReader.FindAllFilesInProject(projectPath, p);
@@ -87,7 +90,7 @@ class Programm
         foreach (var file in files)
         {
             if (File.Exists(file) == false) continue;
-            var tree = ExtractSyntaxTree(file);
+            var tree = ExtractSyntaxTree(file, defines);
             trees.Add(tree);
         }
 
@@ -177,15 +180,10 @@ class Programm
         }
     }
 
-    public static SyntaxTree ExtractSyntaxTree(string filePath)
+    public static SyntaxTree ExtractSyntaxTree(string filePath, string[] defines)
     {
-        var preprocessorSymbols = new string[]
-        {
-            "UNITY_EDITOR",
-            "UNITY_2019_1_OR_NEWER"
-        };
-        if (filePath.Contains("LogSink.cs")) preprocessorSymbols = new string[]{};
-        var tree = SyntaxFactory.ParseSyntaxTree(System.IO.File.ReadAllText(filePath), new CSharpParseOptions(preprocessorSymbols: preprocessorSymbols));
+        if (filePath.Contains("LogSink.cs")) defines = new string[]{};
+        var tree = SyntaxFactory.ParseSyntaxTree(System.IO.File.ReadAllText(filePath), new CSharpParseOptions(preprocessorSymbols: defines));
         return tree.WithFilePath(filePath);
     }
 
