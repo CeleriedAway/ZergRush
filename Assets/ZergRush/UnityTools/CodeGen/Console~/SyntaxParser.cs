@@ -25,7 +25,9 @@ public class TreePruner : CSharpSyntaxRewriter
         "IGameCommandModelRoot",
         "IGameCommandExecuter",
         "IPolymorphable",
-        "IArgBasedEntity"
+        "IArgBasedEntity",
+        "IGameModel",
+        "IServerSessionController"
     };
     
     ThrowStatementSyntax BuildException()
