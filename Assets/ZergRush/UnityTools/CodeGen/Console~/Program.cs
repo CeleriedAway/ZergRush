@@ -64,8 +64,7 @@ class Programm
 
     private static void SyntaxAnalizeStuff(string projectPath, string[] projectName)
     {
-        Console.WriteLine("\n\nFinding all files \n\nv v v v v v v");
-
+        //Console.WriteLine("\n\nFinding all files \n\nv v v v v v v");
         var allReferencePaths = new HashSet<string>();
         var allProjectReference = new HashSet<string>();
 
@@ -82,7 +81,6 @@ class Programm
             {
                 allProjectReference.Add(pp);
             }
-            ShowEntireList(allFilePaths);
             return allFilePaths;
         }).ToHashSet();
 
@@ -104,10 +102,10 @@ class Programm
         Dictionary<string, Assembly> loadedAssemblies = new Dictionary<string, Assembly>();
         foreach (var portableExecutableReference in references)
         {
-            if (File.Exists(portableExecutableReference.FilePath) == false)
-            {
-                Console.Error.WriteLine(portableExecutableReference.FilePath + " does not exists");
-            }
+            // if (File.Exists(portableExecutableReference.FilePath) == false)
+            // {
+            //     Console.Error.WriteLine(portableExecutableReference.FilePath + " does not exists");
+            // }
             try
             {
                 var a = AppDomain.CurrentDomain.Load(File.ReadAllBytes(portableExecutableReference.FilePath));
@@ -185,16 +183,6 @@ class Programm
         if (filePath.Contains("LogSink.cs")) defines = new string[]{};
         var tree = SyntaxFactory.ParseSyntaxTree(System.IO.File.ReadAllText(filePath), new CSharpParseOptions(preprocessorSymbols: defines));
         return tree.WithFilePath(filePath);
-    }
-
-    public static void ShowEntireList<T>(List<T> listToShow)
-    {
-        int i = 0;
-        foreach (var value in listToShow)
-        {
-            Console.WriteLine($"{i}: {value}");
-            i++;
-        }
     }
 
     public static void ShowSyntaxTree(SyntaxTree toShow)

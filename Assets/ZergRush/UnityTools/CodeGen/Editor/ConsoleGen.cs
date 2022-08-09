@@ -62,7 +62,7 @@ namespace ZergRush.CodeGen
             {
                 var typeInAssembly = typeAndPriority.t;
 
-                LogSink.log($"Gen type: {typeInAssembly.Name}");
+                //LogSink.log($"Gen type: {typeInAssembly.Name}");
                 RegisterTypeContext(typeInAssembly, null);
                 foreach (var methodInfo in typeInAssembly.GetMethods(BindingFlags.Public | BindingFlags.NonPublic |
                                                            BindingFlags.Static))
@@ -174,7 +174,7 @@ namespace ZergRush.CodeGen
 
             foreach (var context in contexts.Values)
             {
-                LogSink.log($"commit context {context.pathToSharp}");
+                //LogSink.log($"commit context {context.pathToSharp}");
                 context.Commit();
             }
 

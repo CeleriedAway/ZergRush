@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using UnityEditor.Compilation;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
 
@@ -24,37 +25,80 @@ namespace ZergRush.CodeGen
             "Assembly-CSharp-Editor",
         };
 
+        static bool hasErrors;
+        
+        [InitializeOnLoadMethod]
+        static void CodeGenerationEditorExtensionInit()
+        {
+            CompilationPipeline.assemblyCompilationFinished += (s, messages) =>
+            {
+                hasErrors = messages.Any(m => m.type == CompilerMessageType.Error);
+                Debug.Log($"~~~~~~~~~~~~ {hasErrors}");
+            };
+        }
+
         [MenuItem("Code Gen/Run CodeGen #&c")]
         public static void GenCode()
         {
-            GenerateInner(includeAssemblies);
-            AssetDatabase.Refresh();
-        }
-        
-        [MenuItem("Code Gen/Run CodeGen Stub #&s")]
-        public static void GenCodeStubs()
-        {
-            GenerateInner(includeAssemblies, true);
+            if (hasErrors) GenCodeConsole();
+            else GenCodeClassic();
             AssetDatabase.Refresh();
         }
 
-        [MenuItem("Code Gen/Run CodeGen Experimental#&c")]
-        public static void GenCodeExperimental()
+        [MenuItem("Code Gen/Force CodeGen Classic")]
+        public static void GenCodeClassic()
         {
-            var path = ExePath();
-            if (File.Exists(path) == false)
+            EditorUtility.DisplayProgressBar(CCDTitle, "Running CodeGen...", 0.0f);
+            try
             {
+                GenerateInner(includeAssemblies);
+                EditorUtility.DisplayProgressBar(CCDTitle, "Finishing...", 1f);
+            }
+            catch (Exception e)
+            {
+                Debug.LogError("Codegen failed with exception: " + e.ToError());
+            }
+            finally
+            {
+                EditorUtility.ClearProgressBar();
+                AssetDatabase.Refresh();
+            }
+        }
+
+        // [MenuItem("Code Gen/Run CodeGen Stub #&s")]
+        // public static void GenCodeStubs()
+        // {
+        //     GenerateInner(includeAssemblies, true);
+        //     AssetDatabase.Refresh();
+        // }
+
+        static string CCDTitle = "Console Codegen";
+
+        [MenuItem("Code Gen/Force CodeGen Console")]
+        public static void GenCodeConsole()
+        {
+            try
+            {
+                EditorUtility.DisplayProgressBar(CCDTitle, "Compiling CodeGen solution...", 0f);
+                var path = ExePath();
                 RunCompilation();
+                EditorUtility.DisplayProgressBar(CCDTitle, "Running CodeGen...", 0.5f);
+                RunProcessAndReadLogs(path, $" {string.Join(' ', includeAssemblies)}", Path.GetDirectoryName(path));
+                EditorUtility.DisplayProgressBar(CCDTitle, "Finishing...", 1f);
                 if (File.Exists(path) == false)
                 {
                     Debug.LogError("compilation did not produce exe");
-                    return;
                 }
             }
-            RunProcessAndReadLogs(path,
-                $" {string.Join(' ', includeAssemblies)}", 
-                Path.GetDirectoryName(path));
-            AssetDatabase.Refresh();
+            catch (Exception e)
+            {
+                Debug.LogError("Codegen console failed with exception: " + e.ToError());
+            }
+            finally
+            {
+                EditorUtility.ClearProgressBar();
+                AssetDatabase.Refresh();
+            }
         }
 
         static void RunProcessAndReadLogs(string fileName, string args, [JetBrains.Annotations.CanBeNull] string dir)
@@ -65,11 +109,11 @@ namespace ZergRush.CodeGen
             si.CreateNoWindow = true;
             si.RedirectStandardOutput = true;
             si.RedirectStandardError = true;
-            si.FileName = fileName; 
+            si.FileName = fileName;
             si.Arguments = args;
             if (dir != null)
                 si.WorkingDirectory = Path.GetFullPath(dir);
-            
+
             p.ErrorDataReceived += (_, e) =>
             {
                 if (e.Data != null) Debug.LogError(e.Data);
@@ -78,7 +122,7 @@ namespace ZergRush.CodeGen
             {
                 if (e.Data != null) Debug.Log(e.Data);
             };
-            
+
             p.Start();
             p.BeginErrorReadLine();
             p.BeginOutputReadLine();
@@ -97,6 +141,7 @@ namespace ZergRush.CodeGen
             {
                 return enumerateFile;
             }
+
             throw new ZergRushException($"cant find zergrush solution file at path {path}");
         }
 
@@ -112,6 +157,7 @@ namespace ZergRush.CodeGen
             {
                 solutionFolder = SearchSolution("Assets");
             }
+
             return solutionFolder;
         }
 
@@ -125,21 +171,40 @@ namespace ZergRush.CodeGen
         public static void RunCompilation()
         {
             var solution = GetSolutionFilePath();
-            var frameworkVersions = Path.Combine(Path.GetPathRoot(Environment.SystemDirectory), "Windows",
-                "Microsoft.NET", "Framework64");
-            var installedVersions = Directory.GetDirectories(frameworkVersions).Where(x => x.Contains("v"));
-            List<string> compilers = new List<string>();
 
-            foreach (var frameworkVersion in installedVersions)
+            var path = "";
+            var p = new Process();
+            p.StartInfo.FileName = "cmd.exe";
+            p.StartInfo.Arguments =
+                @"/c """"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe"""" -latest -prerelease -products * -requires Microsoft.Component.MSBuild -find MSBuild\**\Bin\MSBuild.exe";
+            Debug.Log("args-----=> " + p.StartInfo.Arguments);
+            p.StartInfo.CreateNoWindow = true;
+            p.StartInfo.RedirectStandardError = true;
+            p.StartInfo.RedirectStandardOutput = true;
+            p.StartInfo.RedirectStandardInput = false;
+            p.StartInfo.UseShellExecute = false;
+            p.OutputDataReceived += (a, b) =>
             {
-                var compilerFile = Path.Combine(frameworkVersion, "msbuild.exe");
-                if (File.Exists(compilerFile))
+                if (b.Data == null) return;
+                if (File.Exists(b.Data))
                 {
-                    compilers.Add(compilerFile);
-                    Debug.Log(compilerFile);
+                    path = b.Data;
                 }
-            }
-            RunProcessAndReadLogs("cmd.exe", "/C " + compilers.Last() + " " + solution, null);
+
+                Debug.Log(b.Data);
+            };
+            p.ErrorDataReceived += (a, b) =>
+            {
+                if (b.Data == null) return;
+                Debug.LogError(b.Data);
+            };
+            p.Start();
+            p.BeginErrorReadLine();
+            p.BeginOutputReadLine();
+            p.WaitForExit();
+
+            RunProcessAndReadLogs("cmd.exe", "/C \"" + path + "\" -t:restore " + solution, null);
+            RunProcessAndReadLogs("cmd.exe", "/C \"" + path + "\" " + solution, null);
         }
     }
 }
