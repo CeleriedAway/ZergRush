@@ -56,6 +56,7 @@ namespace ZergRush.CodeGen
             parents.Clear();
             contexts.Clear();
             customContextFolders.Clear();
+            contextsForTypes.Clear();
             hasErrors = false;
 
             stubMode = stubs;
