@@ -172,39 +172,39 @@ namespace ZergRush.CodeGen
         {
             var solution = GetSolutionFilePath();
 
-            var path = "";
-            var p = new Process();
-            p.StartInfo.FileName = "cmd.exe";
-            p.StartInfo.Arguments =
-                @"/c """"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe"""" -latest -prerelease -products * -requires Microsoft.Component.MSBuild -find MSBuild\**\Bin\MSBuild.exe";
-            Debug.Log("args-----=> " + p.StartInfo.Arguments);
-            p.StartInfo.CreateNoWindow = true;
-            p.StartInfo.RedirectStandardError = true;
-            p.StartInfo.RedirectStandardOutput = true;
-            p.StartInfo.RedirectStandardInput = false;
-            p.StartInfo.UseShellExecute = false;
-            p.OutputDataReceived += (a, b) =>
-            {
-                if (b.Data == null) return;
-                if (File.Exists(b.Data))
-                {
-                    path = b.Data;
-                }
+            // var path = "";
+            // var p = new Process();
+            // p.StartInfo.FileName = "cmd.exe";
+            // p.StartInfo.Arguments =
+            //     @"/c """"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe"""" -latest -prerelease -products * -requires Microsoft.Component.MSBuild -find MSBuild\**\Bin\MSBuild.exe";
+            // Debug.Log("args-----=> " + p.StartInfo.Arguments);
+            // p.StartInfo.CreateNoWindow = true;
+            // p.StartInfo.RedirectStandardError = true;
+            // p.StartInfo.RedirectStandardOutput = true;
+            // p.StartInfo.RedirectStandardInput = false;
+            // p.StartInfo.UseShellExecute = false;
+            // p.OutputDataReceived += (a, b) =>
+            // {
+            //     if (b.Data == null) return;
+            //     if (File.Exists(b.Data))
+            //     {
+            //         path = b.Data;
+            //     }
+            //
+            //     Debug.Log(b.Data);
+            // };
+            // p.ErrorDataReceived += (a, b) =>
+            // {
+            //     if (b.Data == null) return;
+            //     Debug.LogError(b.Data);
+            // };
+            // p.Start();
+            // p.BeginErrorReadLine();
+            // p.BeginOutputReadLine();
+            // p.WaitForExit();
 
-                Debug.Log(b.Data);
-            };
-            p.ErrorDataReceived += (a, b) =>
-            {
-                if (b.Data == null) return;
-                Debug.LogError(b.Data);
-            };
-            p.Start();
-            p.BeginErrorReadLine();
-            p.BeginOutputReadLine();
-            p.WaitForExit();
-
-            RunProcessAndReadLogs("cmd.exe", "/C \"" + path + "\" -t:restore " + solution, null);
-            RunProcessAndReadLogs("cmd.exe", "/C \"" + path + "\" " + solution, null);
+            RunProcessAndReadLogs("dotnet", "msbuild -t:restore " + solution, null);
+            RunProcessAndReadLogs("dotnet", "msbuild " + solution, null);
         }
     }
 }

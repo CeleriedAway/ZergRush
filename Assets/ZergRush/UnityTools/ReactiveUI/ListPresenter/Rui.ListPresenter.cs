@@ -56,14 +56,7 @@ namespace ZergRush.ReactiveUI
             }
 
             this.updateOnShow = updateOnShow;
-
             this.needView = needView;
-
-            //            if (disableOnRecycle) pool.AddRecycleAction(v =>
-            //            {
-            //                v.SetActiveSafe(false);
-            //                return 0;
-            //            });
         }
 
         bool updateOnShow;
