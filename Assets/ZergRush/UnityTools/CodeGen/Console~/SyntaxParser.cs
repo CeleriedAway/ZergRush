@@ -229,7 +229,7 @@ public static partial class TypeReader
                         attr = childNode.Attributes?.Item(0);
                         if (attr?.Value == null) continue;
                         if (projectFile.Contains("ZergRush.Core") == false && attr.Value.EndsWith(".gen.cs")) continue;
-                        files.Add($@"{projectPath}\{attr.Value}");
+                        files.Add(Path.Combine(projectPath,attr.Value));
                         continue;
                     }
                     case "Reference":
