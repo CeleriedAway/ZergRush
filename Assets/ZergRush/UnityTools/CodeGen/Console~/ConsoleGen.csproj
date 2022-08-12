@@ -6,7 +6,7 @@
     <TargetFramework>net6.0-windows</TargetFramework>
     <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>enable</Nullable>
-	<UseWindowsForms>true</UseWindowsForms>
+	<UseWindowsForms>false</UseWindowsForms>
   </PropertyGroup>
 
   <ItemGroup>
