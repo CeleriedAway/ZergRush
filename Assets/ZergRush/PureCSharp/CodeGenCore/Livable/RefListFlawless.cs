@@ -34,7 +34,7 @@ namespace ZergRush.Alive
             __temp.Clear();
             foreach (var id in ids)
             {
-                __temp.Add(root.Recall<T>(id));
+                __temp.Add(root.RecallMayBe<T>(id));
             }
             return __temp;
         }
