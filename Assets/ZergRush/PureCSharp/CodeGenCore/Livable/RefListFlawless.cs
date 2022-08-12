@@ -208,5 +208,9 @@ namespace ZergRush.Alive
         {
             return GetCurrent().PrintCollection();
         }
+
+        public void __PropagateHierarchyAndRememberIds()
+        {
+        }
     }
 }
