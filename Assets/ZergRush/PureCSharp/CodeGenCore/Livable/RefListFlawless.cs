@@ -71,7 +71,7 @@ namespace ZergRush.Alive
             if (item == null) return;
             if (root != null)
             {
-                if (root.RecallMayBe(item.Id) == item)
+                if (root.RecallMayBe(item.Id) != item)
                 {
                     throw new ZergRushException(
                         $"this item {item} with id {item.Id} is not contained in any Data/LivableList or Data/LivableSlot");
