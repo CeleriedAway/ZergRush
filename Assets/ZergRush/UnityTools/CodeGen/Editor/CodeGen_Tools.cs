@@ -18,12 +18,12 @@ namespace ZergRush.CodeGen
         public static bool IsList(this Type t)
         {
 	        //return t.IsGenericType && t.GetGenericTypeDefinition() == typeof(List<>);
-	        return t.IsGenericType && !t.IsGenericOfType(typeof(RefListMk2<>)) && typeof(IList<>).EnrichGeneric(t.FirstGenericArg()).IsAssignableFrom(t);
+	        return t.IsGenericType && !t.IsRefList() && typeof(IList<>).EnrichGeneric(t.FirstGenericArg()).IsAssignableFrom(t);
         }
-        public static bool IsReadOnlyList(this Type t)
+
+        public static bool IsRefList(this Type t)
         {
-	        //return t.IsGenericType && t.GetGenericTypeDefinition() == typeof(List<>);
-	        return t.IsGenericType && typeof(IReadOnlyList<>).EnrichGeneric(t.FirstGenericArg()).IsAssignableFrom(t);
+	        return t.IsGenericType && (t.IsGenericOfType(typeof(RefListMk2<>)) || t.IsGenericOfType(typeof(RefListFlawless<>)));
         }
         public static bool IsDictionary(this Type t)
         {

@@ -50,11 +50,6 @@ namespace ZergRush.ReactiveCore
         public void Add(T item)
         {
             data.Add(item);
-            OnItemAdded(item, up, data);
-        }
-
-        public static void OnItemAdded(T item, EventStream<ReactiveCollectionEvent<T>> up, IReadOnlyList<T> data)
-        {
             OnItemInserted(item, up, data.Count - 1);
         }
 

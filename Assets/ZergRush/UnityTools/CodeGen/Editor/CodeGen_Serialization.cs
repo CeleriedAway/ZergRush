@@ -355,7 +355,7 @@ namespace ZergRush.CodeGen
 
 
             var accessPrefix = type.AccessPrefixInGeneratedFunction();
-            if (type.IsList() && type.IsGenericOfType(typeof(RefListMk2<>)) == false)
+            if (type.IsList() && type.IsRefList() == false)
             {
                 var elemType = type.GenericTypeArguments[0];
                 RequestGen(elemType, type, flag);

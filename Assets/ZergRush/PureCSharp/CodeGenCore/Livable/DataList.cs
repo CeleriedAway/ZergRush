@@ -91,7 +91,7 @@ namespace ZergRush.Alive
         {
             items.Add(item);
             if (item != null) ProcessAddItem(item);
-            ReactiveCollection<T>.OnItemAdded(item, up, items);
+            ReactiveCollection<T>.OnItemInserted(item, up, items.Count - 1);
         }
 
         public void Clear()
@@ -176,9 +176,8 @@ namespace ZergRush.Alive
             items.Add(item);
             SetupItemHierarchy(item);
             item.UpdateFrom(refData);
-            ReactiveCollection<T>.OnItemAdded(item, up, items);
+            ReactiveCollection<T>.OnItemInserted(item, up, items.Count - 1);
         }
-
 
         public void __GenIds(DataRoot __root)
         {

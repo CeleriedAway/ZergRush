@@ -69,7 +69,7 @@ namespace ZergRush.CodeGen
             MethodBuilder sink = MakeGenMethod(type, GenTaskFlags.CompareChech, funcPrefix + CompareFuncName, typeof(void),
                 $"{updateFromType.RealName(true)} {instanceName}, Stack<string> __path, {PrinterArg}");
             
-            if (type.IsList() || type.IsReadOnlyList() || type.IsArray)
+            if (type.IsList() || type.IsArray)
             {
                 var countName = !type.IsArray ? "Count" : "Length";
                 var elemType = type.FirstGenericArg();

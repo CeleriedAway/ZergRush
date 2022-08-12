@@ -66,7 +66,7 @@ namespace ZergRush.Alive
             if (alive)
                 item?.Enlive();
             
-            ReactiveCollection<T>.OnItemAdded(item, up, items);
+            ReactiveCollection<T>.OnItemInserted(item, up, items.Count - 1);
         }
 
         protected override void ProcessAddItem(T item)

@@ -108,6 +108,7 @@ namespace ZergRush.Alive
         
         public object RecallMayBe(int id)
         {
+            if (id == 0) return null;
             object val;
             if (gameEntities.TryGetValue(id, out val))
             {

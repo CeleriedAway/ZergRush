@@ -12,7 +12,12 @@ namespace ZergRush.Alive
     {
         void OnUpdateFinished();
     }
-    
+
+    /*
+     *  This list wraps ids collection into a list of instances got from DataRoot
+     *  This one has inner instance caching so it is fast on access
+     *  But when your entity leaves DataRoot hierarchy element in this list will be nullified automatically
+     */
     [GenZergRushFolder, GenTask(GenTaskFlags.Serialization | GenTaskFlags.JsonSerialization), GenTaskCustomImpl(GenTaskFlags.CompareChech | GenTaskFlags.UpdateFrom | GenTaskFlags.Hash)]
     public sealed partial class RefListMk2<T> : IReactiveCollection<T>, IList<T>, ICompareChechable<RefListMk2<T>>, INeedUpdateFromPostProcess where T : class, IDataNode, IReferencableFromDataRoot
     {
@@ -30,7 +35,7 @@ namespace ZergRush.Alive
             }
         }
         
-        public void ClearDead()
+        public void ClearNulls()
         {
             for (var i = ids.Count - 1; i >= 0; i--)
             {
@@ -143,16 +148,8 @@ namespace ZergRush.Alive
             //Debug.Log($"Adding ref item:{item} id:{item?.Id}");
             item.destroyEvent.Subscribe(() =>
             {
-                //Debug.Log($"Removing ref from ref list:{item} id:{item?.Id}");
-                // var i = ids.IndexOf(id);
-                // if (i != -1)
-                // {
-                //     data.RemoveAt(i);
-                //     ids.RemoveAt(i);
-                //     ReactiveCollection<T>.OnItemRemovedAt(i, up, item);
-                // }
-                //Debug.Log($"removing destroyed item:{item} id:{item.Id}");
-                Remove(item);
+                var index = data.IndexOf(item);
+                this[index] = null;
             });
         }
 
@@ -168,7 +165,7 @@ namespace ZergRush.Alive
             ids.Add(item == null ? 0 : item.Id);
             data.Add(item);
             OnItemAdd(item);
-            ReactiveCollection<T>.OnItemAdded(item, up, data);
+            ReactiveCollection<T>.OnItemInserted(item, up, data.Count - 1);
         }
 
         public int IndexOf(T item)

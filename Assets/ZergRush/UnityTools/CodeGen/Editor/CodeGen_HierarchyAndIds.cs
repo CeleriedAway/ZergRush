@@ -191,6 +191,7 @@ namespace ZergRush.CodeGen
                    (t.IsGenericOfType(typeof(Ref<>)) ||
                     t.IsGenericOfType(typeof(__OldRefList<>)) ||
                     t.IsGenericOfType(typeof(RefListMk2<>)) ||
+                    t.IsGenericOfType(typeof(RefListFlawless<>)) ||
                     t.IsGenericOfType(typeof(DataList<>))
                     );
         }
