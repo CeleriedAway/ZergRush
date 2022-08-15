@@ -25,6 +25,11 @@ namespace ZergRush.CodeGen
             "Assembly-CSharp-Editor",
         };
 
+        public static readonly bool IsWindows = Application.platform == RuntimePlatform.WindowsEditor;
+
+        // No need to look for it on Mac - assuming we got it through `brew install dotnet-sdk` - @ micktu
+        public static readonly string DotnetExecutablePath = IsWindows ? "dotnet" : "/usr/local/bin/dotnet";
+
         static bool hasErrors;
         
         [InitializeOnLoadMethod]
@@ -163,8 +168,13 @@ namespace ZergRush.CodeGen
 
         static string ExePath()
         {
-            var d = Path.GetDirectoryName(GetSolutionFilePath());
-            return Path.Combine(d, "bin", "Debug", "net6.0-windows", "ConsoleGen.exe");
+            string path = Path.GetDirectoryName(GetSolutionFilePath());
+            path = Path.GetFullPath(path);
+            path = Path.Combine(path, "bin", "Debug", "net6.0-windows", "ConsoleGen");
+            
+            if (IsWindows) path += ".exe";
+            
+            return path;
         }
 
         [MenuItem("Code Gen/Compile Run")]
@@ -203,8 +213,8 @@ namespace ZergRush.CodeGen
             // p.BeginOutputReadLine();
             // p.WaitForExit();
 
-            RunProcessAndReadLogs("dotnet", "msbuild -t:restore " + solution, null);
-            RunProcessAndReadLogs("dotnet", "msbuild " + solution, null);
+            RunProcessAndReadLogs(DotnetExecutablePath, "msbuild -t:restore " + solution, null);
+            RunProcessAndReadLogs(DotnetExecutablePath, "msbuild " + solution, null);
         }
     }
 }
