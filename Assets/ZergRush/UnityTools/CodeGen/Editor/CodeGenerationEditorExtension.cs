@@ -163,7 +163,7 @@ namespace ZergRush.CodeGen
                 solutionFolder = SearchSolution("Assets");
             }
 
-            return solutionFolder;
+            return Path.GetFullPath(solutionFolder);
         }
 
         static string ExePath()
@@ -213,8 +213,8 @@ namespace ZergRush.CodeGen
             // p.BeginOutputReadLine();
             // p.WaitForExit();
 
-            RunProcessAndReadLogs(DotnetExecutablePath, "msbuild -t:restore " + solution, null);
-            RunProcessAndReadLogs(DotnetExecutablePath, "msbuild " + solution, null);
+            RunProcessAndReadLogs(DotnetExecutablePath, $"msbuild -t:restore \"{solution}\"", null);
+            RunProcessAndReadLogs(DotnetExecutablePath, $"msbuild \"{solution}\"", null);
         }
     }
 }
