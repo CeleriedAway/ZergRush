@@ -28,7 +28,7 @@ namespace ZergRush.CodeGen
         public static readonly bool IsWindows = Application.platform == RuntimePlatform.WindowsEditor;
 
         // No need to look for it on Mac - assuming we got it through `brew install dotnet-sdk` - @ micktu
-        public static readonly string DotnetExecutablePath = IsWindows ? "dotnet" : "/usr/local/bin/dotnet";
+        public static readonly string DotnetExecutablePath = IsWindows ? "dotnet" : GetPathToDotnetMac();
 
         static bool hasErrors;
         
@@ -106,6 +106,37 @@ namespace ZergRush.CodeGen
             }
         }
 
+        static string GetPathToDotnetMac()
+        {
+            string res = "error";
+            var p = new System.Diagnostics.Process();
+            p.StartInfo.FileName = "which";
+            p.StartInfo.Arguments = "dotnet";
+            p.StartInfo.CreateNoWindow = true;
+            p.StartInfo.RedirectStandardError = true;
+            p.StartInfo.RedirectStandardOutput = true;
+            p.StartInfo.RedirectStandardInput = false;
+            p.StartInfo.UseShellExecute = false;
+            p.OutputDataReceived += (a, b) =>
+            {
+                if (b.Data == null) return;
+                res = b.Data;
+                Debug.Log(b.Data);
+            };
+            p.ErrorDataReceived += (a, b) =>
+            {
+                if (b.Data == null) return;
+                Debug.LogError(b.Data);
+            };
+            p.Start();
+            p.BeginErrorReadLine();
+            p.BeginOutputReadLine();
+            p.WaitForExit();
+            if (res == "error" || !File.Exists(res))
+                throw new ZergRushException("Install dotnet");
+            return res;
+        }
+        
         static void RunProcessAndReadLogs(string fileName, string args, [JetBrains.Annotations.CanBeNull] string dir)
         {
             Process p = new Process();
