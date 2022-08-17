@@ -37,6 +37,9 @@ namespace ZergRush.CodeGen
         }
     }
 
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
+    public class GenDoNotSortFields : Attribute {}
+
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Field | AttributeTargets.Property |
                     AttributeTargets.Struct)]
     public class GenIgnore : Attribute

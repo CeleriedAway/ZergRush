@@ -429,7 +429,8 @@ namespace ZergRush.CodeGen
                 //member.valueTransformer = member.type.FirstGenericArg().IsValueType ? n => n + ".valueRef" : n => n + ".value";
             }
 
-            members = members.OrderBy(m1 => m1.name).ToList();
+            if (type.GetAttribute<GenDoNotSortFields>() == null)
+                members = members.OrderBy(m1 => m1.name).ToList();
             if (ignoreCheck && inheretedMembers) membersForCodegenInheretedCache[type] = members;
             if (ignoreCheck && !inheretedMembers) membersForCodegenCache[type] = members;
 
