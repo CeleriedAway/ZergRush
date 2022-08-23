@@ -16,15 +16,6 @@ public static class ParseTools
     {
         return new string(str.TakeLast(cnt).ToArray());
     }
-    public static bool IsNullOrWhitespace(this string str)
-    {
-        return String.IsNullOrWhiteSpace(str);
-    }
-
-    public static bool IsNullOrEmpty(this string str)
-    {
-        return String.IsNullOrEmpty(str);
-    }
 
     public static bool HasPrefixAndStrip(this string str, string prefix, out string suff)
     {
