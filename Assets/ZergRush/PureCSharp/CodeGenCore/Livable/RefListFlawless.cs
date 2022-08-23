@@ -92,7 +92,7 @@ namespace ZergRush.Alive
 
         public int IndexOf(T item)
         {
-            return ids.IndexOf(item.Id);
+            return ids.IndexOf(item == null ? 0 : item.Id);
         }
 
         public void Insert(int index, T item)
