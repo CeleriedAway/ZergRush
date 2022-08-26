@@ -10,11 +10,11 @@ public static class ParseTools
 {
     public static string TakeString(this string str , int cnt)
     {
-        return new string(str.Take(cnt).ToArray());
+        return str.Substring(0, cnt);
     }
     public static string TakeLastString(this string str , int cnt)
     {
-        return new string(str.TakeLast(cnt).ToArray());
+        return str.Substring(str.Length - cnt, cnt);
     }
 
     public static bool HasPrefixAndStrip(this string str, string prefix, out string suff)

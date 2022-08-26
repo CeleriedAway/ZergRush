@@ -88,7 +88,7 @@ namespace ZergRush.CodeGen
                 var path = ExePath();
                 RunCompilation();
                 EditorUtility.DisplayProgressBar(CCDTitle, "Running CodeGen...", 0.5f);
-                RunProcessAndReadLogs(path, $" {string.Join(' ', includeAssemblies)}", Path.GetDirectoryName(path));
+                RunProcessAndReadLogs(path, $" {includeAssemblies.PrintCollection(" ")}", Path.GetDirectoryName(path));
                 EditorUtility.DisplayProgressBar(CCDTitle, "Finishing...", 1f);
                 if (File.Exists(path) == false)
                 {

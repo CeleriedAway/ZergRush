@@ -17,6 +17,11 @@ namespace ZergRush.CodeGen
         {
             return type.Name == "Fix64";
         }
+        
+        public static bool IsGuid(this Type type)
+        {
+            return type == typeof(Guid);
+        }
 
         public static void WriteJsonValueStatement(MethodBuilder sink, DataInfo info, bool inList, bool writeDataNodeAsId = false)
         {
@@ -71,6 +76,10 @@ namespace ZergRush.CodeGen
             {
                 sink.content($"writer.WriteValue({info.access}.ToString());");
             }
+            else if (t == typeof(Guid))
+            {
+                sink.content($"writer.WriteValue({info.access}.ToString());");
+            }
             else if (t.IsPrimitive || t.IsString())
             {
                 sink.content($"writer.WriteValue({info.access}{(isNullable ? ".Value" : "")});");
@@ -106,7 +115,7 @@ namespace ZergRush.CodeGen
             {
                 baseCall = (s, info1) => s.content($"{info1.access} = ({t.RealName()}) reader.Value;");
             }
-            if ((t.IsValueType && t.IsControllable() == false) || t == typeof(byte[]))
+            if ((t.IsValueType && t.IsControllable() == false) || t == typeof(byte[]) || t == typeof(Guid))
             {
                 baseCall = (s, info1) => s.content($"{info1.access} = {DirectJsonImmutableTypeReader(t)};");
             }
@@ -136,6 +145,8 @@ namespace ZergRush.CodeGen
         {
             var str = $"({t.RealName(true)})";
 
+            if (t == typeof(Guid))
+                return $"Guid.Parse((string)reader.Value)";
             if (t.IsEnum)
                 return $"((string)reader.Value).ParseEnum<{t.RealName(true)}>()";
             if (t.Name == "Fix64")

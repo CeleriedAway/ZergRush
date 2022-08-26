@@ -206,15 +206,20 @@ public static partial class SerializationTools
             writer.Write((ulong)val);
         }
     }
-
-    public static void Write(this BinaryWriter writer, uint? val)
+    
+    public static ulong CalculateHash(this Guid val)
     {
-        if (val == null) writer.Write(false);
-        else
-        {
-            writer.Write(true);
-            writer.Write((uint)val);
-        }
+        return (ulong) val.ToString().CalculateHash();
+    }
+
+    public static void Write(this BinaryWriter writer, Guid val)
+    {
+        writer.WriteByteArray(val.ToByteArray());
+    }
+    
+    public static Guid ReadGuid(this BinaryReader reader)
+    {
+        return new Guid(reader.ReadByteArray());
     }
 
     public static byte[] ReadByteArray(this BinaryReader stream)

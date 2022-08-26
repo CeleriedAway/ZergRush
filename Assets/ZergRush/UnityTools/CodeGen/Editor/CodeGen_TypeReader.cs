@@ -136,7 +136,7 @@ namespace ZergRush.CodeGen
         {
             if (t == typeof(object)) return;
             if (t == Void || t.IsPrimitive || t.IsNullable() || t.IsEnum || t.IsGenericParameter || t == typeof(string) ||
-                t == typeof(byte[])) return;
+                t == typeof(byte[]) || t == typeof(Guid)) return;
             
             RegisterTypeContext(t, requester);
             if (requester != null) typeRequestMap.TryGetOrNew(t).AddIfNotContains(requester);

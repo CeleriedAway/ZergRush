@@ -45,7 +45,7 @@ namespace ZergRush.CodeGen
                 sink.content($"{stream}.Write({info.access}.id);");
             else if (t.IsReferencableDataNode() && writeDataNodeAsId)
                 sink.content($"{stream}.Write({info.access}.Id);");
-            else if (t.IsPrimitive || t.IsString())
+            else if (t.IsPrimitive || t == typeof(Guid) || t.IsString())
                 sink.content($"{stream}.Write({info.access});");
             else if (t.IsEnum)
                 sink.content($"{stream}.Write(({t.GetEnumUnderlyingType().Name}){info.access});");

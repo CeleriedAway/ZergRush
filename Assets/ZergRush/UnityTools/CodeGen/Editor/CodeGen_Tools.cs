@@ -182,7 +182,7 @@ namespace ZergRush.CodeGen
 		}
         public static bool IsImmutableType(this Type t)
         {
-	        return t.IsPrimitive || t.IsEnum || t == typeof(string) || t.IsFix64() || (t.IsNullable() && Nullable.GetUnderlyingType(t).IsImmutableType()) || t.HasAttribute<Immutable>();
+	        return t.IsAlmostPrimitive() || t.IsEnum || t == typeof(string) || (t.IsNullable() && Nullable.GetUnderlyingType(t).IsImmutableType()) || t.HasAttribute<Immutable>();
         }
         public static bool IsStruct(this Type t)
         {

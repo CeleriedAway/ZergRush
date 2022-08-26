@@ -1,4 +1,5 @@
 ﻿using System;
+using Newtonsoft.Json;
 using ZergRush.CodeGen;
 
 namespace ZergRush.CodeGen
@@ -113,7 +114,7 @@ namespace ZergRush.CodeGen
         
 		static bool IsAlmostPrimitive(this Type t)
 		{
-			return t.IsPrimitive || t.IsFix64() || t.IsNullablePrimitive();
-		}
+			return t.IsPrimitive || t.IsFix64() || t.IsNullablePrimitive() || t.IsGuid();
+        }
     }
 }

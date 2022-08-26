@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Reflection;
 using ZergRush.CodeGen;
 
@@ -210,7 +211,7 @@ namespace ZergRush.CodeGen
         {
             if (t.IsEnum)
                 return $"ReadEnum<{t.RealName(true)}>()";
-            if (t.IsPrimitive)
+            if (t.IsPrimitive || t == typeof(Guid))
                 return $"Read{t.Name}()";
             if (t.IsNullable())
                 return ReadNewInstanceOfImmutableType(Nullable.GetUnderlyingType(t), pooled);
