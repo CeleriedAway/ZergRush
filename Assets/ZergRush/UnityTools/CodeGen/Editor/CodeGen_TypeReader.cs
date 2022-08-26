@@ -425,6 +425,11 @@ namespace ZergRush.CodeGen
                 {
                     member.canBeNull = true;
                 }
+
+                if (type.IsTuple() && member.type.IsValueType == false)
+                {
+                    member.canBeNull = true;
+                }
                 
                 //member.valueTransformer = member.type.FirstGenericArg().IsValueType ? n => n + ".valueRef" : n => n + ".value";
             }
