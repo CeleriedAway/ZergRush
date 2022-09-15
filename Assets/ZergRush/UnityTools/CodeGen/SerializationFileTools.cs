@@ -12,11 +12,11 @@ public static partial class SerializationFileTools
     public static void CheckSerialization<T>(T c) where T : class, IJsonSerializable, ICompareChechable<T>, new()
     {
         var str = new StringWriter();
-        var writer = new JsonTextWriter(str);
+        var writer = new ZRJsonTextWriter(str);
         c.WriteJson(writer);
         var result = str.ToString();
 
-        var reader = new JsonTextReader(new StringReader(result));
+        var reader = new ZRJsonTextReader(new StringReader(result));
         var c2 = reader.ReadAsJsonRoot<T>();
 
         c.CompareCheck(c2);
@@ -169,7 +169,7 @@ public static partial class SerializationFileTools
             UnityEngine.Debug.Log($"Saving {data} to : " + path);
             using (var file = FileWrapper.CreateText(path))
             {
-                var writer = new JsonTextWriter(file);
+                var writer = new ZRJsonTextWriter(file);
                 writer.Formatting = formatting ? Formatting.Indented : Formatting.None;
                 data.WriteJson(writer);
                 file.Flush();
@@ -191,7 +191,7 @@ public static partial class SerializationFileTools
             using (var file = FileWrapper.OpenText(path))
             {
                 data = new T();
-                data.ReadFromJson(new JsonTextReader(file));
+                data.ReadFromJson(new ZRJsonTextReader(file));
                 if (data is ILivable livable) livable.Enlive();
                 return true;
             }
@@ -216,7 +216,7 @@ public static partial class SerializationFileTools
         {
             using (var file = FileWrapper.OpenText(filePath))
             {
-                data.ReadFromJson(new JsonTextReader(file));
+                data.ReadFromJson(new ZRJsonTextReader(file));
                 if (data is ILivable livable && livable.isAlive == false) livable.Enlive();
             }
         }

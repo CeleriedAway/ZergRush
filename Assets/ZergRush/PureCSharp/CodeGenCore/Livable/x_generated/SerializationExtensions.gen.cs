@@ -42,7 +42,7 @@ public static partial class SerializationExtensions
         __path.Pop();
         if (self.ownerId != other.ownerId) SerializationTools.LogCompError(__path, "ownerId", printer, other.ownerId, self.ownerId);
     }
-    public static bool ReadFromJson(this ZergRush.Alive.StaticConnections self, JsonTextReader reader) 
+    public static bool ReadFromJson(this ZergRush.Alive.StaticConnections self, ZRJsonTextReader reader) 
     {
         while (reader.Read())
         {
@@ -65,7 +65,7 @@ public static partial class SerializationExtensions
         }
         return true;
     }
-    public static void WriteJson(this ZergRush.Alive.StaticConnections self, JsonTextWriter writer) 
+    public static void WriteJson(this ZergRush.Alive.StaticConnections self, ZRJsonTextWriter writer) 
     {
         writer.WriteStartObject();
         writer.WritePropertyName("connections");
@@ -175,7 +175,7 @@ public static partial class SerializationExtensions
             __path.Pop();
         }
     }
-    public static ZergRush.Alive.SerializableConnection ReadFromJsonZergRush_Alive_SerializableConnection(this JsonTextReader reader) 
+    public static ZergRush.Alive.SerializableConnection ReadFromJsonZergRush_Alive_SerializableConnection(this ZRJsonTextReader reader) 
     {
         var self = new ZergRush.Alive.SerializableConnection();
         while (reader.Read())
@@ -198,7 +198,7 @@ public static partial class SerializationExtensions
         }
         return self;
     }
-    public static void WriteJson(this ZergRush.Alive.SerializableConnection self, JsonTextWriter writer) 
+    public static void WriteJson(this ZergRush.Alive.SerializableConnection self, ZRJsonTextWriter writer) 
     {
         writer.WriteStartObject();
         writer.WritePropertyName("entityId");
@@ -207,7 +207,7 @@ public static partial class SerializationExtensions
         writer.WriteValue(self.ownerId);
         writer.WriteEndObject();
     }
-    public static bool ReadFromJson(this System.Collections.Generic.List<ZergRush.Alive.SerializableConnection> self, JsonTextReader reader) 
+    public static bool ReadFromJson(this System.Collections.Generic.List<ZergRush.Alive.SerializableConnection> self, ZRJsonTextReader reader) 
     {
         if (reader.TokenType != JsonToken.StartArray) throw new JsonSerializationException("Bad Json Format");
         while (reader.Read())
@@ -219,7 +219,7 @@ public static partial class SerializationExtensions
         }
         return true;
     }
-    public static void WriteJson(this System.Collections.Generic.List<ZergRush.Alive.SerializableConnection> self, JsonTextWriter writer) 
+    public static void WriteJson(this System.Collections.Generic.List<ZergRush.Alive.SerializableConnection> self, ZRJsonTextWriter writer) 
     {
         writer.WriteStartArray();
         for (int i = 0; i < self.Count; i++)
@@ -291,7 +291,7 @@ public static partial class SerializationExtensions
             }
         }
     }
-    public static bool ReadFromJson(this System.Collections.Generic.List<int> self, JsonTextReader reader) 
+    public static bool ReadFromJson(this System.Collections.Generic.List<int> self, ZRJsonTextReader reader) 
     {
         if (reader.TokenType != JsonToken.StartArray) throw new JsonSerializationException("Bad Json Format");
         while (reader.Read())
@@ -303,7 +303,7 @@ public static partial class SerializationExtensions
         }
         return true;
     }
-    public static void WriteJson(this System.Collections.Generic.List<int> self, JsonTextWriter writer) 
+    public static void WriteJson(this System.Collections.Generic.List<int> self, ZRJsonTextWriter writer) 
     {
         writer.WriteStartArray();
         for (int i = 0; i < self.Count; i++)

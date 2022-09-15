@@ -86,7 +86,7 @@
             Instance.Deserialize(reader);
         }
 
-        public static void LoadFrom(JsonTextReader reader)
+        public static void LoadFrom(ZRJsonTextReader reader)
         {
             Instance = new T();
             Instance.ReadFromJson(reader);

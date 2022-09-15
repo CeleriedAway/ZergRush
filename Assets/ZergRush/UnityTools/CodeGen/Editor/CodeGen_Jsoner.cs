@@ -10,6 +10,9 @@ namespace ZergRush.CodeGen
         public static string JsonWriteFuncName = "WriteJson";
         public static string JsonReadFuncName = "ReadFromJson";
 
+        public static string readerClassName = "ZRJsonTextReader";
+        public static string writerClassName = "ZRJsonTextWriter";
+
         static JsonTextWriter writer;
         static JsonTextReader reader;
 
@@ -88,6 +91,10 @@ namespace ZergRush.CodeGen
             {
                 sink.content($"writer.WriteValue({info.access}.ToString());");
             }
+            else if (t.IsMultipleReference())
+            {
+                sink.content($"writer.WriteObjectWithRef({info.access});");
+            }
             else
             {
                 sink.content($"{info.access}.{JsonWriteFuncName}(writer);");
@@ -111,6 +118,10 @@ namespace ZergRush.CodeGen
 
             // info can be transformed because read from can do temp value wrapping for it
             Action<MethodBuilder, DataInfo> baseCall = (s, info1) => s.content( $"{(info.type.IsArray ? info1.access + " = ": "")}{info1.access}.{JsonReadFuncName}(reader);");
+            if (t.IsMultipleReference())
+            {
+                baseCall = (s, info1) => s.content( $"reader.ReadFromRef(ref {info1.access});");
+            }
             if (t != typeof(byte[]) && t.IsImmutableType())
             {
                 baseCall = (s, info1) => s.content($"{info1.access} = ({t.RealName()}) reader.Value;");
@@ -195,8 +206,8 @@ namespace ZergRush.CodeGen
                 var listNeedAuxId = type.IsModifiableLivableList();
                 
                 var returnTypeForReadMethod = type.IsArray ? type : retType;
-                var sinkReader = MakeGenMethod(type, GenTaskFlags.JsonSerialization, funcPrefix + JsonReadFuncName, returnTypeForReadMethod, $"JsonTextReader {readerName}");
-                var sinkWriter = MakeGenMethod(type, GenTaskFlags.JsonSerialization, funcPrefix + JsonWriteFuncName, Void, $"JsonTextWriter {writerName}");
+                var sinkReader = MakeGenMethod(type, GenTaskFlags.JsonSerialization, funcPrefix + JsonReadFuncName, returnTypeForReadMethod, $"{readerClassName} {readerName}");
+                var sinkWriter = MakeGenMethod(type, GenTaskFlags.JsonSerialization, funcPrefix + JsonWriteFuncName, Void, $"{writerClassName} {writerName}");
                 
                 var elemType = type.FirstGenericArg();
                 if (elemType.IsConfig() == false) RequestGen(elemType, type, GenTaskFlags.JsonSerialization);
@@ -284,8 +295,8 @@ namespace ZergRush.CodeGen
             }
             else if (type.IsDictionary())
             {
-                var sinkReader = MakeGenMethod(type, GenTaskFlags.JsonSerialization, funcPrefix + JsonReadFuncName, retType, $"JsonTextReader {readerName}");
-                var sinkWriter = MakeGenMethod(type, GenTaskFlags.JsonSerialization, funcPrefix + JsonWriteFuncName, Void, $"JsonTextWriter {writerName}");
+                var sinkReader = MakeGenMethod(type, GenTaskFlags.JsonSerialization, funcPrefix + JsonReadFuncName, retType, $"{readerClassName} {readerName}");
+                var sinkWriter = MakeGenMethod(type, GenTaskFlags.JsonSerialization, funcPrefix + JsonWriteFuncName, Void, $"{writerClassName} {writerName}");
                 var keyType = type.FirstGenericArg();
                 var valType = type.SecondGenericArg();
                 RequestGen(keyType, type, GenTaskFlags.JsonSerialization);
@@ -333,8 +344,8 @@ namespace ZergRush.CodeGen
                 string readerFuncName = funcPrefix + JsonReadFuncName + (!externalMode ? "Field" : "") +
                                         (immutableMode ? type.UniqueName() : "");
                 var sinkReader = MakeGenMethod(type, GenTaskFlags.JsonSerialization, readerFuncName, immutableMode ? type : retType,
-                    $"{(immutableMode ? "this " : "")}JsonTextReader {readerName}{(!externalMode ? ", string __name" : "")}", immutableMode);
-                var sinkWriter = MakeGenMethod(type, GenTaskFlags.JsonSerialization, funcPrefix + JsonWriteFuncName + (!externalMode ? "Fields" : ""), Void, $"JsonTextWriter {writerName}");
+                    $"{(immutableMode ? "this " : "")}{readerClassName} {readerName}{(!externalMode ? ", string __name" : "")}", immutableMode);
+                var sinkWriter = MakeGenMethod(type, GenTaskFlags.JsonSerialization, funcPrefix + JsonWriteFuncName + (!externalMode ? "Fields" : ""), Void, $"{writerClassName} {writerName}");
 
                 if (sinkReader.needBaseValCall)
                 {

@@ -53,7 +53,7 @@ namespace ZergRush {
             SeedArray.CompareCheck(other.SeedArray, __path, printer);
             __path.Pop();
         }
-        public virtual bool ReadFromJsonField(JsonTextReader reader, string __name) 
+        public virtual bool ReadFromJsonField(ZRJsonTextReader reader, string __name) 
         {
             switch(__name)
             {
@@ -70,7 +70,7 @@ namespace ZergRush {
             }
             return true;
         }
-        public virtual void WriteJsonFields(JsonTextWriter writer) 
+        public virtual void WriteJsonFields(ZRJsonTextWriter writer) 
         {
             writer.WritePropertyName("inext");
             writer.WriteValue(inext);

@@ -21,6 +21,10 @@ namespace ZergRush.CodeGen
 	        return t.IsGenericType && !t.IsRefList() && typeof(IList<>).EnrichGeneric(t.FirstGenericArg()).IsAssignableFrom(t);
         }
 
+        public static bool IsMultipleReference(this Type t)
+        {
+	        return t.HasAttribute<GenSerializeMultipleRefs>();
+        }
         public static bool IsRefList(this Type t)
         {
 	        return t.IsGenericType && (t.IsGenericOfType(typeof(RefListMk2<>)) || t.IsGenericOfType(typeof(RefListFlawless<>)));

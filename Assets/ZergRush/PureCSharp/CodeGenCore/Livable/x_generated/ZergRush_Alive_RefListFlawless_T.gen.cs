@@ -37,7 +37,7 @@ namespace ZergRush.Alive {
             ids.CompareCheck(other.ids, __path, printer);
             __path.Pop();
         }
-        public bool ReadFromJsonField(JsonTextReader reader, string __name) 
+        public bool ReadFromJsonField(ZRJsonTextReader reader, string __name) 
         {
             switch(__name)
             {
@@ -48,7 +48,7 @@ namespace ZergRush.Alive {
             }
             return true;
         }
-        public void WriteJsonFields(JsonTextWriter writer) 
+        public void WriteJsonFields(ZRJsonTextWriter writer) 
         {
             writer.WritePropertyName("ids");
             ids.WriteJson(writer);

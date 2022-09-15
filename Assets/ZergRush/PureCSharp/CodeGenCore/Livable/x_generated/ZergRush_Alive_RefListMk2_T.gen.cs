@@ -18,7 +18,7 @@ namespace ZergRush.Alive {
         {
             ids.Serialize(writer);
         }
-        public bool ReadFromJsonField(JsonTextReader reader, string __name) 
+        public bool ReadFromJsonField(ZRJsonTextReader reader, string __name) 
         {
             switch(__name)
             {
@@ -29,7 +29,7 @@ namespace ZergRush.Alive {
             }
             return true;
         }
-        public void WriteJsonFields(JsonTextWriter writer) 
+        public void WriteJsonFields(ZRJsonTextWriter writer) 
         {
             writer.WritePropertyName("ids");
             ids.WriteJson(writer);

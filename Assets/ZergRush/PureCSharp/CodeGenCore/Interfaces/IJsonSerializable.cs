@@ -1,7 +1,8 @@
 using Newtonsoft.Json;
+using ZergRush;
 
 public interface IJsonSerializable
 {
-    void WriteJsonFields(JsonTextWriter writer);
-    bool ReadFromJsonField(JsonTextReader reader, string name);
+    void WriteJsonFields(ZRJsonTextWriter writer);
+    bool ReadFromJsonField(ZRJsonTextReader reader, string name);
 }

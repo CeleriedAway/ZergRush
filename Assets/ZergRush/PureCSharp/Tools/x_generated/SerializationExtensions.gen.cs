@@ -59,7 +59,7 @@ public static partial class SerializationExtensions
             if (self[i] != other[i]) SerializationTools.LogCompError(__path, i.ToString(), printer, other[i], self[i]);
         }
     }
-    public static System.Int32[] ReadFromJson(this System.Int32[] self, JsonTextReader reader) 
+    public static System.Int32[] ReadFromJson(this System.Int32[] self, ZRJsonTextReader reader) 
     {
         if (reader.TokenType != JsonToken.StartArray) throw new JsonSerializationException("Bad Json Format");
         if(self == null || self.Length > 0) self = Array.Empty<int>();
@@ -73,7 +73,7 @@ public static partial class SerializationExtensions
         }
         return self;
     }
-    public static void WriteJson(this System.Int32[] self, JsonTextWriter writer) 
+    public static void WriteJson(this System.Int32[] self, ZRJsonTextWriter writer) 
     {
         writer.WriteStartArray();
         for (int i = 0; i < self.Length; i++)

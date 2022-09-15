@@ -58,7 +58,7 @@ public static partial class SerializationExtensions
             self[i]?.CollectConfigs(_collection);
         }
     }
-    public static bool ReadFromJson(this ZergRush.Alive.ConfigStorageList<ZergRush.Alive.SomeItemFromConfig> self, JsonTextReader reader) 
+    public static bool ReadFromJson(this ZergRush.Alive.ConfigStorageList<ZergRush.Alive.SomeItemFromConfig> self, ZRJsonTextReader reader) 
     {
         if (reader.TokenType != JsonToken.StartArray) throw new JsonSerializationException("Bad Json Format");
         while (reader.Read())
@@ -73,7 +73,7 @@ public static partial class SerializationExtensions
         }
         return true;
     }
-    public static void WriteJson(this ZergRush.Alive.ConfigStorageList<ZergRush.Alive.SomeItemFromConfig> self, JsonTextWriter writer) 
+    public static void WriteJson(this ZergRush.Alive.ConfigStorageList<ZergRush.Alive.SomeItemFromConfig> self, ZRJsonTextWriter writer) 
     {
         writer.WriteStartArray();
         for (int i = 0; i < self.Count; i++)

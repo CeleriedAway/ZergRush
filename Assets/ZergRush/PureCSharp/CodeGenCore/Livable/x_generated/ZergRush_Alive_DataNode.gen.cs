@@ -63,7 +63,7 @@ namespace ZergRush.Alive {
             staticConnections.CompareCheck(other.staticConnections, __path, printer);
             __path.Pop();
         }
-        public virtual bool ReadFromJsonField(JsonTextReader reader, string __name) 
+        public virtual bool ReadFromJsonField(ZRJsonTextReader reader, string __name) 
         {
             switch(__name)
             {
@@ -80,7 +80,7 @@ namespace ZergRush.Alive {
             }
             return true;
         }
-        public virtual void WriteJsonFields(JsonTextWriter writer) 
+        public virtual void WriteJsonFields(ZRJsonTextWriter writer) 
         {
             writer.WritePropertyName("__parent_id");
             writer.WriteValue(__parent_id);

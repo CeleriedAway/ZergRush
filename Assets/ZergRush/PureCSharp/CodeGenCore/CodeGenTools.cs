@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Text;
 using ZergRush;
 
+
 public static class CodeGenTools
 {
     public static T GetAttribute<T>(this Type type) where T : Attribute

@@ -108,12 +108,12 @@ namespace ZergRush.Alive
             }
         }
 
-        public override void WriteJsonFields(JsonTextWriter writer)
+        public override void WriteJsonFields(ZRJsonTextWriter writer)
         {
             base.WriteJsonFields(writer);
         }
 
-        public override bool ReadFromJsonField(JsonTextReader reader, string name)
+        public override bool ReadFromJsonField(ZRJsonTextReader reader, string name)
         {
             return base.ReadFromJsonField(reader, name);
         }

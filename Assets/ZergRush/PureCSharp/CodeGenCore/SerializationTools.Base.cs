@@ -276,7 +276,7 @@ public static partial class SerializationTools
         }
     }
 
-    public static void WriteJson(this IJsonSerializable obj, JsonTextWriter writer)
+    public static void WriteJson(this IJsonSerializable obj, ZRJsonTextWriter writer)
     {
         if (obj == null)
         {
@@ -296,7 +296,7 @@ public static partial class SerializationTools
         writer.WriteEndObject();
     }
 
-    public static T ReadAsJsonRoot<T>(this JsonTextReader reader, T obj = null)
+    public static T ReadAsJsonRoot<T>(this ZRJsonTextReader reader, T obj = null)
         where T : class, IJsonSerializable, new()
     {
         if (obj == null) obj = new T();
@@ -305,7 +305,7 @@ public static partial class SerializationTools
         return obj;
     }
 
-    public static void ReadFromJson<T>(this List<T> self, JsonTextReader reader, Func<ushort, T> constructor)
+    public static void ReadFromJson<T>(this List<T> self, ZRJsonTextReader reader, Func<ushort, T> constructor)
         where T : class, IJsonSerializable
     {
         if (reader.TokenType != JsonToken.StartArray) throw new JsonSerializationException("Bad Json Format");
@@ -322,7 +322,7 @@ public static partial class SerializationTools
         }
     }
 
-    public static void WriteJson<T>(this List<T> self, JsonTextWriter writer) where T : IJsonSerializable
+    public static void WriteJson<T>(this List<T> self, ZRJsonTextWriter writer) where T : IJsonSerializable
     {
         writer.WriteStartArray();
         for (int i = 0; i < self.Count; i++)
@@ -333,7 +333,7 @@ public static partial class SerializationTools
         writer.WriteEndArray();
     }
 
-    public static void ReadFromJson<T>(this T t, JsonTextReader reader) where T : IJsonSerializable
+    public static void ReadFromJson<T>(this T t, ZRJsonTextReader reader) where T : IJsonSerializable
     {
         while (reader.Read())
         {
@@ -394,7 +394,7 @@ public static partial class SerializationTools
         {
             using (var stream = new StringWriter())
             {
-                var writer = new JsonTextWriter(stream);
+                var writer = new ZRJsonTextWriter(stream);
                 writer.Formatting = formatting ? Formatting.Indented : Formatting.None;
                 data.WriteJson(writer);
                 return stream.ToString();
@@ -411,7 +411,7 @@ public static partial class SerializationTools
         if (data == null) data = new T();
         using (var reader = new StringReader(content))
         {
-            data.ReadFromJson(new JsonTextReader(reader));
+            data.ReadFromJson(new ZRJsonTextReader(reader));
         }
 
         return data;
