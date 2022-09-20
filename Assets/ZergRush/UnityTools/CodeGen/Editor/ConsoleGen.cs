@@ -57,6 +57,11 @@ namespace ZergRush.CodeGen
             defaultContext = new GeneratorContext(new GenInfo {sharpGenPath = defaultPath}, stubMode);
             contexts[defaultPath] = defaultContext;
             customContextFolders.Add(defaultPath);
+            
+            foreach (var valueTuple in priorityList)
+            {
+                RegisterPolymorph(valueTuple.t);
+            }
 
             foreach (var typeAndPriority in priorityList)
             {

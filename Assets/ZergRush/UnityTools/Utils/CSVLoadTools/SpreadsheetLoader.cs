@@ -137,7 +137,7 @@ namespace GameTools
                 foreach (var page in config.pages)
                 {
                     EditorUtility.DisplayProgressBar($"Downloading {config.name} page", $"Page {page.Key}", i++ * part);
-                    var content = LoadTableAsCSV(config.id, page.Value);
+                    var content = LoadTableAsCSV(config.id, page.Value, page.Key.ToString());
                     var path = $"{pathToConfigs}{config.name}";
                     Directory.CreateDirectory(path);
                     filesToWrite.Add(($"{path}/{page.Key}.csv", content));
@@ -162,7 +162,7 @@ namespace GameTools
             onLoaded?.Invoke();
         }
 
-        private async Task<string> LoadTableAsCSV(string tableId, string pageId)
+        private async Task<string> LoadTableAsCSV(string tableId, string pageId, string info)
         {
             ServicePointManager.ServerCertificateValidationCallback = MyRemoteCertificateValidationCallback;
 
@@ -176,7 +176,7 @@ namespace GameTools
             }
             catch (Exception e)
             {
-                Debug.LogError($"cant download config {link}, error = {e.Message}, stack = {e.StackTrace}");
+                Debug.LogError($"cant download config {info} {link}, error = {e.Message}, stack = {e.StackTrace}");
             }
 
             return csv;
