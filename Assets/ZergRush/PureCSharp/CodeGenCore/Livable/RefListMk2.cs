@@ -47,7 +47,7 @@ namespace ZergRush.Alive
 
         void Invalidate() => isSetUp = false;
 
-        void CheckSetup()
+        public void CheckSetup()
         {
             if (isSetUp) return;
             isSetUp = true;
@@ -149,7 +149,8 @@ namespace ZergRush.Alive
             item.destroyEvent.Subscribe(() =>
             {
                 var index = data.IndexOf(item);
-                this[index] = null;
+                if (index != -1)
+                    this[index] = null;
             });
         }
 
