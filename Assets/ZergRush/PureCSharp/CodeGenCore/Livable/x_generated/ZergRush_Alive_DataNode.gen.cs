@@ -10,11 +10,11 @@ namespace ZergRush.Alive {
 
     public partial class DataNode : IUpdatableFrom<ZergRush.Alive.DataNode>, IBinaryDeserializable, IBinarySerializable, IHashable, ICompareChechable<ZergRush.Alive.DataNode>, IJsonSerializable
     {
-        public virtual void UpdateFrom(ZergRush.Alive.DataNode other) 
+        public virtual void UpdateFrom(ZergRush.Alive.DataNode other, ZRUpdateFromHelper __helper) 
         {
             __parent_id = other.__parent_id;
             dead = other.dead;
-            staticConnections.UpdateFrom(other.staticConnections);
+            staticConnections.UpdateFrom(other.staticConnections, __helper);
         }
         public virtual void Deserialize(BinaryReader reader) 
         {

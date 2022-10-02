@@ -10,7 +10,7 @@ namespace ZergRush {
 
     public partial class ZergRandom : IUpdatableFrom<ZergRush.ZergRandom>, IBinaryDeserializable, IBinarySerializable, IHashable, ICompareChechable<ZergRush.ZergRandom>, IJsonSerializable
     {
-        public virtual void UpdateFrom(ZergRush.ZergRandom other) 
+        public virtual void UpdateFrom(ZergRush.ZergRandom other, ZRUpdateFromHelper __helper) 
         {
             inext = other.inext;
             inextp = other.inextp;
@@ -18,7 +18,7 @@ namespace ZergRush {
             var SeedArrayTemp = SeedArray;
             Array.Resize(ref SeedArrayTemp, SeedArrayCount);
             SeedArray = SeedArrayTemp;
-            SeedArray.UpdateFrom(other.SeedArray);
+            SeedArray.UpdateFrom(other.SeedArray, __helper);
         }
         public virtual void Deserialize(BinaryReader reader) 
         {

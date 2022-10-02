@@ -10,14 +10,14 @@ namespace ZergRush.Alive {
 
     public partial class LivableRoot : IUpdatableFrom<ZergRush.Alive.LivableRoot>, IUpdatableFrom<ZergRush.Alive.DataNode>, IBinaryDeserializable, IBinarySerializable, IHashable, ICompareChechable<ZergRush.Alive.DataNode>, IJsonSerializable
     {
-        public override void UpdateFrom(ZergRush.Alive.DataNode other) 
+        public override void UpdateFrom(ZergRush.Alive.DataNode other, ZRUpdateFromHelper __helper) 
         {
-            base.UpdateFrom(other);
+            base.UpdateFrom(other,__helper);
             var otherConcrete = (ZergRush.Alive.LivableRoot)other;
         }
-        public void UpdateFrom(ZergRush.Alive.LivableRoot other) 
+        public void UpdateFrom(ZergRush.Alive.LivableRoot other, ZRUpdateFromHelper __helper) 
         {
-            this.UpdateFrom((ZergRush.Alive.DataNode)other);
+            this.UpdateFrom((ZergRush.Alive.DataNode)other, __helper);
         }
         public override void Deserialize(BinaryReader reader) 
         {

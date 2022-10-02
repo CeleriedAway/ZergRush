@@ -44,7 +44,7 @@ namespace ZergRush.Alive
             gameEntities.Clear();
             updatingProcess.value = true;
             
-            UpdateFrom(other);
+            UpdateFrom(other, new ZRUpdateFromHelper());
             this.__entityIdFactory = other.__entityIdFactory;
             
             updatingProcess.value = false;

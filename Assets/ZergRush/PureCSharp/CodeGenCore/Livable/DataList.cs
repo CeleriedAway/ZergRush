@@ -175,7 +175,7 @@ namespace ZergRush.Alive
             }
             items.Add(item);
             SetupItemHierarchy(item);
-            item.UpdateFrom(refData);
+            item.UpdateFrom(refData, new ZRUpdateFromHelper());
             ReactiveCollection<T>.OnItemInserted(item, up, items.Count - 1);
         }
 

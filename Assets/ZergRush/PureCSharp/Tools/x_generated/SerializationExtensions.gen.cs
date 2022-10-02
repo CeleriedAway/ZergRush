@@ -9,7 +9,7 @@ using Newtonsoft.Json;
 
 public static partial class SerializationExtensions
 {
-    public static void UpdateFrom(this System.Int32[] self, System.Int32[] other) 
+    public static void UpdateFrom(this System.Int32[] self, System.Int32[] other, ZRUpdateFromHelper __helper) 
     {
         for (int i = 0; i < self.Length; i++)
         {

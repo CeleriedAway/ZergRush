@@ -153,6 +153,8 @@ namespace ZergRush.CodeGen
                 createFromProrotype.indent++;
                 //CreateNewInstance(createFromProrotype, new DataInfo{type = type, baseAccess = "inst", sureIsNull = true}, "", true, "", true );
                 //createFromProrotype.content($"var inst = ({type.RealName(true)})prototype.NewInst();");
+                
+                createFromProrotype.content($"var {HelperName} = new {HelperClassName}();");
                 GenUpdateValueFromInstance(createFromProrotype, new DataInfo {type = type, baseAccess = $"inst", sureIsNull = true}, "prototype", false, needCreateVar: true);
                 fillCreateWithLivableSetup(createFromProrotype);
                 createFromProrotype.content($"return inst;");

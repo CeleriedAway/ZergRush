@@ -10,15 +10,15 @@ namespace ZergRush.Alive {
 
     public partial class DataRoot : IUpdatableFrom<ZergRush.Alive.DataRoot>, IUpdatableFrom<ZergRush.Alive.DataNode>, IBinaryDeserializable, IBinarySerializable, IHashable, ICompareChechable<ZergRush.Alive.DataNode>, IJsonSerializable
     {
-        public override void UpdateFrom(ZergRush.Alive.DataNode other) 
+        public override void UpdateFrom(ZergRush.Alive.DataNode other, ZRUpdateFromHelper __helper) 
         {
-            base.UpdateFrom(other);
+            base.UpdateFrom(other,__helper);
             var otherConcrete = (ZergRush.Alive.DataRoot)other;
             __entityIdFactory = otherConcrete.__entityIdFactory;
         }
-        public void UpdateFrom(ZergRush.Alive.DataRoot other) 
+        public void UpdateFrom(ZergRush.Alive.DataRoot other, ZRUpdateFromHelper __helper) 
         {
-            this.UpdateFrom((ZergRush.Alive.DataNode)other);
+            this.UpdateFrom((ZergRush.Alive.DataNode)other, __helper);
         }
         public override void Deserialize(BinaryReader reader) 
         {

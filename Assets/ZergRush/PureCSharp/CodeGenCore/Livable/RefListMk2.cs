@@ -315,7 +315,7 @@ namespace ZergRush.Alive
         
         public int getConnectionCount => up == null ? 0 : up.getConnectionCount;
 
-        public void UpdateFrom(RefListMk2<T> other)
+        public void UpdateFrom(RefListMk2<T> other, ZRUpdateFromHelper _)
         {
             if (root == null)
             {

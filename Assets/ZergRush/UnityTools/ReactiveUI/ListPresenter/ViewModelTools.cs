@@ -25,7 +25,7 @@ namespace ZergRush.CodeGen
             for (int i = 0; i < coll.Count; i++)
             {
                 var inst = new T();
-                inst.UpdateFrom(coll[i]);
+                inst.UpdateFrom(coll[i], new ZRUpdateFromHelper());
                 if (i < oldCnt)
                 {
                     buffer[i] = inst;
@@ -58,7 +58,7 @@ namespace ZergRush.CodeGen
             }
             for (int i = 0; i < coll.Count; i++)
             {
-                buffer[i].UpdateFrom(coll[i]);
+                buffer[i].UpdateFrom(coll[i], new ZRUpdateFromHelper());
             }
         }
 

@@ -9,6 +9,8 @@ namespace ZergRush.CodeGen
     {
         public static string ReadFuncName = "Deserialize";
         public static string UpdateFuncName = "UpdateFrom";
+        public static string HelperClassName = "ZRUpdateFromHelper";
+        public static string HelperName = "__helper";
         public static string UpdateStaticsFuncName = "UpdateStaticFieldsFrom";
         public static string UpdateDynamicsFields = "UpdateInstaceFieldsFrom";
         
@@ -156,9 +158,19 @@ namespace ZergRush.CodeGen
         {
             var t = info.type;
             // info can be transformed because read from can do temp value wrapping for it
+            if (info.type.IsMultipleReference() && !needCreateVar)
+            {
+                needTempVarThenAssign = true;
+            }
             Func<DataInfo, string> defaultContent = info1 =>
             {
-                return $"{info1.access}.{UpdateFuncName}({other}{t.OptPoolIfUpdatebleWithPoolSecondArg(pooled)});";
+                var baseCall = $"{info1.access}.{UpdateFuncName}({other}, {HelperName}{t.OptPoolIfUpdatebleWithPoolSecondArg(pooled)});";
+                if (info1.type.IsMultipleReference())
+                {
+                    baseCall = $"if (!{HelperName}.TryLoadAlreadyUpdated({other}, ref {info1.access})) {baseCall}";
+                }
+                
+                return baseCall;
             };
             Action<MethodBuilder, DataInfo> baseReadCall = (s, info1) => s.content(defaultContent(info1));
 
@@ -299,7 +311,7 @@ namespace ZergRush.CodeGen
             }
             
             MethodBuilder sink = MakeGenMethod(type, flag, funcPrefix + UpdateFuncName, typeof(void),
-                $"{updateFromType.RealName(true)} {instanceName}{(pooled ? ", ObjectPool pool" : "")}");
+                $"{updateFromType.RealName(true)} {instanceName}, {HelperClassName} {HelperName}{(pooled ? ", ObjectPool pool" : "")}");
 
             if (type.IsValueType)
             {
@@ -344,9 +356,9 @@ namespace ZergRush.CodeGen
                     sink.content($"var {instanceCastedName} = ({type.RealName(true)}){instanceName};");
                     
                     var directUpdateSink = GenClassSink(type).Method(funcPrefix + UpdateFuncName, type, MethodType.Instance, typeof(void),
-                        $"{type.RealName(true)} {instanceName}{(pooled ? ", ObjectPool pool" : "")}");
+                        $"{type.RealName(true)} {instanceName}, {HelperClassName} {HelperName}{(pooled ? ", ObjectPool pool" : "")}");
 
-                    directUpdateSink.content($"this.UpdateFrom(({updateFromType.RealName(true)})other{(pooled ? ", pool" : "")});");
+                    directUpdateSink.content($"this.UpdateFrom(({updateFromType.RealName(true)})other, {HelperName}{(pooled ? ", pool" : "")});");
                     directUpdateSink.classBuilder.inheritance($"I{(pooled ? "Pooled" : "")}UpdatableFrom<{type.RealName(true)}>");
                 }
                 if (type.IsControllable())

@@ -8,6 +8,11 @@ using ZergRush.Alive;
 
 public static partial class SerializationTools
 {
+    public static void UpdateFrom<T>(this T t, T other) where T : IUpdatableFrom<T>
+    {
+        t.UpdateFrom(other, new ZRUpdateFromHelper());
+    }
+    
     public static void SkipObj(this JsonTextReader reader)
     {
         if (reader.TokenType == JsonToken.StartObject)

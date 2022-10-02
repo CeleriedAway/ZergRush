@@ -9,9 +9,9 @@ using Newtonsoft.Json;
 
 public static partial class SerializationExtensions
 {
-    public static void UpdateFrom(this ZergRush.Alive.StaticConnections self, ZergRush.Alive.StaticConnections other) 
+    public static void UpdateFrom(this ZergRush.Alive.StaticConnections self, ZergRush.Alive.StaticConnections other, ZRUpdateFromHelper __helper) 
     {
-        self.connections.UpdateFrom(other.connections);
+        self.connections.UpdateFrom(other.connections, __helper);
         self.ownerId = other.ownerId;
     }
     public static void Deserialize(this ZergRush.Alive.StaticConnections self, BinaryReader reader) 
@@ -74,12 +74,12 @@ public static partial class SerializationExtensions
         writer.WriteValue(self.ownerId);
         writer.WriteEndObject();
     }
-    public static void UpdateFrom(ref this ZergRush.Alive.SerializableConnection self, ZergRush.Alive.SerializableConnection other) 
+    public static void UpdateFrom(ref this ZergRush.Alive.SerializableConnection self, ZergRush.Alive.SerializableConnection other, ZRUpdateFromHelper __helper) 
     {
         self.entityId = other.entityId;
         self.ownerId = other.ownerId;
     }
-    public static void UpdateFrom(this System.Collections.Generic.List<ZergRush.Alive.SerializableConnection> self, System.Collections.Generic.List<ZergRush.Alive.SerializableConnection> other) 
+    public static void UpdateFrom(this System.Collections.Generic.List<ZergRush.Alive.SerializableConnection> self, System.Collections.Generic.List<ZergRush.Alive.SerializableConnection> other, ZRUpdateFromHelper __helper) 
     {
         int i = 0;
         int oldCount = self.Count;
@@ -87,13 +87,13 @@ public static partial class SerializationExtensions
         for (; i < crossCount; ++i)
         {
             var __selfi = self[i];
-            __selfi.UpdateFrom(other[i]);
+            __selfi.UpdateFrom(other[i], __helper);
             self[i] = __selfi;
         }
         for (; i < other.Count; ++i)
         {
             ZergRush.Alive.SerializableConnection inst = default;
-            inst.UpdateFrom(other[i]);
+            inst.UpdateFrom(other[i], __helper);
             self.Add(inst);
         }
         for (; i < oldCount; ++i)
@@ -228,7 +228,7 @@ public static partial class SerializationExtensions
         }
         writer.WriteEndArray();
     }
-    public static void UpdateFrom(this System.Collections.Generic.List<int> self, System.Collections.Generic.List<int> other) 
+    public static void UpdateFrom(this System.Collections.Generic.List<int> self, System.Collections.Generic.List<int> other, ZRUpdateFromHelper __helper) 
     {
         int i = 0;
         int oldCount = self.Count;

@@ -8,9 +8,9 @@ namespace ZergRush.Alive {
 
     public partial class IntListStub : IUpdatableFrom<ZergRush.Alive.IntListStub>, IHashable, ICompareChechable<ZergRush.Alive.IntListStub>
     {
-        public virtual void UpdateFrom(ZergRush.Alive.IntListStub other) 
+        public virtual void UpdateFrom(ZergRush.Alive.IntListStub other, ZRUpdateFromHelper __helper) 
         {
-            stub.UpdateFrom(other.stub);
+            stub.UpdateFrom(other.stub, __helper);
         }
         public virtual ulong CalculateHash() 
         {

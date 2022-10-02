@@ -147,7 +147,7 @@ namespace ZergRush.CodeGen
                 directReader: $"{DirectJsonImmutableTypeReader(t)}",
                 needCreateVar: needCreateVar,
                 getDataNodeFromRootWithRefId: readDataNodeFromId,
-                useTempVarThenAssign: info.isValueWrapper != ValueVrapperType.None && info.type.IsControllableStruct()
+                useTempVarThenAssign: info.isValueWrapper != ValueVrapperType.None && (info.type.IsControllableStruct() || info.type.IsMultipleReference())
             );
         }
 

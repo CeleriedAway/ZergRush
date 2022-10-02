@@ -7,7 +7,7 @@ using Object = UnityEngine.Object;
 namespace ZergRush.ReactiveUI
 {
     public sealed class ListPresenter<TData, TView> : LinearViewLoader<TView, TData>
-        where TView : ReusableView, IUpdatableFrom<TData>
+        where TView : ReusableView, ISimpleUpdatableFrom<TData>
     {
         public ListPresenter(
             Func<TData, PrefabRef<TView>> prefabSelector,

@@ -61,7 +61,7 @@ namespace ZergRush.Alive
             SetupItemHierarchy(item);
             
             if (refData != null)
-                item?.UpdateFrom(refData);
+                item?.UpdateFrom(refData, new ZRUpdateFromHelper());
             
             if (alive)
                 item?.Enlive();
