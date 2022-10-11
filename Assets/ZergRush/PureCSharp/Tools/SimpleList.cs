@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using ZergRush;
 
 public class SimpleList<T> : IList<T>, IReadOnlyList<T>
@@ -20,12 +21,15 @@ public class SimpleList<T> : IList<T>, IReadOnlyList<T>
     
     public SimpleList(IReadOnlyList<T> list)
     {
-        if (list == null) return; 
-        Capacity = list.Count;
-        currentCount = list.Count;
-        for (var i = 0; i < list.Count; i++)
+        if (list == null) return;
+        var listCount = list.Count;
+        Capacity = listCount;
+        currentCount = listCount;
+        var i = 0;
+        foreach (var x1 in list)
         {
-            data[i] = list[i];
+            data[i] = x1;
+            i++;
         }
     }
     
@@ -184,6 +188,10 @@ public class SimpleList<T> : IList<T>, IReadOnlyList<T>
                 num = 4;
             else
                 num = data.Length * 2;
+        }
+        else
+        {
+            return;
         }
         if (num < capacity) num = capacity;
         Capacity = num;

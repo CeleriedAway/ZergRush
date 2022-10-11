@@ -13,7 +13,7 @@ namespace ZergRush.ReactiveCore
         
         protected readonly ReactiveCollection<T> buffer = new ReactiveCollection<T>();
         
-        bool connected
+        public bool connected
         {
             get { return connectionCounter != 0; }
         }

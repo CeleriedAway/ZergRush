@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 
 namespace ZergRush.ReactiveCore
 {
@@ -68,7 +69,14 @@ namespace ZergRush.ReactiveCore
 
             protected override void RefillRaw()
             {
-                RefillRaw(collection);
+                if (collection is AbstractCollectionTransform<T> transformed && !transformed.connected)
+                {
+                    RefillRaw(collection.ToList());
+                }
+                else
+                {
+                    RefillRaw(collection);
+                }
             }
 
             protected void RefillRaw(IReadOnlyList<T> list)
