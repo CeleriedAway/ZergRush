@@ -88,6 +88,8 @@ namespace ZergRush
 
         public void Dispose()
         {
+            if (disposed)
+                return;
             if (First != null) First.Dispose();
             if (Second != null) Second.Dispose();
             disposed = true;
