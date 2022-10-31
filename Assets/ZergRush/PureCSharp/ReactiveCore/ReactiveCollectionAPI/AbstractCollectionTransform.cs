@@ -1,12 +1,16 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine;
+using Random = System.Random;
 
 namespace ZergRush.ReactiveCore
 {
     public abstract class AbstractCollectionTransform<T> : IReactiveCollection<T>
     {
         protected bool disconected => connectionCounter == 0;
+        
+        //public int id = new Random().Next(0, 10000);
         
         int connectionCounter = 0;
         IDisposable collectionConnection;
@@ -24,8 +28,8 @@ namespace ZergRush.ReactiveCore
             {
                 collectionConnection = StartListenAndRefill(); 
             }
-            //Debug.Log($"connection counter increased to {connectionCounter} bufferCounter {buffer.connectionCount}");
             connectionCounter++;
+            //Debug.Log($"connection counter increased to {connectionCounter} {this.GetType()} {id}");
         }
 
         protected abstract IDisposable StartListenAndRefill();
@@ -33,7 +37,7 @@ namespace ZergRush.ReactiveCore
         void OnDisconnect()
         {
             connectionCounter--;
-            //Debug.Log($"connection counter decreased to {connectionCounter} bufferCounter {buffer.connectionCount}");
+            //Debug.Log($"connection counter decreased to {connectionCounter} {GetType()} {id}");
             if (connectionCounter == 0)
             {
                 if (buffer.getConnectionCount != 0)

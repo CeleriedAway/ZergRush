@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using UnityEngine;
 using ZergRush.CodeGen;
+using Random = System.Random;
 
 namespace ZergRush
 {
@@ -68,8 +70,15 @@ namespace ZergRush
 
     public class DoubleDisposable : IDisposable
     {
-        public IDisposable first;
-        public IDisposable second;
+        public DoubleDisposable() {}
+        public DoubleDisposable(IDisposable first, IDisposable second)
+        {
+            this.first = first;
+            this.second = second;
+        }
+
+        IDisposable first;
+        IDisposable second;
 
         public bool disposed = false;
 
@@ -89,7 +98,11 @@ namespace ZergRush
         public void Dispose()
         {
             if (disposed)
+            {
+                Debug.LogError($"Disposed..");
                 return;
+            }
+            //Debug.Log($"Disposing...");
             if (First != null) First.Dispose();
             if (Second != null) Second.Dispose();
             disposed = true;
