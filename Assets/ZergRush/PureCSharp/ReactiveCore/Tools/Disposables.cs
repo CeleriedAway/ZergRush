@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using UnityEngine;
 using ZergRush.CodeGen;
 using Random = System.Random;
 
@@ -99,7 +98,7 @@ namespace ZergRush
         {
             if (disposed)
             {
-                Debug.LogError($"Disposed..");
+                LogSink.log($"Disposed..");
                 return;
             }
             //Debug.Log($"Disposing...");
