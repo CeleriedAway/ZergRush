@@ -69,6 +69,12 @@ namespace ZergRush.ReactiveCore
             return original.AsCell().Map(list => list.GetReversed()).ToReactiveCollection();
         }
 
+        public static void ReverseInPlace<T>(this ReactiveCollection<T> col)
+        {
+            for (var index = 0; index < col.Count / 2; index++)
+                (col[index], col[col.Count - index - 1]) = (col[col.Count - index - 1], col[index]);
+        }
+
         public static IReactiveCollection<T> EnumerateRange<T>(this ICell<int> cellOfElemCount, Func<int, T> fill)
         {
             return new ReactiveRange<T> { fill = fill, cellOfCount = cellOfElemCount };
