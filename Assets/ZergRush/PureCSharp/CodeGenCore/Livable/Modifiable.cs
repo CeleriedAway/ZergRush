@@ -213,6 +213,64 @@ namespace ZergRush.ReactiveCore
             return result;
         }
     }
+    
+    [GenIgnore]
+    public class ModifiableSortedList<T> : IReactiveCollection<T>, IReadOnlyList<T>
+    {
+        public ModifiableSortedList(Func<T, int> orderPredicate)
+        {
+            this.orderPredicate = orderPredicate;
+        }
+        
+        ReactiveCollection<T> collection = new ReactiveCollection<T>();
+        Func<T, int> orderPredicate;
+        [MustUseReturnValue]
+        public IDisposable ModifyAdd(T elem)
+        {
+            collection.InsertSorted(elem, orderPredicate);
+            return new AnonymousDisposable(() =>
+            {
+                var i = collection.Remove(elem);
+            });
+        }
+
+        public void ModifyAdd(IConnectionSink sink, T elem)
+        {
+            sink.AddConnection(ModifyAdd(elem));
+        }
+
+        public IDisposable ModifyAdd(ICell<T> elem)
+        {
+            var disp = new DoubleDisposable();
+            disp.First = ModifyAdd(elem.value);
+            disp.Second = elem.BufferListenUpdates((newVal, oldVal) =>
+            {
+                //Debug.Log($"cell({cellMod.GetHashCode()}) value replaced from:{oldVal} to:{newVal} Connected to {GetHashCode()}}}");
+                var index = collection.IndexOf(m => EqualityComparer<T>.Default.Equals(m, oldVal));
+                collection[index] = newVal;
+            });
+            return disp;
+        }
+        
+        public void ModifyAdd(IConnectionSink sink, ICell<T> elem)
+        {
+            sink.AddConnection(ModifyAdd(elem));
+        }
+
+        public IEnumerator<T> GetEnumerator()
+        {
+            return collection.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return ((IEnumerable) collection).GetEnumerator();
+        }
+
+        public IEventStream<IReactiveCollectionEvent<T>> update => collection.update;
+        public int Count => collection.Count;
+        public T this[int index] => collection[index];
+    }
 
     [GenIgnore(GenTaskFlags.All & ~GenTaskFlags.DefaultConstructor)]
     public class ModifiableList<T> : IReactiveCollection<T>, IReadOnlyList<T>
