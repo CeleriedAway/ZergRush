@@ -36,7 +36,7 @@ namespace ZergRush.ReactiveCore
         /// Wont work well if collection has same elements multiple times
         [MustUseReturnValue]
         public static IDisposable AffectEach<T>(this IReactiveCollection<T> collection,
-            Action<IConnectionSink, T> affect) where T : class
+            Action<Connections, T> affect) where T : class
         {
             var itemConnectionsDict = new Dictionary<T, Connections>();
 
