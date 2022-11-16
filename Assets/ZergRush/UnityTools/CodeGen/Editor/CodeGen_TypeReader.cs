@@ -137,7 +137,12 @@ namespace ZergRush.CodeGen
             if (t == typeof(object)) return;
             if (t == Void || t.IsPrimitive || t.IsNullable() || t.IsEnum || t.IsGenericParameter || t == typeof(string) ||
                 t == typeof(byte[]) || t == typeof(Guid)) return;
-            
+
+            if (t.IsArray && t.GetArrayRank() > 1)
+            {
+                Error($"Multidimensional array is not supported {t.ToString()} requested from: {requester.ToString()}");
+                return;
+            }
             RegisterTypeContext(t, requester);
             if (requester != null) typeRequestMap.TryGetOrNew(t).AddIfNotContains(requester);
 
