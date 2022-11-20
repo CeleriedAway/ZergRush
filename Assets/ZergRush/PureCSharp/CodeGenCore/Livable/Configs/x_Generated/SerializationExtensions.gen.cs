@@ -78,7 +78,14 @@ public static partial class SerializationExtensions
         writer.WriteStartArray();
         for (int i = 0; i < self.Count; i++)
         {
-            self[i].WriteJson(writer);
+            if (self[i] == null)
+            {
+                writer.WriteNull();
+            }
+            else
+            {
+                self[i].WriteJson(writer);
+            }
         }
         writer.WriteEndArray();
     }

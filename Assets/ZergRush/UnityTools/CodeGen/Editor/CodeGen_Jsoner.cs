@@ -224,8 +224,7 @@ namespace ZergRush.CodeGen
                 sinkWriter.content($"{{");
                 sinkWriter.indent++;
                 WriteJsonValueStatement(sinkWriter, 
-                    new DataInfo{type = info.type, baseAccess = $"{info.access}[i]", insideConfigStorage = type.IsConfigStorage()},
-                    true);
+                    new DataInfo{type = info.type, baseAccess = $"{info.access}[i]", insideConfigStorage = type.IsConfigStorage(), canBeNull = info.type.IsClass}, true);
                 sinkWriter.indent--;
                 sinkWriter.content($"}}");
                 sinkWriter.content($"writer.WriteEndArray();");
