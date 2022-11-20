@@ -66,11 +66,20 @@ namespace ZergRush.ReactiveCore
             return cell.FlatMap(v => v != null ? map(v) : StaticCell<T2>.Default());
         }
 
+        // WIll be default in case of cell value is null or map output value is null
         public static ICell<T2> FlatMapWithDefaultOnNull<T, T2>(this ICell<T> cell, Func<T, ICell<T2>> map,
             T2 defaultValue)
             where T : class
         {
-            return cell.FlatMap(v => v != null ? map(v) : new StaticCell<T2>(defaultValue));
+            return cell.FlatMap(v =>
+            {
+                if (v != null)
+                {
+                    var innerCell = map(v);
+                    if (innerCell != null) return innerCell;
+                }
+                return new StaticCell<T2>(defaultValue);
+            });
         }
 
         public static IEventStream<T2> FlatMap<T, T2>(this ICell<T> cell, Func<T, IEventStream<T2>> map)
