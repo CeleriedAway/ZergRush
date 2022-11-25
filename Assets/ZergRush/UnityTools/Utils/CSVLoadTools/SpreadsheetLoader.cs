@@ -1,6 +1,5 @@
 ﻿//#define GOOGLE_AUTH
 
-#if UNITY_EDITOR
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -15,7 +14,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
+#if UNITY_EDITOR
 using UnityEditor;
+#endif
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -136,7 +137,9 @@ namespace GameTools
             {
                 foreach (var page in config.pages)
                 {
+#if UNITY_EDITOR
                     EditorUtility.DisplayProgressBar($"Downloading {config.name} page", $"Page {page.Key}", i++ * part);
+#endif
                     var content = LoadTableAsCSV(config.id, page.Value);
                     var path = $"{pathToConfigs}{config.name}";
                     Directory.CreateDirectory(path);
@@ -155,10 +158,10 @@ namespace GameTools
                 File.WriteAllText(path, await content);
             }
             
-            Debug.Log("Load csv data complete!");
-
+#if UNITY_EDITOR
             EditorUtility.ClearProgressBar();
-            
+#endif
+
             onLoaded?.Invoke();
         }
 
@@ -188,12 +191,14 @@ namespace GameTools
                 "https://omnigames.atlassian.net/wiki/plugins/viewstorage/viewpagestorage.action?pageId=";
             var www = UnityWebRequest.Get($"{url}{id}");
             www.SendWebRequest();
+#if UNITY_EDITOR
             while (!www.isDone)
                 EditorUtility.DisplayProgressBar($"Downloading atlassian configs", $"Page {name}",
                     www.downloadProgress / part + part * i);
 
             if (part == 1 || i == 0)
                 EditorUtility.ClearProgressBar();
+#endif
 
             if (www.result != UnityWebRequest.Result.Success)
             {
@@ -292,4 +297,3 @@ namespace GameTools
         }
     }
 }
-#endif
