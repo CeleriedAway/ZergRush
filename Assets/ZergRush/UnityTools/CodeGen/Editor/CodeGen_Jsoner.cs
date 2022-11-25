@@ -348,7 +348,7 @@ namespace ZergRush.CodeGen
 
                 if (sinkReader.needBaseValCall)
                 {
-                    sinkReader.content($"if (base.{readerFuncName}({readerName}, __name)) return true;");
+                    sinkReader.content($"if (base.{JsonReadFuncName}Field({readerName}, __name)) return true;");
                     sinkReader.needBaseValCall = false;
                 }
                 
