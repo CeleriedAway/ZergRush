@@ -157,7 +157,8 @@ namespace GameTools
             {
                 File.WriteAllText(path, await content);
             }
-            
+
+            Debug.Log("Load csv data complete!");
 #if UNITY_EDITOR
             EditorUtility.ClearProgressBar();
 #endif
