@@ -84,7 +84,9 @@ namespace ZergRush.Alive
         {
             if (isAlive)
             {
-                throw new ZergRushException("You can not enlive living");
+                throw new ZergRushException($"You can not enlive living, may be you place same instance of this class" +
+                                $" {this} several times into LivableList or into LivableSlot or as readonly member of other livable class," +
+                                $" previous carrier {previousCarrier} current carrier {carrier}");
             }
 
             isAlive = true;
@@ -94,7 +96,7 @@ namespace ZergRush.Alive
         {
             if (!isAlive)
             {
-                throw new ZergRushException("What Is Dead May Never Die (c)");
+                throw new ZergRushException("What Is Dead May Never Die (c) or probably an internal ZR error");
             }
 
             DisconnectAll();

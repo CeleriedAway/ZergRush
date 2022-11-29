@@ -1,27 +1,28 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.Serialization;
 using Newtonsoft.Json;
 
 namespace ZergRush
 {
-    public class ZRUpdateFromHelper
+    public class ZRHashHelper
     {
         ObjectIDGenerator generator = new ObjectIDGenerator();
-        Dictionary<long, object> alreadyUpdated = new Dictionary<long, object>();
-
-        public bool TryLoadAlreadyUpdated<T>(T source, ref T target)
+        Dictionary<long, ulong> alreadyHashed = new();
+        public ulong CalculateHash<T>(T source) where T : IHashable
         {
             var id = generator.GetId(source, out var firstTime);
             if (firstTime)
             {
-                alreadyUpdated[id] = target;
-                return false;
+                var hash = source.CalculateHash();
+                alreadyHashed[id] = hash;
+                return hash;
             }
             else
             {
-                target = (T)alreadyUpdated[id];
-                return true;
+                return alreadyHashed[id];
             }
         }
     }

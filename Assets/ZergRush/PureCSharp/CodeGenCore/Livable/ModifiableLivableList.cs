@@ -8,8 +8,7 @@ namespace ZergRush.Alive
 
         public void ModifyAddInstance(StaticConnections connections, T item)
         {
-            item.root = root;
-            item.carrier = carrier;
+            item.SetRootAndCarrier(root, carrier);
             item.__PropagateHierarchyAndRememberIds();
             item.__parent_id = connections.ownerId;
             if (item.Id == 0)

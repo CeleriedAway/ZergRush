@@ -48,8 +48,7 @@ namespace ZergRush.Alive
         protected void SetupItemHierarchy(T item)
         {
             if (item == null) return;
-            item.carrier = carrier;
-            item.root = root;
+            item.SetRootAndCarrier(root, carrier);
             item.__PropagateHierarchyAndRememberIds();
         }
         protected virtual void ProcessAddItem(T item)
@@ -194,8 +193,7 @@ namespace ZergRush.Alive
             {
                 var item = items[i];
                 if (item == null) continue;
-                item.root = root;
-                item.carrier = carrier;
+                item.SetRootAndCarrier(root, carrier);
                 item.__PropagateHierarchyAndRememberIds();
             }
         }

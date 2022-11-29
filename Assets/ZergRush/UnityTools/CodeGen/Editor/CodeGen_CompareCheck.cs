@@ -14,37 +14,51 @@ namespace ZergRush.CodeGen
         public static string CompClassId = "SerializationTools.CompareClassId";
         public static string PrinterArg = "Action<string> printer";
         public static string PrinterName = "printer";
+        public static string CCHelper = nameof(ZRCompareCheckHelper);
 
         public static void CompareCheckValue(MethodBuilder sink, DataInfo info, string otherValueReader)
         {
             if (info.type.IsAlmostPrimitive() || info.type.IsEnum || info.type.IsString())
             {
-                sink.content($"if ({info.access} != {otherValueReader}) {CompErrorFunc}(__path, {info.pathName}, {PrinterName}, {otherValueReader}, {info.access});");
+                sink.content($"if ({info.access} != {otherValueReader}) {CompErrorFunc}({HelperName}, {info.pathName}, {PrinterName}, {otherValueReader}, {info.access});");
             }
             else
             {
                 if (info.canBeNull)
                 {
                     var compNull = info.type.IsNullable() ? CompNullNullbaleComp : CompNullComp;
-                    sink.content($"if ({compNull}(__path, {info.pathName}, {PrinterName}, {info.access}, {otherValueReader})) {{");
+                    sink.content($"if ({compNull}({HelperName}, {info.pathName}, {PrinterName}, {info.access}, {otherValueReader})) {{");
                     sink.indent++;
                 }
                 if (info.type.CanBeAncestor())
                 {
-                    sink.content($"if ({CompClassId}(__path, {info.pathName}, {PrinterName}, {info.access}, {otherValueReader})) {{");
+                    sink.content($"if ({CompClassId}({HelperName}, {info.pathName}, {PrinterName}, {info.access}, {otherValueReader})) {{");
                     sink.indent++;
                 }
-                sink.content($"__path.Push({info.pathName});");
+                if (info.type.IsMultipleReference())
+                {
+                    sink.content($"if ({HelperName}.{nameof(ZRCompareCheckHelper.NeedCompareCheck)}({info.pathName}," +
+                                 $" {PrinterName}, {info.access}, {otherValueReader})) {{");
+                    sink.indent++;
+                }
+                sink.content($"{HelperName}.Push({info.pathName});");
                 if (info.type.IsLoadableConfig())
                 {
-                    sink.content($"if ({info.access}.id != {otherValueReader}.id) {CompErrorFunc}(__path, {info.pathName}, {PrinterName}, {otherValueReader}.id, {info.access}.id);");
+                    sink.content($"if ({info.access}.id != {otherValueReader}.id) {CompErrorFunc}({HelperName}, {info.pathName}, {PrinterName}, {otherValueReader}.id, {info.access}.id);");
                 }
                 else
                 {
                     RequestGen(info.type, sink.classType, GenTaskFlags.CompareChech);
-                    sink.content($"{info.access}.{CompareFuncName}({otherValueReader}, __path, {PrinterName});");
+                    sink.content($"{info.access}.{CompareFuncName}({otherValueReader}, {HelperName}, {PrinterName});");
                 }
-                sink.content($"__path.Pop();");
+                
+                sink.content($"{HelperName}.Pop();");
+                
+                if (info.type.IsMultipleReference())
+                {
+                    sink.indent--;
+                    sink.content($"}}");
+                }
                 if (info.type.CanBeAncestor())
                 {
                     sink.indent--;
@@ -68,7 +82,7 @@ namespace ZergRush.CodeGen
             var updateFromType = type.TopParentImplementingFlag(GenTaskFlags.CompareChech) ?? type;
 
             MethodBuilder sink = MakeGenMethod(type, GenTaskFlags.CompareChech, funcPrefix + CompareFuncName, typeof(void),
-                $"{updateFromType.RealName(true)} {instanceName}, Stack<string> __path, {PrinterArg}");
+                $"{updateFromType.RealName(true)} {instanceName}, {CCHelper} {HelperName}, {PrinterArg}");
             
             if (type.IsList() || type.IsArray)
             {

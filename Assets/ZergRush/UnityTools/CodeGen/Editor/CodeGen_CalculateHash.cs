@@ -9,6 +9,7 @@ namespace ZergRush.CodeGen
         public static string HashFuncName = "CalculateHash";
         public static string HashTypeName = "ulong";
         public static Type HashType = typeof(ulong);
+        public static string HashHelperName = nameof(ZRHashHelper);
 
         public static uint RandomHash()
         {
@@ -23,7 +24,7 @@ namespace ZergRush.CodeGen
             else if (t == typeof(bool)) return $"{name} ? 1u : 0u";
             else if (t.IsPrimitive || t.IsEnum) return $"({HashType}){name}";
 
-            string calcHash = $"{name}.CalculateHash()";
+            string calcHash = $"{name}.CalculateHash({HelperName})";
             if (t == typeof(string))
             {
                 calcHash = $"({HashTypeName}){name}.CalculateHash()";
@@ -32,7 +33,10 @@ namespace ZergRush.CodeGen
             {
                 calcHash = $"({HashTypeName}){name}.{UIdFuncName}()";
             }
-
+            else if (t.IsMultipleReference())
+            {
+                calcHash = $"{HelperName}.{nameof(ZRHashHelper.CalculateHash)}({name})";
+            }
             if (info.canBeNull && !info.type.IsValueType)
             {
                 return $"{name} != null ? {calcHash} : {RandomHash()}";
@@ -66,6 +70,7 @@ namespace ZergRush.CodeGen
                 needDictKeyTraverse = true,
                 interfaceType = typeof(IHashable),
                 needMembersGenRequest = true,
+                funcArgs = $"{HashHelperName} {HelperName}",
                 start = (sink, hasBaseCall) => {
                     if (hasBaseCall)
                     {

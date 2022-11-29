@@ -24,6 +24,17 @@ namespace ZergRush.Alive
         public int __parent_id;
 
         public bool IsInHierarchy => !dead;
+        
+        // for debug
+        [GenIgnore] protected DataNode previousCarrier;
+        
+        public void SetRootAndCarrier(DataRoot root, DataNode carrier)
+        {
+            this.root = root;
+            previousCarrier = carrier;
+            this.carrier = carrier;
+        }
+        
         public T ReachCarrierHierarchy<T>() where T : DataNode
         {
             var c = carrier;

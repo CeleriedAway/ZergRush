@@ -84,8 +84,7 @@ namespace ZergRush.CodeGen
 
                 if (info.realType.NeedsHierarchy())
                 {
-                    setupHierarchy.content($"{info.baseAccess}.root = root;");
-                    setupHierarchy.content($"{info.baseAccess}.carrier = this;");
+                    setupHierarchy.content($"{info.baseAccess}.{nameof(DataNode.SetRootAndCarrier)}(root, this);");
                     //if (info.type.IsLivableContainer() || info.isValueWrapper == ValueVrapperType.LivableSlot || info.type.HasChildrenThatNeedsRootSetup())
                     //if (info.type.HasChildrenThatNeedsRootSetup() || info.type.IsLivableList() || info.type.IsLivableSlot())
                     setupHierarchy.content($"{info.baseAccess}.{SetupHierarchyFuncName}();");
@@ -154,7 +153,7 @@ namespace ZergRush.CodeGen
                 //CreateNewInstance(createFromProrotype, new DataInfo{type = type, baseAccess = "inst", sureIsNull = true}, "", true, "", true );
                 //createFromProrotype.content($"var inst = ({type.RealName(true)})prototype.NewInst();");
                 
-                createFromProrotype.content($"var {HelperName} = new {HelperClassName}();");
+                createFromProrotype.content($"var {HelperName} = new {UpdateFromHelperClassName}();");
                 GenUpdateValueFromInstance(createFromProrotype, new DataInfo {type = type, baseAccess = $"inst", sureIsNull = true}, "prototype", false, needCreateVar: true);
                 fillCreateWithLivableSetup(createFromProrotype);
                 createFromProrotype.content($"return inst;");

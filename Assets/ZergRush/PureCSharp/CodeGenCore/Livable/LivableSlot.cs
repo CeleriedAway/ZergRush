@@ -26,7 +26,7 @@ namespace ZergRush.Alive
                         _value.root = root;
                         _value.__PropagateHierarchyAndRememberIds();
                     }
-                    _value.carrier = carrier;
+                    _value.SetRootAndCarrier(root, carrier);
                 }
 
                 if (up != null)
@@ -45,8 +45,7 @@ namespace ZergRush.Alive
         {
             if (_value != null && _value.root != root)
             {
-                _value.carrier = carrier;
-                _value.root = root;
+                _value.SetRootAndCarrier(root, carrier);
                 _value.__PropagateHierarchyAndRememberIds();
             }
         }
@@ -122,8 +121,7 @@ namespace ZergRush.Alive
 
                     if (root != null)
                     {
-                        _value.root = root;
-                        _value.carrier = carrier;
+                        _value.SetRootAndCarrier(root, carrier);
                         _value.__PropagateHierarchyAndRememberIds();
                     }
                     
@@ -144,8 +142,7 @@ namespace ZergRush.Alive
         {
             if (_value != null && _value.root != root)
             {
-                _value.carrier = carrier;
-                _value.root = root;
+                _value.SetRootAndCarrier(root, carrier);
                 _value.__PropagateHierarchyAndRememberIds();
             }
         }
