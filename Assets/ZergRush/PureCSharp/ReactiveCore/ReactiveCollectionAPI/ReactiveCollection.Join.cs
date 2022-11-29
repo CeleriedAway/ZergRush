@@ -58,12 +58,13 @@ namespace ZergRush.ReactiveCore
         {
             public IReactiveCollection<IReactiveCollection<T>> collection;
             public Connections collectionConnections = new Connections();
-            public DoubleDisposable allConnections = new DoubleDisposable();
 
             protected override IDisposable StartListenAndRefill()
             {
+                //Debug.Log("Start listen and refill");
                 void OnRemove(IReactiveCollectionEvent<IReactiveCollection<T>> reactiveCollectionEvent1)
                 {
+                    //Debug.Log($"remove {reactiveCollectionEvent1.position} {reactiveCollectionEvent1.type} {id}");
                     collectionConnections.RemoveAndDisposeConnectionAt(reactiveCollectionEvent1.position);
                     var removeStartIndex = FinalStartIndex(reactiveCollectionEvent1.position);
                     for (int i = 0; i < reactiveCollectionEvent1.oldItem.Count; i++)
@@ -83,13 +84,15 @@ namespace ZergRush.ReactiveCore
 
                     SubscribeCollection(reactiveCollectionEvent.newItem, reactiveCollectionEvent.position);
                 }
-
-                allConnections.first = collectionConnections;
-                allConnections.second = collection.BindCollection(e =>
+                
+                DoubleDisposable allConnections = new DoubleDisposable();
+                allConnections.First = collectionConnections;
+                allConnections.Second = collection.BindCollection(e =>
                 {
                     switch (e.type)
                     {
                         case ReactiveCollectionEventType.Reset:
+                            //Debug.Log($"Reset event to count {e.newData.Count} {id}");
                             RefillRaw(e.newData);
                             collectionConnections.DisconnectAll();
                             for (int i = 0; i < e.newData.Count; i++)
@@ -105,6 +108,7 @@ namespace ZergRush.ReactiveCore
                             OnRemove(e);
                             break;
                         case ReactiveCollectionEventType.Set:
+                            //Debug.Log($"set event to count {e.position} {e.newData}");
                             OnRemove(e);
                             OnInsert(e);
                             break;
@@ -320,8 +324,8 @@ namespace ZergRush.ReactiveCore
             {
                 var disp = new DoubleDisposable
                 {
-                    first = connetions,
-                    second = coll.update.Subscribe(Process)
+                    First = connetions,
+                    Second = coll.update.Subscribe(Process)
                 };
                 ProperRefill(coll);
                 return disp;

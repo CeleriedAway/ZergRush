@@ -124,16 +124,17 @@ namespace ZergRush.ReactiveCore
                 realIndexes.Clear();
 
                 var coll = collection;
-                for (int i = 0; i < coll.Count; i++)
+                var i = 0;
+                foreach (var item in collection)
                 {
-                    var item = coll[i];
                     Insert(i, item);
+                    i++;
                 }
             }
 
             protected override IDisposable StartListenAndRefill()
             {
-                var disp = new DoubleDisposable { first = connetions, second = collection.update.Subscribe(Process) };
+                var disp = new DoubleDisposable (connetions, collection.update.Subscribe(Process));
                 ProperRefill();
                 return disp;
             }

@@ -59,7 +59,7 @@ namespace ZergRush.CodeGen
                 start = (sink, hasBaseCall) => {
                     if (type.HasAttribute<HasRefId>())
                     {
-                        sink.content($"if (Id != 0) root.Forget(Id, this);");
+                        sink.content($"if (Id != 0) root?.Forget(Id, this);");
                     }
                 },
                 elemProcess = (sink, info) => {
@@ -71,7 +71,7 @@ namespace ZergRush.CodeGen
             
             if (type.HasAttribute<HasRefId>())
             {
-                setupHierarchy.content($"if (Id != 0) root.Remember(this, Id);");
+                setupHierarchy.content($"if (Id != 0) root?.Remember(this, Id);");
             }
             
             type.ProcessMembers(GenTaskFlags.OwnershipHierarchy, false, info =>

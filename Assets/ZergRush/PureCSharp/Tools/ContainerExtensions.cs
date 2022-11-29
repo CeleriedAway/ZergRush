@@ -93,6 +93,7 @@ namespace ZergRush
         // returns insert position
         public static int InsertSorted<T>(this IList<T> list, Func<T, T, int> predicate, T val)
         {
+            //TODO make logn
             var i = list.IndexOf(t => predicate(t, val) >= 0);
             if (i != -1)
             {

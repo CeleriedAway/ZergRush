@@ -70,6 +70,14 @@
             Instance = new T();
             fillConfig(Instance);
         }
+        /// <summary>
+        /// Executes actions to fulfill game config with members.
+        /// </summary>
+        public static void SetGameConfig<TConfig>(Action<T> fillConfig) where TConfig : T , new()
+        {
+            Instance = new TConfig();
+            fillConfig(Instance);
+        }
 
         /// <summary>
         /// Executes async actions to fulfill game config with members.

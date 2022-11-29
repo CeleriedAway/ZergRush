@@ -17,21 +17,21 @@ namespace ZergRush.ReactiveCore
         public static IDisposable SubscribeWhile<T>(this IEventStream<T> stream, ICell<bool> listenCondition, Action<T> act)
         {
             var disp = new DoubleDisposable();
-            disp.first = listenCondition.Bind(val =>
+            disp.First = listenCondition.Bind(val =>
             {
                 if (val)
                 {
                     if (disp.disposed) return;
-                    if (disp.second != null)
+                    if (disp.Second != null)
                     {
                         throw new ZergRushException();
                     }
-                    disp.second = stream.Subscribe(act);
+                    disp.Second = stream.Subscribe(act);
                 }
-                else if (disp.second != null)
+                else if (disp.Second != null)
                 {
-                    disp.second.Dispose();
-                    disp.second = null;
+                    disp.Second.Dispose();
+                    disp.Second = null;
                 }
             });
             return disp;
