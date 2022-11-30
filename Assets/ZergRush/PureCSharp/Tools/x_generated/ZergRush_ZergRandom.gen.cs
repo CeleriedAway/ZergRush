@@ -32,7 +32,7 @@ namespace ZergRush {
             writer.Write(inextp);
             SeedArray.Serialize(writer);
         }
-        public virtual ulong CalculateHash() 
+        public virtual ulong CalculateHash(ZRHashHelper __helper) 
         {
             System.UInt64 hash = 345093625;
             hash += (ulong)502686759;
@@ -41,17 +41,17 @@ namespace ZergRush {
             hash += hash << 11; hash ^= hash >> 7;
             hash += (System.UInt64)inextp;
             hash += hash << 11; hash ^= hash >> 7;
-            hash += SeedArray.CalculateHash();
+            hash += SeedArray.CalculateHash(__helper);
             hash += hash << 11; hash ^= hash >> 7;
             return hash;
         }
-        public virtual void CompareCheck(ZergRush.ZergRandom other, Stack<string> __path, Action<string> printer) 
+        public virtual void CompareCheck(ZergRush.ZergRandom other, ZRCompareCheckHelper __helper, Action<string> printer) 
         {
-            if (inext != other.inext) SerializationTools.LogCompError(__path, "inext", printer, other.inext, inext);
-            if (inextp != other.inextp) SerializationTools.LogCompError(__path, "inextp", printer, other.inextp, inextp);
-            __path.Push("SeedArray");
-            SeedArray.CompareCheck(other.SeedArray, __path, printer);
-            __path.Pop();
+            if (inext != other.inext) SerializationTools.LogCompError(__helper, "inext", printer, other.inext, inext);
+            if (inextp != other.inextp) SerializationTools.LogCompError(__helper, "inextp", printer, other.inextp, inextp);
+            __helper.Push("SeedArray");
+            SeedArray.CompareCheck(other.SeedArray, __helper, printer);
+            __helper.Pop();
         }
         public virtual bool ReadFromJsonField(ZRJsonTextReader reader, string __name) 
         {

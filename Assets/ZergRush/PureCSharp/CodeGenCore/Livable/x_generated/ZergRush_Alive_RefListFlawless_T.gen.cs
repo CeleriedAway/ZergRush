@@ -22,20 +22,20 @@ namespace ZergRush.Alive {
         {
             ids.Serialize(writer);
         }
-        public ulong CalculateHash() 
+        public ulong CalculateHash(ZRHashHelper __helper) 
         {
             System.UInt64 hash = 345093625;
             hash += (ulong)1091248618;
             hash += hash << 11; hash ^= hash >> 7;
-            hash += ids.CalculateHash();
+            hash += ids.CalculateHash(__helper);
             hash += hash << 11; hash ^= hash >> 7;
             return hash;
         }
-        public void CompareCheck(ZergRush.Alive.RefListFlawless<T> other, Stack<string> __path, Action<string> printer) 
+        public void CompareCheck(ZergRush.Alive.RefListFlawless<T> other, ZRCompareCheckHelper __helper, Action<string> printer) 
         {
-            __path.Push("ids");
-            ids.CompareCheck(other.ids, __path, printer);
-            __path.Pop();
+            __helper.Push("ids");
+            ids.CompareCheck(other.ids, __helper, printer);
+            __helper.Pop();
         }
         public bool ReadFromJsonField(ZRJsonTextReader reader, string __name) 
         {

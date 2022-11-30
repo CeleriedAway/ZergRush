@@ -24,23 +24,23 @@ public static partial class SerializationExtensions
         self.connections.Serialize(writer);
         writer.Write(self.ownerId);
     }
-    public static ulong CalculateHash(this ZergRush.Alive.StaticConnections self) 
+    public static ulong CalculateHash(this ZergRush.Alive.StaticConnections self, ZRHashHelper __helper) 
     {
         System.UInt64 hash = 345093625;
         hash += (ulong)1300247783;
         hash += hash << 11; hash ^= hash >> 7;
-        hash += self.connections.CalculateHash();
+        hash += self.connections.CalculateHash(__helper);
         hash += hash << 11; hash ^= hash >> 7;
         hash += (System.UInt64)self.ownerId;
         hash += hash << 11; hash ^= hash >> 7;
         return hash;
     }
-    public static void CompareCheck(this ZergRush.Alive.StaticConnections self, ZergRush.Alive.StaticConnections other, Stack<string> __path, Action<string> printer) 
+    public static void CompareCheck(this ZergRush.Alive.StaticConnections self, ZergRush.Alive.StaticConnections other, ZRCompareCheckHelper __helper, Action<string> printer) 
     {
-        __path.Push("connections");
-        self.connections.CompareCheck(other.connections, __path, printer);
-        __path.Pop();
-        if (self.ownerId != other.ownerId) SerializationTools.LogCompError(__path, "ownerId", printer, other.ownerId, self.ownerId);
+        __helper.Push("connections");
+        self.connections.CompareCheck(other.connections, __helper, printer);
+        __helper.Pop();
+        if (self.ownerId != other.ownerId) SerializationTools.LogCompError(__helper, "ownerId", printer, other.ownerId, self.ownerId);
     }
     public static bool ReadFromJson(this ZergRush.Alive.StaticConnections self, ZRJsonTextReader reader) 
     {
@@ -135,7 +135,7 @@ public static partial class SerializationExtensions
             }
         }
     }
-    public static ulong CalculateHash(this ZergRush.Alive.SerializableConnection self) 
+    public static ulong CalculateHash(this ZergRush.Alive.SerializableConnection self, ZRHashHelper __helper) 
     {
         System.UInt64 hash = 345093625;
         hash += (ulong)1980239909;
@@ -146,7 +146,7 @@ public static partial class SerializationExtensions
         hash += hash << 11; hash ^= hash >> 7;
         return hash;
     }
-    public static ulong CalculateHash(this System.Collections.Generic.List<ZergRush.Alive.SerializableConnection> self) 
+    public static ulong CalculateHash(this System.Collections.Generic.List<ZergRush.Alive.SerializableConnection> self, ZRHashHelper __helper) 
     {
         System.UInt64 hash = 345093625;
         hash += (ulong)910491146;
@@ -154,25 +154,25 @@ public static partial class SerializationExtensions
         var size = self.Count;
         for (int i = 0; i < size; i++)
         {
-            hash += self[i].CalculateHash();
+            hash += self[i].CalculateHash(__helper);
             hash += hash << 11; hash ^= hash >> 7;
         }
         return hash;
     }
-    public static void CompareCheck(this ZergRush.Alive.SerializableConnection self, ZergRush.Alive.SerializableConnection other, Stack<string> __path, Action<string> printer) 
+    public static void CompareCheck(this ZergRush.Alive.SerializableConnection self, ZergRush.Alive.SerializableConnection other, ZRCompareCheckHelper __helper, Action<string> printer) 
     {
-        if (self.entityId != other.entityId) SerializationTools.LogCompError(__path, "entityId", printer, other.entityId, self.entityId);
-        if (self.ownerId != other.ownerId) SerializationTools.LogCompError(__path, "ownerId", printer, other.ownerId, self.ownerId);
+        if (self.entityId != other.entityId) SerializationTools.LogCompError(__helper, "entityId", printer, other.entityId, self.entityId);
+        if (self.ownerId != other.ownerId) SerializationTools.LogCompError(__helper, "ownerId", printer, other.ownerId, self.ownerId);
     }
-    public static void CompareCheck(this System.Collections.Generic.List<ZergRush.Alive.SerializableConnection> self, System.Collections.Generic.List<ZergRush.Alive.SerializableConnection> other, Stack<string> __path, Action<string> printer) 
+    public static void CompareCheck(this System.Collections.Generic.List<ZergRush.Alive.SerializableConnection> self, System.Collections.Generic.List<ZergRush.Alive.SerializableConnection> other, ZRCompareCheckHelper __helper, Action<string> printer) 
     {
-        if (self.Count != other.Count) SerializationTools.LogCompError(__path, "Count", printer, other.Count, self.Count);
+        if (self.Count != other.Count) SerializationTools.LogCompError(__helper, "Count", printer, other.Count, self.Count);
         var count = Math.Min(self.Count, other.Count);
         for (int i = 0; i < count; i++)
         {
-            __path.Push(i.ToString());
-            self[i].CompareCheck(other[i], __path, printer);
-            __path.Pop();
+            __helper.Push(i.ToString());
+            self[i].CompareCheck(other[i], __helper, printer);
+            __helper.Pop();
         }
     }
     public static ZergRush.Alive.SerializableConnection ReadFromJsonZergRush_Alive_SerializableConnection(this ZRJsonTextReader reader) 
@@ -247,7 +247,7 @@ public static partial class SerializationExtensions
             self.RemoveAt(self.Count - 1);
         }
     }
-    public static ulong CalculateHash(this System.Collections.Generic.List<int> self) 
+    public static ulong CalculateHash(this System.Collections.Generic.List<int> self, ZRHashHelper __helper) 
     {
         System.UInt64 hash = 345093625;
         hash += (ulong)910491146;
@@ -260,13 +260,13 @@ public static partial class SerializationExtensions
         }
         return hash;
     }
-    public static void CompareCheck(this System.Collections.Generic.List<int> self, System.Collections.Generic.List<int> other, Stack<string> __path, Action<string> printer) 
+    public static void CompareCheck(this System.Collections.Generic.List<int> self, System.Collections.Generic.List<int> other, ZRCompareCheckHelper __helper, Action<string> printer) 
     {
-        if (self.Count != other.Count) SerializationTools.LogCompError(__path, "Count", printer, other.Count, self.Count);
+        if (self.Count != other.Count) SerializationTools.LogCompError(__helper, "Count", printer, other.Count, self.Count);
         var count = Math.Min(self.Count, other.Count);
         for (int i = 0; i < count; i++)
         {
-            if (self[i] != other[i]) SerializationTools.LogCompError(__path, i.ToString(), printer, other[i], self[i]);
+            if (self[i] != other[i]) SerializationTools.LogCompError(__helper, i.ToString(), printer, other[i], self[i]);
         }
     }
     public static void Deserialize(this System.Collections.Generic.List<int> self, BinaryReader reader) 

@@ -24,9 +24,9 @@ namespace ZergRush.Alive {
             writer.Write(name);
             writer.Write(price);
         }
-        public override ulong CalculateHash() 
+        public override ulong CalculateHash(ZRHashHelper __helper) 
         {
-            var baseVal = base.CalculateHash();
+            var baseVal = base.CalculateHash(__helper);
             System.UInt64 hash = baseVal;
             hash += (ulong)72721043;
             hash += hash << 11; hash ^= hash >> 7;

@@ -29,9 +29,9 @@ namespace ZergRush.Alive {
             base.Serialize(writer);
             writer.Write(__id);
         }
-        public override ulong CalculateHash() 
+        public override ulong CalculateHash(ZRHashHelper __helper) 
         {
-            var baseVal = base.CalculateHash();
+            var baseVal = base.CalculateHash(__helper);
             System.UInt64 hash = baseVal;
             hash += (ulong)1374988313;
             hash += hash << 11; hash ^= hash >> 7;
@@ -54,11 +54,11 @@ namespace ZergRush.Alive {
             base.__ForgetIds();
 
         }
-        public override void CompareCheck(ZergRush.Alive.DataNode other, Stack<string> __path, Action<string> printer) 
+        public override void CompareCheck(ZergRush.Alive.DataNode other, ZRCompareCheckHelper __helper, Action<string> printer) 
         {
-            base.CompareCheck(other,__path,printer);
+            base.CompareCheck(other,__helper,printer);
             var otherConcrete = (ZergRush.Alive.Ref<T>)other;
-            if (__id != otherConcrete.__id) SerializationTools.LogCompError(__path, "__id", printer, otherConcrete.__id, __id);
+            if (__id != otherConcrete.__id) SerializationTools.LogCompError(__helper, "__id", printer, otherConcrete.__id, __id);
         }
     }
 }

@@ -29,9 +29,9 @@ namespace ZergRush.Alive {
             base.Serialize(writer);
 
         }
-        public override ulong CalculateHash() 
+        public override ulong CalculateHash(ZRHashHelper __helper) 
         {
-            var baseVal = base.CalculateHash();
+            var baseVal = base.CalculateHash(__helper);
             System.UInt64 hash = baseVal;
             return hash;
         }

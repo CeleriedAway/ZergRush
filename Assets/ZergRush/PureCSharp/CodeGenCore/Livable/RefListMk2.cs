@@ -372,7 +372,7 @@ namespace ZergRush.Alive
         }
 
 
-        public void CompareCheck(RefListMk2<T> other, Stack<string> path, Action<string> printer)
+        public void CompareCheck(RefListMk2<T> other, ZRCompareCheckHelper path, Action<string> printer)
         {
             if (Count != other.Count) SerializationTools.LogCompError(path, "Count", printer, other.Count, Count);
             var count = Math.Min(Count, other.Count);

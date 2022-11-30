@@ -1,4 +1,6 @@
+using ZergRush;
+
 public interface IHashable
 {
-    ulong CalculateHash();
+    ulong CalculateHash(ZRHashHelper __helper);
 }

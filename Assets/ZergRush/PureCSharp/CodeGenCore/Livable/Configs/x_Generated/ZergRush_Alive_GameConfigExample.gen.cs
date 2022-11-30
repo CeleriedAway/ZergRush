@@ -20,13 +20,13 @@ namespace ZergRush.Alive {
             base.Serialize(writer);
             items.Serialize(writer);
         }
-        public override ulong CalculateHash() 
+        public override ulong CalculateHash(ZRHashHelper __helper) 
         {
-            var baseVal = base.CalculateHash();
+            var baseVal = base.CalculateHash(__helper);
             System.UInt64 hash = baseVal;
             hash += (ulong)178743089;
             hash += hash << 11; hash ^= hash >> 7;
-            hash += items.CalculateHash();
+            hash += items.CalculateHash(__helper);
             hash += hash << 11; hash ^= hash >> 7;
             return hash;
         }

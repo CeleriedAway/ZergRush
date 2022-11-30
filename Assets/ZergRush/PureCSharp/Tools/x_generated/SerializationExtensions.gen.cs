@@ -37,7 +37,7 @@ public static partial class SerializationExtensions
             }
         }
     }
-    public static ulong CalculateHash(this System.Int32[] self) 
+    public static ulong CalculateHash(this System.Int32[] self, ZRHashHelper __helper) 
     {
         System.UInt64 hash = 345093625;
         hash += (ulong)677530667;
@@ -50,13 +50,13 @@ public static partial class SerializationExtensions
         }
         return hash;
     }
-    public static void CompareCheck(this System.Int32[] self, System.Int32[] other, Stack<string> __path, Action<string> printer) 
+    public static void CompareCheck(this System.Int32[] self, System.Int32[] other, ZRCompareCheckHelper __helper, Action<string> printer) 
     {
-        if (self.Length != other.Length) SerializationTools.LogCompError(__path, "Length", printer, other.Length, self.Length);
+        if (self.Length != other.Length) SerializationTools.LogCompError(__helper, "Length", printer, other.Length, self.Length);
         var count = Math.Min(self.Length, other.Length);
         for (int i = 0; i < count; i++)
         {
-            if (self[i] != other[i]) SerializationTools.LogCompError(__path, i.ToString(), printer, other[i], self[i]);
+            if (self[i] != other[i]) SerializationTools.LogCompError(__helper, i.ToString(), printer, other[i], self[i]);
         }
     }
     public static System.Int32[] ReadFromJson(this System.Int32[] self, ZRJsonTextReader reader) 

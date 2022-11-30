@@ -8,9 +8,9 @@ namespace ZergRush.Alive {
 
     public partial struct __RefListRecord<T> : ICompareChechable<ZergRush.Alive.__RefListRecord<T>>
     {
-        public void CompareCheck(ZergRush.Alive.__RefListRecord<T> other, Stack<string> __path, Action<string> printer) 
+        public void CompareCheck(ZergRush.Alive.__RefListRecord<T> other, ZRCompareCheckHelper __helper, Action<string> printer) 
         {
-            if (id != other.id) SerializationTools.LogCompError(__path, "id", printer, other.id, id);
+            if (id != other.id) SerializationTools.LogCompError(__helper, "id", printer, other.id, id);
         }
     }
 }

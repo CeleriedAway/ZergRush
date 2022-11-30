@@ -28,14 +28,14 @@ namespace ZergRush.Alive {
             writer.Write(dead);
             staticConnections.Serialize(writer);
         }
-        public virtual ulong CalculateHash() 
+        public virtual ulong CalculateHash(ZRHashHelper __helper) 
         {
             System.UInt64 hash = 345093625;
             hash += (System.UInt64)__parent_id;
             hash += hash << 11; hash ^= hash >> 7;
             hash += dead ? 1u : 0u;
             hash += hash << 11; hash ^= hash >> 7;
-            hash += staticConnections.CalculateHash();
+            hash += staticConnections.CalculateHash(__helper);
             hash += hash << 11; hash ^= hash >> 7;
             return hash;
         }
@@ -55,13 +55,13 @@ namespace ZergRush.Alive {
         {
             staticConnections = new ZergRush.Alive.StaticConnections();
         }
-        public virtual void CompareCheck(ZergRush.Alive.DataNode other, Stack<string> __path, Action<string> printer) 
+        public virtual void CompareCheck(ZergRush.Alive.DataNode other, ZRCompareCheckHelper __helper, Action<string> printer) 
         {
-            if (__parent_id != other.__parent_id) SerializationTools.LogCompError(__path, "__parent_id", printer, other.__parent_id, __parent_id);
-            if (dead != other.dead) SerializationTools.LogCompError(__path, "dead", printer, other.dead, dead);
-            __path.Push("staticConnections");
-            staticConnections.CompareCheck(other.staticConnections, __path, printer);
-            __path.Pop();
+            if (__parent_id != other.__parent_id) SerializationTools.LogCompError(__helper, "__parent_id", printer, other.__parent_id, __parent_id);
+            if (dead != other.dead) SerializationTools.LogCompError(__helper, "dead", printer, other.dead, dead);
+            __helper.Push("staticConnections");
+            staticConnections.CompareCheck(other.staticConnections, __helper, printer);
+            __helper.Pop();
         }
         public virtual bool ReadFromJsonField(ZRJsonTextReader reader, string __name) 
         {

@@ -12,20 +12,20 @@ namespace ZergRush.Alive {
         {
             stub.UpdateFrom(other.stub, __helper);
         }
-        public virtual ulong CalculateHash() 
+        public virtual ulong CalculateHash(ZRHashHelper __helper) 
         {
             System.UInt64 hash = 345093625;
             hash += (ulong)1909710134;
             hash += hash << 11; hash ^= hash >> 7;
-            hash += stub.CalculateHash();
+            hash += stub.CalculateHash(__helper);
             hash += hash << 11; hash ^= hash >> 7;
             return hash;
         }
-        public virtual void CompareCheck(ZergRush.Alive.IntListStub other, Stack<string> __path, Action<string> printer) 
+        public virtual void CompareCheck(ZergRush.Alive.IntListStub other, ZRCompareCheckHelper __helper, Action<string> printer) 
         {
-            __path.Push("stub");
-            stub.CompareCheck(other.stub, __path, printer);
-            __path.Pop();
+            __helper.Push("stub");
+            stub.CompareCheck(other.stub, __helper, printer);
+            __helper.Pop();
         }
     }
 }
