@@ -37,14 +37,13 @@ namespace ZergRush.Alive
             }
         }
 
-        public virtual void RootUpdateFrom(DataRoot other)
+        public virtual void RootUpdateFrom(DataRoot other, ZRUpdateFromHelper __helper)
         {
             // All ids will be refilled from other model
-            
             gameEntities.Clear();
             updatingProcess.value = true;
             
-            UpdateFrom(other, new ZRUpdateFromHelper());
+            UpdateFrom(other, __helper);
             this.__entityIdFactory = other.__entityIdFactory;
             
             updatingProcess.value = false;
