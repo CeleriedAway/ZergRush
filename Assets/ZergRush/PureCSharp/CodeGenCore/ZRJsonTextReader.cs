@@ -11,6 +11,7 @@ namespace ZergRush
     {
         ObjectIDGenerator generator = new ObjectIDGenerator();
         Dictionary<long, ulong> alreadyHashed = new();
+        
         public ulong CalculateHash<T>(T source) where T : IHashable
         {
             var id = generator.GetId(source, out var firstTime);
@@ -18,7 +19,7 @@ namespace ZergRush
             {
                 var hash = source.CalculateHash(this);
                 alreadyHashed[id] = hash;
-                return hash;
+                return hash ^ 0x2345096349;
             }
             else
             {
