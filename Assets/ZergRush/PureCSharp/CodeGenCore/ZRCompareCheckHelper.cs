@@ -21,6 +21,11 @@ namespace ZergRush
         {
             path.Push(name);
         }
+
+        public void Pop()
+        {
+            path.Pop();
+        }
         
         public bool NeedCompareCheck<T>(string name, Action<string> print, T self, T other)
         {
@@ -31,7 +36,7 @@ namespace ZergRush
                 projection[selfId] = otherId;
                 return true;
             }
-            else if 
+            else 
             {
                 if (projection[selfId] != otherId)
                 {

@@ -9,7 +9,7 @@ namespace ZergRush.CodeGen
     {
         public static string ReadFuncName = "Deserialize";
         public static string UpdateFuncName = "UpdateFrom";
-        public static string HelperClassName = "ZRUpdateFromHelper";
+        public static string UpdateFromHelperClassName = "ZRUpdateFromHelper";
         public static string HelperName = "__helper";
         public static string UpdateStaticsFuncName = "UpdateStaticFieldsFrom";
         public static string UpdateDynamicsFields = "UpdateInstaceFieldsFrom";
@@ -311,7 +311,7 @@ namespace ZergRush.CodeGen
             }
             
             MethodBuilder sink = MakeGenMethod(type, flag, funcPrefix + UpdateFuncName, typeof(void),
-                $"{updateFromType.RealName(true)} {instanceName}, {HelperClassName} {HelperName}{(pooled ? ", ObjectPool pool" : "")}");
+                $"{updateFromType.RealName(true)} {instanceName}, {UpdateFromHelperClassName} {HelperName}{(pooled ? ", ObjectPool pool" : "")}");
 
             if (type.IsValueType)
             {
@@ -356,7 +356,7 @@ namespace ZergRush.CodeGen
                     sink.content($"var {instanceCastedName} = ({type.RealName(true)}){instanceName};");
                     
                     var directUpdateSink = GenClassSink(type).Method(funcPrefix + UpdateFuncName, type, MethodType.Instance, typeof(void),
-                        $"{type.RealName(true)} {instanceName}, {HelperClassName} {HelperName}{(pooled ? ", ObjectPool pool" : "")}");
+                        $"{type.RealName(true)} {instanceName}, {UpdateFromHelperClassName} {HelperName}{(pooled ? ", ObjectPool pool" : "")}");
 
                     directUpdateSink.content($"this.UpdateFrom(({updateFromType.RealName(true)})other, {HelperName}{(pooled ? ", pool" : "")});");
                     directUpdateSink.classBuilder.inheritance($"I{(pooled ? "Pooled" : "")}UpdatableFrom<{type.RealName(true)}>");
