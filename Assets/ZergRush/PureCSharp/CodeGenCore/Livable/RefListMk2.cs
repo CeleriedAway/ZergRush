@@ -382,7 +382,7 @@ namespace ZergRush.Alive
             }
         }
         
-        public ulong CalculateHash()
+        public ulong CalculateHash(ZRHashHelper _)
         {
             ulong hash = 0xffffff;
             for (int i = 0; i < Count; i++)
@@ -395,6 +395,12 @@ namespace ZergRush.Alive
 
         public void __PropagateHierarchyAndRememberIds()
         {
+        }
+
+        public void SetRootAndCarrier(DataRoot dataRoot, DataNode carrier)
+        {
+            root = dataRoot;
+            this.carrier = carrier;
         }
     }
 

@@ -92,10 +92,5 @@ namespace ZergRush.Alive
             items.Clear();
         }
 
-        public void SetRootAndCarrier(DataRoot root, DataNode carrier)
-        {
-            this.root = root;
-            this.carrier = carrier;
-        }
     }
 }

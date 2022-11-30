@@ -34,6 +34,12 @@ namespace ZergRush.Alive
             }
         }
         
+        public void SetRootAndCarrier(DataRoot root, DataNode carrier)
+        {
+            this.root = root;
+            this.carrier = carrier;
+        }
+        
         public void ForEach(Action<T> action)
         {
             for (var i = 0; i < this.Count; i++)

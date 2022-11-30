@@ -212,7 +212,7 @@ public static partial class SerializationTools
         }
     }
     
-    public static ulong CalculateHash(this Guid val)
+    public static ulong CalculateHash(this Guid val, ZRHashHelper _)
     {
         return (ulong) val.ToString().CalculateHash();
     }
@@ -240,7 +240,7 @@ public static partial class SerializationTools
         stream.Write(bytes);
     }
 
-    public static uint CalculateHash(this byte[] array)
+    public static uint CalculateHash(this byte[] array, ZRHashHelper _)
     {
         uint hash = 0;
         for (int i = 0; i < array.Length; i++)
@@ -249,7 +249,6 @@ public static partial class SerializationTools
             hash += hash << 10;
             hash ^= hash >> 6;
         }
-
         return hash;
     }
 
