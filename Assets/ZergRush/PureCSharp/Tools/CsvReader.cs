@@ -6,7 +6,7 @@ using System.Linq;
 using JetBrains.Annotations;
 using ZergRush.CodeGen;
 
-namespace GameTools
+namespace ZergRush
 {
     public class Row
     {

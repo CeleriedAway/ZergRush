@@ -111,7 +111,7 @@ namespace ZergRush.CodeGen
             return t.IsChildOf<LoadableConfig>();
         }
         
-        public static void ReadJsonValueStatement(MethodBuilder sink, DataInfo info, bool needCreateVar, bool readDataNodeFromId = false)
+        public static void ReadJsonValueStatement(MethodBuilder sink, DataInfo info, bool needCreateVar, bool readDataNodeFromId = false, bool useTempVar = false)
         {
             var t = info.type;
             if (t.IsConfig() == false) RequestGen(t, sink.classType, GenTaskFlags.JsonSerialization);
@@ -147,7 +147,7 @@ namespace ZergRush.CodeGen
                 directReader: $"{DirectJsonImmutableTypeReader(t)}",
                 needCreateVar: needCreateVar,
                 getDataNodeFromRootWithRefId: readDataNodeFromId,
-                useTempVarThenAssign: info.isValueWrapper != ValueVrapperType.None && (info.type.IsControllableStruct() || info.type.IsMultipleReference())
+                useTempVarThenAssign: useTempVar || info.isValueWrapper != ValueVrapperType.None && (info.type.IsControllableStruct() || info.type.IsMultipleReference())
             );
         }
 
@@ -260,9 +260,11 @@ namespace ZergRush.CodeGen
                         sinkReader.content("if (reader.TokenType == JsonToken.Null) continue;");
                     }
 
+                    string tempVarName = "__temp";
                     ReadJsonValueStatement(sinkReader, 
-                        new DataInfo {type = elemType, carrierType = type, baseAccess = $"self[self.{count} - 1]", insideConfigStorage = type.IsConfigStorage(),
-                            sureIsNull = true}, false);
+                        new DataInfo {type = elemType, carrierType = type, baseAccess = tempVarName, insideConfigStorage = type.IsConfigStorage(),
+                            sureIsNull = true}, true);
+                    sinkReader.content($"self[self.{count} - 1] = {tempVarName};");
                 }
                 else
                 {

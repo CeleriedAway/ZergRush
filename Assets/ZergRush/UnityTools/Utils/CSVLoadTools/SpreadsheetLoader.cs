@@ -26,7 +26,7 @@ using Google.Apis.Services;
 using Google.Apis.Util.Store;
 #endif
 
-namespace GameTools
+namespace ZergRush
 {
     public class GoogleSheetConfig : List<GoogleSheet>
     {
