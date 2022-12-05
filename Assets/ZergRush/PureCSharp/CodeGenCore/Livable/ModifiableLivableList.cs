@@ -26,7 +26,7 @@ namespace ZergRush.Alive
         public new void __PropagateHierarchyAndRememberIds() 
         {
             //Debug.Log($"{root.__debugTag} livable list setup id:{Id}");
-            if (Id != 0) root.Remember(this, Id);
+            if (Id != 0 && root != null) root.Remember(this, Id);
             base.__PropagateHierarchyAndRememberIds();
         }
         public new void __ForgetIds() 
