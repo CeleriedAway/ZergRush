@@ -115,6 +115,12 @@ namespace ZergRush
 
         public async void DownloadAllConfigs(Action onLoaded = null)
         {
+            await DownloadAllConfigsTask();
+            onLoaded?.Invoke();
+        }
+        
+        public async Task DownloadAllConfigsTask()
+        {
             Authorize();
             Connect();
 
@@ -158,8 +164,6 @@ namespace ZergRush
             Debug.Log("Load csv data complete!");
 
             EditorUtility.ClearProgressBar();
-            
-            onLoaded?.Invoke();
         }
 
         private async Task<string> LoadTableAsCSV(string tableId, string pageId, string info)

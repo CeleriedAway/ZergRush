@@ -456,6 +456,11 @@ namespace ZergRush
         {
             return list.Find(e => e is T2) as T2;
         }
+        
+        public static T2 FindCast<T, T2>(this IEnumerable<T> list, Func<T2, bool> predicate) where T2 : class
+        {
+            return list.Find(e => e is T2 t2 && predicate(t2)) as T2;
+        }
 
         public static string PrintCollection<T>(this IEnumerable<T> collection, string delimiter = ", ")
         {
