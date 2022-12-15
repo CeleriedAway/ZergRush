@@ -135,16 +135,23 @@ namespace ZergRush
             return rows[rowIndex];
         }
 
-        public CsvReader Slice(int rowIndex, int count)
+        public CsvReader Slice(int rowIndex, int count, int appendTopLinesCountForNames = 0)
         {
             var reader = new CsvReader();
             if (count < 0) count = 0xffffff;
             var limit = Math.Min(rowCount, rowIndex + count);
+            for (int i = 0; i < appendTopLinesCountForNames; i++)
+            {
+                var r = new Row(rows[i].data);
+                r.table = reader.rows;
+                r.index = i;
+                reader.rows.Add(r);
+            }
             for (int i = rowIndex; i < limit; i++)
             {
                 var r = new Row(rows[i].data);
                 r.table = reader.rows;
-                r.index = i - rowIndex;
+                r.index = i - rowIndex + appendTopLinesCountForNames;
                 reader.rows.Add(r);
             }
 
