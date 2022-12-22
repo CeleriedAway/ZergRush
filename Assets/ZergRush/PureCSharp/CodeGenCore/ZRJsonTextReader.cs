@@ -35,6 +35,9 @@ namespace ZergRush
         public ZRJsonTextReader(TextReader reader) : base(reader)
         {
         }
+        public ZRJsonTextReader(string str) : base(new StringReader(str))
+        {
+        }
 
         public void ReadFromRef<T>(ref T t) where T : IJsonSerializable
         {

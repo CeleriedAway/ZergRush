@@ -15,6 +15,11 @@ namespace ZergRush.ReactiveCore
             });
         }
 
+        public static IEventStream<T2> FilterCast<T, T2>(this IEventStream<T> eventStream) where T2 : class
+        {
+            return eventStream.Filter(t => t is T2).Map(t => t as T2);
+        }
+        
         public static IEventStream Filter(this IEventStream eventStream, Func<bool> filter)
         {
             return new AnonymousEventStream(reaction =>
