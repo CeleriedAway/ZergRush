@@ -207,7 +207,7 @@ namespace ZergRush.CodeGen
         }
         static bool IsReferencableDataNode(this Type t)
         {
-            return t.IsDataNode() && typeof(IReferencableFromDataRoot).IsAssignableFrom(t);
+            return typeof(IReferencableFromDataRoot).IsAssignableFrom(t);
         }
         public static bool IsDataRoot(this Type t)
         {
