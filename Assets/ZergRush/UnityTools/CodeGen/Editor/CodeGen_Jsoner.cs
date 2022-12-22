@@ -59,7 +59,7 @@ namespace ZergRush.CodeGen
                 sink.content($"writer.WriteFixedPreview({info.access}, \"{info.access}\");");
                 return;
             }
-            else if (writeDataNodeAsId && t.IsDataNode() && typeof(IReferencableFromDataRoot).IsAssignableFrom(t))
+            else if (writeDataNodeAsId && typeof(IReferencableFromDataRoot).IsAssignableFrom(t))
             {
                 sink.content($"writer.WriteValue({info.access}.id);");
             }
