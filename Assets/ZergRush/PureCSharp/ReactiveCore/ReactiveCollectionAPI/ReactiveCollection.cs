@@ -208,7 +208,7 @@ namespace ZergRush.ReactiveCore
 
         public static void OnItemSet(int index, T newItem, T oldItem, EventStream<ReactiveCollectionEvent<T>> up)
         {
-            if (up != null)
+            if (up != null && EqualityComparer<T>.Default.Equals(newItem, oldItem) == false)
             {
                 up.Send(new ReactiveCollectionEvent<T>
                 {
