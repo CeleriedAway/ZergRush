@@ -23,7 +23,7 @@ public static partial class SerializationFileTools
     }
     
     public static T LoadFromBinary<T>(this byte[] content, Func<T> defaultIfLoadFailed = null)
-        where T : ISerializable, new()
+        where T : IBinaryDeserializable, new()
     {
         var data = new T();
         try
@@ -89,7 +89,7 @@ public static partial class SerializationFileTools
     }
 
     public static T ReadFromResourcesSerializable<T>(string filePath, T instance = null)
-        where T : class, ISerializable, new()
+        where T : class, IBinaryDeserializable, new()
     {
         var asset = Resources.Load<TextAsset>(filePath);
         instance = SerializationTools.DeserializeFromBytes(asset.bytes, instance);
@@ -105,7 +105,7 @@ public static partial class SerializationFileTools
     }
 
 
-    public static void SaveToBinaryFile<T>(T data, string path) where T : ISerializable
+    public static void SaveToBinaryFile<T>(this T data, string path) where T : IBinarySerializable
     {
         try
         {
@@ -119,12 +119,11 @@ public static partial class SerializationFileTools
         }
         catch (Exception e)
         {
-            Debug.LogError($"Failed to save data to path {data} with error :");
-            Debug.LogError(e.Message);
+            Debug.LogError($"Failed to save data to path {data} with error : {e.ToError()}");
         }
     }
 
-    public static bool LoadFromBinaryFile<T>(this T data, string path) where T : ISerializable
+    public static bool LoadFromBinaryFile<T>(this T data, string path) where T : IBinaryDeserializable
     {
         try
         {
@@ -230,7 +229,7 @@ public static partial class SerializationFileTools
     }
 
     public static T ReadFromFile<T>(string filePath, bool wrapPath, T instance = null)
-        where T : class, ISerializable, new()
+        where T : class, IBinaryDeserializable, new()
     {
         using (BinaryReader reader = new BinaryReader(OpenFileWrap(filePath, FileMode.Open, wrapPath)))
         {

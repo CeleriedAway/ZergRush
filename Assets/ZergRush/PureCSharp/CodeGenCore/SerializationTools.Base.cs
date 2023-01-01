@@ -37,13 +37,13 @@ public static partial class SerializationTools
         }
     }
         
-    public static T DeserializeSource<T>(byte[] data, T instance = null) where T : class, ISerializable, new()
+    public static T DeserializeSource<T>(byte[] data, T instance = null) where T : class, IBinaryDeserializable, new()
     {
         instance = DeserializeFromBytes(data, instance);
         return instance;
     }
 
-    public static T DeserializeFromBytes<T>(byte[] bytes, T instance = null) where T : class, ISerializable, new()
+    public static T DeserializeFromBytes<T>(byte[] bytes, T instance = null) where T : class, IBinaryDeserializable, new()
     {
         if (instance == null) instance = new T();
         using (BinaryReader reader = new BinaryReader(new MemoryStream(bytes)))

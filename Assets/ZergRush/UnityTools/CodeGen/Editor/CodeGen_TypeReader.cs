@@ -85,7 +85,7 @@ namespace ZergRush.CodeGen
 
         static bool CanPerform(this Type t, GenTaskFlags flags)
         {
-            if ((flags & GenTaskFlags.Serialization) != 0 && typeof(ISerializable).IsAssignableFrom(t))
+            if ((flags & GenTaskFlags.Serialization) != 0 && typeof(IBinaryDeserializable).IsAssignableFrom(t))
             {
                 flags ^= GenTaskFlags.Serialization;
             }
