@@ -272,7 +272,7 @@ namespace ZergRush.CodeGen
                 if (useAddCopyFunc)
                 {
                     CreateNewInstance(sink, DataInfo.WithTypeAndName(elementType, "inst"), $"{refInst}.{CodeGen.PolymorphClassIdGetter}", pooled, refInst, true);
-                    sink.content($"self.AddCopy(inst, {refInst});");
+                    sink.content($"self.AddCopy(inst, {refInst}, {HelperName});");
     //                sink.content($"self.Add(null);");
     //                GenUpdateValueFromInstance(sink, new DataInfo {type = elementType, baseAccess = $"self[i]", sureIsNull = true},
     //                    refInst, pooled: pooled);

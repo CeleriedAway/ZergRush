@@ -320,6 +320,14 @@ namespace ZergRush.CodeGen
             });
         }
 
+        static void AddMultiRefInterfaces()
+        {
+            typeRequestMap.Keys.ForEach(t =>
+            {
+                if (t.IsMultipleReference()) GenClassSink(t).inheritance(nameof(IsMultiRef));
+            });
+        }
+
         static void GeneratePolimorphismSupport()
         {
             foreach (var polymorphTask in polymorphicMap)

@@ -50,18 +50,21 @@ namespace ZergRush.Alive
             if (root != null && root.pool != null) item?.ReturnToPool(root.pool);
         }
 
-        public new void AddCopy(T item, T refData)
+        public new void AddCopy(T item, T refData, ZRUpdateFromHelper __helper)
         {
             if (refData == null)
             {
                 items.Add(null);
                 return;
             }
+
+            bool updated = refData is IsMultiRef ? __helper.TryLoadAlreadyUpdated(refData, ref item) : false;
+            
             items.Add(item);
             SetupItemHierarchy(item);
-            
-            if (refData != null)
-                item?.UpdateFrom(refData, new ZRUpdateFromHelper());
+
+            if (!updated && refData != null)
+                item?.UpdateFrom(refData, __helper);
             
             if (alive)
                 item?.Enlive();

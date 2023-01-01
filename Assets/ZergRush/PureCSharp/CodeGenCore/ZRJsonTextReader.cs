@@ -17,6 +17,7 @@ namespace ZergRush
             var id = generator.GetId(source, out var firstTime);
             if (firstTime)
             {
+                alreadyHashed[id] = (ulong)id;
                 var hash = source.CalculateHash(this);
                 alreadyHashed[id] = hash;
                 return hash ^ 0x2345096349;

@@ -142,7 +142,7 @@ namespace ZergRush.CodeGen
                 }
             }
 
-
+            AddMultiRefInterfaces();
             GenerateFieldWrappers();
             GeneratePolimorphismSupport();
             GeneratePolymorphicRootSupport();

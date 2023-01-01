@@ -171,16 +171,17 @@ namespace ZergRush.Alive
 
         public int getConnectionCount => up != null ? up.getConnectionCount : 0;
         
-        public void AddCopy(T item, T refData)
+        public void AddCopy(T item, T refData, ZRUpdateFromHelper __helper)
         {
             if (refData == null)
             {
                 items.Add(null);
                 return;
             }
+            bool updated = refData is IsMultiRef ? __helper.TryLoadAlreadyUpdated(refData, ref item) : false;
             items.Add(item);
             SetupItemHierarchy(item);
-            item.UpdateFrom(refData, new ZRUpdateFromHelper());
+            if (!updated) item.UpdateFrom(refData, __helper);
             ReactiveCollection<T>.OnItemInserted(item, up, items.Count - 1);
         }
 
