@@ -48,7 +48,7 @@ namespace ZergRush.ReactiveUI
                 pools[prefabRef] = pool;
                 
                 // TODO implement proper prefab logic here
-                if (options.Has(PresentOptions.UseLoadedViews)) Rui.FillPoolWithChildrenViews(pool, parent, prefabRef, prefab, options);
+                if (options.Has(PresentOptions.__UseLoadedViews)) Rui.FillPoolWithChildrenViews(pool, parent, prefabRef, prefab, options);
                 recycleAction.ForEach(a => pool.AddRecycleAction(a));
                 if (instantiateAction != null) pool.AddInstantiateAction(instantiateAction);
             }

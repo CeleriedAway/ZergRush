@@ -12,10 +12,11 @@ namespace ZergRush.ReactiveUI
     {
         None = 0,
         PreserveSiblingOrder = 1,
-        UseLoadedViews = 2,
-        UseChildWithSameTypeAsView = 4 | UseLoadedViews,
-        UseChildWithSameNameAsView = 8 | UseLoadedViews,
-        NeedLayout = 16
+        UseChildWithSameTypeAsView = 4 | __UseLoadedViews,
+        UseChildWithSameNameAsView = 8 | __UseLoadedViews,
+        
+        __UseLoadedViews = 2, // for internal use
+        __NeedLayout = 16 // for internal use
     }
 
     // You need to dispose this when table view is done.
@@ -198,7 +199,7 @@ namespace ZergRush.ReactiveUI
         {
             var components = new TableConnectionsAndComponents<TView, TData>();
 
-            if (options.Has(PresentOptions.NeedLayout) && layout == null) layout = LinearLayout();
+            if (options.Has(PresentOptions.__NeedLayout) && layout == null) layout = LinearLayout();
             components.layout = layout;
 
             if (pool == null)
@@ -221,7 +222,7 @@ namespace ZergRush.ReactiveUI
                     var actualPrefab = prefab.ExtractPrefab(parent);
                     layout?.UpdatePrefabSizeInfo(actualPrefab.GetComponent<RectTransform>().rect.size);
                     pool = new ViewPool<TView, TData>(parent, actualPrefab);
-                    if (options.Has(PresentOptions.UseLoadedViews))
+                    if (options.Has(PresentOptions.__UseLoadedViews))
                     {
                         FillPoolWithChildrenViews(pool, parent, prefab, actualPrefab, options);
                     }
@@ -571,7 +572,7 @@ namespace ZergRush.ReactiveUI
                 prefabSelectorPreload: prefabSelectorPreload,
                 layout: layout,
                 delegates: delegates,
-                options: options | PresentOptions.NeedLayout);
+                options: options | PresentOptions.__NeedLayout);
             return PresentInScrollWithLayout(components, scroll);
         }
 
@@ -590,7 +591,7 @@ namespace ZergRush.ReactiveUI
         {
             var components = CreateBasicTableComponents(data, rect, fillFactory, prefab: prefab,
                 layout: layout, delegates: delegates, prefabSelector: prefabSelector,
-                prefabSelectorPreload: prefabSelectorPreload, pool: pool, options: options | PresentOptions.NeedLayout);
+                prefabSelectorPreload: prefabSelectorPreload, pool: pool, options: options | PresentOptions.__NeedLayout);
             components.viewPort = new AllVisibleViewPort();
             return ControlItemVisibilityAndRecycle(components);
         }
