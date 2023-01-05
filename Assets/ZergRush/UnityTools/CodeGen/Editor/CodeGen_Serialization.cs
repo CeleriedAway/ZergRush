@@ -63,8 +63,7 @@ namespace ZergRush.CodeGen
         public static bool IsConfigStorage(this Type t)
         {
             return t.IsGenericType && t.GetGenericTypeDefinition() == typeof(ConfigStorageList<>) ||
-                   t.IsGenericType && t.GetGenericTypeDefinition() == typeof(ConfigStorageDict<,>) ||
-                   t.IsConfig() || t.IsLoadableConfig();
+                   t.IsGenericType && t.GetGenericTypeDefinition() == typeof(ConfigStorageDict<,>);
         }
 
         public static void SinkListWriterCode(Type listType, MethodBuilder sink, DataInfo info, string stream)
