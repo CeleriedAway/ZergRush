@@ -118,7 +118,21 @@ namespace ZergRush
             await DownloadAllConfigsTask();
             onLoaded?.Invoke();
         }
-        
+
+        public async Task DownloadOne(object id)
+        {
+            foreach (var googleSheet in googleConfig)
+            {
+                if (googleSheet.pages.TryGetValue(id, out var page))
+                {
+                    var content = await LoadTableAsCSV(googleSheet.id, page, id.ToString());
+                    var path = $"{pathToConfigs}{googleSheet.name}/{id.ToString()}.csv";
+                    await File.WriteAllTextAsync(path, content);
+                    Debug.Log($"page {id} loaded and saved to {path}");
+                }
+            }
+        }
+
         public async Task DownloadAllConfigsTask()
         {
             Authorize();
@@ -145,8 +159,8 @@ namespace ZergRush
                     EditorUtility.DisplayProgressBar($"Downloading {config.name} page", $"Page {page.Key}", i++ * part);
                     var content = LoadTableAsCSV(config.id, page.Value, page.Key.ToString());
                     var path = $"{pathToConfigs}{config.name}";
-                    Directory.CreateDirectory(path);
                     filesToWrite.Add(($"{path}/{page.Key}.csv", content));
+                    Directory.CreateDirectory(path);
                 }
             }
 
@@ -166,7 +180,7 @@ namespace ZergRush
             EditorUtility.ClearProgressBar();
         }
 
-        private async Task<string> LoadTableAsCSV(string tableId, string pageId, string info)
+        private static async Task<string> LoadTableAsCSV(string tableId, string pageId, string info)
         {
             ServicePointManager.ServerCertificateValidationCallback = MyRemoteCertificateValidationCallback;
 
