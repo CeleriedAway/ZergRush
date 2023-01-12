@@ -1,5 +1,4 @@
 ﻿// See https://aka.ms/new-console-template for more information
-//Console.WriteLine("Hello, World!");
 
 using System;
 using System.Collections.Generic;
@@ -8,6 +7,7 @@ using System.Linq;
 using System.Reflection;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis;
+using System.Diagnostics;
 
 #if UNITY_EDITOR
 #endif
@@ -58,13 +58,16 @@ class Programm
         };
 
         var projects = Directory.GetFiles(path).Where(f => f.EndsWith(".csproj") && !exclude.Any(e => f.Contains(e)));
-        
+        foreach(var project in projects)
+        {
+            Console.WriteLine(project);
+        }
+
         SyntaxAnalizeStuff(path, projects.Select(f => Path.GetFileName(f)).ToArray());
     }
 
     private static void SyntaxAnalizeStuff(string projectPath, string[] projectName)
     {
-        //Console.WriteLine("\n\nFinding all files \n\nv v v v v v v");
         var allReferencePaths = new HashSet<string>();
         var allProjectReference = new HashSet<string>();
 
@@ -75,6 +78,8 @@ class Programm
             var (allFilePaths, dlls, projs) = TypeReader.FindAllFilesInProject(projectPath, p);
             foreach (var dll in dlls)
             {
+                //Console.WriteLine($"dll: {dll}");
+                if (dll.Contains("ZergRush") || dll.Contains("CodeGen")) continue;
                 allReferencePaths.Add(dll);
             }
             foreach (var pp in projs)
@@ -87,17 +92,14 @@ class Programm
         var trees = new List<SyntaxTree>();
         foreach (var file in files)
         {
+            
             if (File.Exists(file) == false) continue;
             var tree = ExtractSyntaxTree(file, defines);
             trees.Add(tree);
         }
 
         var pruned = trees.ConvertAll(TypeReader.PruneTree);
-        // pruned.ForEach((t) =>
-        // {
-        //     Console.WriteLine(t.FilePath);
-        // });
-        var references = allReferencePaths.Where(f => File.Exists(f)).Select((rPath) => MetadataReference.CreateFromFile(rPath));
+        var references = allReferencePaths.Where(f => File.Exists(f)).Select((rPath) => MetadataReference.CreateFromFile(rPath));        
 
         Dictionary<string, Assembly> loadedAssemblies = new Dictionary<string, Assembly>();
         foreach (var portableExecutableReference in references)
@@ -127,7 +129,15 @@ class Programm
         if (assembly == null) throw new NullReferenceException("Assembly is null");
 
         var cg = assembly.GetTypes().First(t => t.Name == "CodeGen");
-        cg.GetMethod("RawGen").Invoke(null, new []{(object) new List<Assembly>{assembly}, Path.Combine(projectPath, "Assets", "zGenerated"), (object)false});
+        try
+        {
+            cg.GetMethod("RawGen").Invoke(null, new[] { (object)new List<Assembly> { assembly }, Path.Combine(projectPath, "Assets", "zGenerated"), (object)false });
+
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.InnerException.ToString());
+        }
     }
 
 
@@ -169,7 +179,8 @@ class Programm
                                             $"in\n{diagnostic.Location.SourceTree.FilePath} {diagnostic.Location.SourceSpan.ToString()}");
                 }
 
-                throw new Exception("Unknown error while compiling code !");
+                Console.ReadLine();
+                return null;
             }
 
             ms.Seek(0, SeekOrigin.Begin);
