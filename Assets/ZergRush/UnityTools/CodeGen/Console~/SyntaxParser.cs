@@ -157,6 +157,7 @@ public static partial class TypeReader
         "CodeGen.",
         "LogSink.cs",
         "Arg.cs",
+        "GenTaskFlags.cs",
         Path.Combine("UnityTools", "CodeGen", "Editor")
     };
     public static SyntaxTree PruneTree(SyntaxTree original)
