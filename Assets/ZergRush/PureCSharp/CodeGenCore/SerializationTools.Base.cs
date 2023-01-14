@@ -6,8 +6,83 @@ using Newtonsoft.Json;
 using ZergRush;
 using ZergRush.Alive;
 
+public interface IStableIdentifiable
+{
+    public int stableId { get; }
+    public object NewInstThisType();
+}
+
 public static partial class SerializationTools
 {
+    public static void StableUpdateFrom<T>(IList<T> self, IList<T> other, ZRUpdateFromHelper __helper) 
+        where T : IStableIdentifiable, IUpdatableFrom<T>, new()
+    {
+        var i = 0;
+        for (; i < other.Count; i++)
+        {
+            var currOtherItem = other[i];
+            var selfMatchingItemIndex = self.IndexOf(o => o.stableId == currOtherItem.stableId);
+            
+            check:
+            if (selfMatchingItemIndex == i)
+            {
+                // self is here, just update
+                var selfItem = self[i];
+                if (selfItem is not IsMultiRef || !__helper.TryLoadAlreadyUpdated(currOtherItem, ref selfItem))
+                {
+                    selfItem.UpdateFrom(currOtherItem, __helper);
+                }
+                self[i] = selfItem;
+            }
+            else if (selfMatchingItemIndex > i)
+            {
+                // check if current self item is absent in other to make the most painless shift
+                var otherPosOfCurrentSelf = self.IndexOf(o => o.stableId == currOtherItem.stableId);
+                if (otherPosOfCurrentSelf == -1)
+                {
+                    // this self is redundant, remove, shift index and go again
+                    self.RemoveAt(i);
+                    selfMatchingItemIndex--;
+                    goto check;
+                }
+                // move item to right position
+                var selfItem = self.TakeAt(selfMatchingItemIndex);
+                if (selfItem is not IsMultiRef || !__helper.TryLoadAlreadyUpdated(currOtherItem, ref selfItem))
+                {
+                    selfItem.UpdateFrom(currOtherItem, __helper);
+                }
+                self.Insert(i, selfItem);
+            }
+            else if (selfMatchingItemIndex == -1)
+            {
+                var selfItem = (T) currOtherItem.NewInstThisType();
+                // self not found, creating new one
+                if (self is IAddCopyList<T> addCopyList)
+                {
+                    addCopyList.AddCopy(selfItem, currOtherItem, __helper);
+                }
+                else
+                {
+                    if (selfItem is not IsMultiRef || !__helper.TryLoadAlreadyUpdated(currOtherItem, ref selfItem))
+                    {
+                        selfItem.UpdateFrom(currOtherItem, __helper);
+                    }
+                    self.Insert(i, selfItem);
+                }
+            }
+            else
+            {
+                throw new ZergRushException("found self in the past, thi should not happer");
+            }
+        }
+
+        // remove redundant self items if any
+        for (; i < self.Count; i++)
+        {
+            self.RemoveAt(i);
+        }
+    }
+    
     public static void UpdateFrom<T>(this T t, T other) where T : IUpdatableFrom<T>
     {
         t.UpdateFrom(other, new ZRUpdateFromHelper());

@@ -5,7 +5,7 @@ using ZergRush.ReactiveCore;
 
 namespace ZergRush.Alive
 {
-    public partial class LivableList<T> : DataList<T> where T : Livable
+    public partial class LivableList<T> : DataList<T>, IAddCopyList<T> where T : Livable
     {
         [GenIgnore] bool alive;
 
