@@ -2,6 +2,6 @@ namespace ZergRush.Alive
 {
     public interface IAddCopyList<T>
     {
-        void AddCopy(T item, T refData, ZRUpdateFromHelper __helper);
+        void InsertCopy(T item, T refData, ZRUpdateFromHelper __helper, int index);
     }
 }

@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Diagnostics;
 using ZergRush.Alive;
 using ZergRush.CodeGen;
 using ZergRush.ReactiveCore;
 
 namespace ZergRush.Alive
 {
+    [DebuggerDisplay("{this.ToString()}")]
     public partial class LivableList<T> : DataList<T>, IAddCopyList<T> where T : Livable
     {
         [GenIgnore] bool alive;
@@ -49,8 +51,8 @@ namespace ZergRush.Alive
             base.ProcessRemoveItem(item);
             if (root != null && root.pool != null) item?.ReturnToPool(root.pool);
         }
-
-        public new void AddCopy(T item, T refData, ZRUpdateFromHelper __helper)
+        
+        public void InsertCopy(T item, T refData, ZRUpdateFromHelper __helper, int index)
         {
             if (refData == null)
             {
@@ -60,7 +62,7 @@ namespace ZergRush.Alive
 
             bool updated = refData is IsMultiRef ? __helper.TryLoadAlreadyUpdated(refData, ref item) : false;
             
-            items.Add(item);
+            items.Insert(index, item);
             SetupItemHierarchy(item);
 
             if (!updated && refData != null)
@@ -69,7 +71,12 @@ namespace ZergRush.Alive
             if (alive)
                 item?.Enlive();
             
-            ReactiveCollection<T>.OnItemInserted(item, up, items.Count - 1);
+            ReactiveCollection<T>.OnItemInserted(item, up, index);
+        }
+
+        public new void AddCopy(T item, T refData, ZRUpdateFromHelper __helper)
+        {
+            InsertCopy(item, refData, __helper, items.Count);
         }
 
         protected override void ProcessAddItem(T item)
@@ -93,6 +100,12 @@ namespace ZergRush.Alive
             }
 
             items.Clear();
+        }
+
+
+        public override string ToString()
+        {
+            return this.PrintCollection();
         }
 
     }

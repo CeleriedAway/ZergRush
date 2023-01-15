@@ -253,9 +253,9 @@ namespace ZergRush.CodeGen
         public static void SinkUpdateFromList(MethodBuilder sink, Type elementType,
             string accessPrefix, string other, bool pooled, bool useAddCopyFunc)
         {
-            if (elementType is IStableIdentifiable)
+            if (typeof(IStableIdentifiable).IsAssignableFrom(elementType))
             {
-                sink.content($"{accessPrefix}.StableUpdateFrom({other};");
+                sink.content($"{accessPrefix}.StableUpdateFrom({other}, {HelperName});");
                 return;
             }
             

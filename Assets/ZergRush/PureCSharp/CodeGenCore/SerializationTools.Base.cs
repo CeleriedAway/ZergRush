@@ -14,7 +14,7 @@ public interface IStableIdentifiable
 
 public static partial class SerializationTools
 {
-    public static void StableUpdateFrom<T>(IList<T> self, IList<T> other, ZRUpdateFromHelper __helper) 
+    public static void StableUpdateFrom<T>(this IList<T> self, IList<T> other, ZRUpdateFromHelper __helper) 
         where T : IStableIdentifiable, IUpdatableFrom<T>, new()
     {
         var i = 0;
@@ -36,8 +36,9 @@ public static partial class SerializationTools
             }
             else if (selfMatchingItemIndex > i)
             {
+                var currSelfItem = self[i];
                 // check if current self item is absent in other to make the most painless shift
-                var otherPosOfCurrentSelf = self.IndexOf(o => o.stableId == currOtherItem.stableId);
+                var otherPosOfCurrentSelf = other.IndexOf(o => o.stableId == currSelfItem.stableId);
                 if (otherPosOfCurrentSelf == -1)
                 {
                     // this self is redundant, remove, shift index and go again
@@ -59,7 +60,7 @@ public static partial class SerializationTools
                 // self not found, creating new one
                 if (self is IAddCopyList<T> addCopyList)
                 {
-                    addCopyList.AddCopy(selfItem, currOtherItem, __helper);
+                    addCopyList.InsertCopy(selfItem, currOtherItem, __helper, i);
                 }
                 else
                 {
