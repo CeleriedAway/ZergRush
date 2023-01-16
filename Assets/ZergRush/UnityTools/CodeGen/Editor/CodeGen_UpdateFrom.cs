@@ -253,6 +253,12 @@ namespace ZergRush.CodeGen
         public static void SinkUpdateFromList(MethodBuilder sink, Type elementType,
             string accessPrefix, string other, bool pooled, bool useAddCopyFunc)
         {
+            if (typeof(IStableIdentifiable).IsAssignableFrom(elementType))
+            {
+                sink.content($"{accessPrefix}.StableUpdateFrom({other}, {HelperName});");
+                return;
+            }
+            
             var refInst = $"{other}[i]";
             sink.content($"int i = 0;");
             sink.content($"int oldCount = {accessPrefix}.Count;");
