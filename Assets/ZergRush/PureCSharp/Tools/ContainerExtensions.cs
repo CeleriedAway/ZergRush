@@ -551,7 +551,7 @@ namespace ZergRush
             }
         }
 
-        public static void Resize<T>(this List<T> list, int count, Func<T> create, Action<T> destroy)
+        public static void Resize<T>(this IList<T> list, int count, Func<int, T> create, Action<T> destroy)
         {
             while (list.Count > count)
             {
@@ -560,8 +560,12 @@ namespace ZergRush
 
             while (list.Count < count)
             {
-                list.Add(create());
+                list.Add(create(list.Count));
             }
+        }
+        public static void Resize<T>(this IList<T> list, int count, Func<T> create, Action<T> destroy)
+        {
+            Resize(list, count, _ => create(), destroy);
         }
 
         public static (V, int) MinWithIndex<V>(this IEnumerable<V> list, V baseVal = default)

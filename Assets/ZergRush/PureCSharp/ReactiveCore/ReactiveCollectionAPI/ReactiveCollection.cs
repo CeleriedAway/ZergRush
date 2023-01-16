@@ -95,7 +95,7 @@ namespace ZergRush.ReactiveCore
 
         public void Clear()
         {
-            Reset(new List<T>());
+            ResetConsumeList(new SimpleList<T>());
         }
 
         public int RemoveAll(Func<T, bool> predicate)
@@ -132,6 +132,14 @@ namespace ZergRush.ReactiveCore
             var oldData = data;
             data = new SimpleList<T>(newData);
             OnItemsReset(newData, oldData, up);
+        }
+        
+        // directly takes this list, this is just an optimization for some cases
+        public void ResetConsumeList(SimpleList<T> list)
+        {
+            var oldData = data;
+            data = list;
+            OnItemsReset(list, oldData, up);
         }
 
         public static void OnItemRemovedAt(int index, EventStream<ReactiveCollectionEvent<T>> up, T item)
