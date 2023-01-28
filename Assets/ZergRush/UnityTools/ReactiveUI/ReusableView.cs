@@ -9,6 +9,8 @@ namespace ZergRush.ReactiveUI
 {
     public class ReusableView : ConnectableMonoBehaviour
     {
+        [NonSerialized, HideInInspector]
+        public bool parentIsLayout;
         protected RectTransform _rect;
         public RectTransform rectTransform { get { return _rect == null ? (_rect = GetComponent<RectTransform>()) : _rect; } }
         private Transform _tr;
@@ -17,8 +19,8 @@ namespace ZergRush.ReactiveUI
         [NonSerialized] public int indexInModel;
         // for some inner impl
         [NonSerialized] public ReusableView prefabRef;
-        public virtual bool autoDisableOnRecycle => rectTransform == null;
-        public virtual bool setImpossiblePositionOnRecycle => rectTransform != null;
+        public virtual bool autoDisableOnRecycle => rectTransform == null || parentIsLayout;
+        public virtual bool setImpossiblePositionOnRecycle => rectTransform != null && !parentIsLayout;
 
         public virtual void OnRecycle()
         {
