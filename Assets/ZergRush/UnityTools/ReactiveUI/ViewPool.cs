@@ -87,7 +87,7 @@ namespace ZergRush.ReactiveUI
             this.parent = parent;
             this.prefab = prefab;
             pool = new List<TView>();
-            parentIsLayout = parent.GetComponent<LayoutGroup>() != null;
+            parentIsLayout = parent?.GetComponent<LayoutGroup>() != null;
         }
 
         public ViewPool(Transform parent, PrefabRef<TView> prefab, PresentOptions options) : this(parent, prefab.ExtractPrefab(parent))
