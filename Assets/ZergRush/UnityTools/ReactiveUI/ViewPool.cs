@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices.WindowsRuntime;
 using UnityEngine;
 using UnityEngine.Assertions;
+using UnityEngine.UI;
 
 namespace ZergRush.ReactiveUI
 {
@@ -76,6 +77,7 @@ namespace ZergRush.ReactiveUI
         readonly List<TView> pool;
         readonly Transform parent;
         readonly TView prefab;
+        bool parentIsLayout;
         Action<TView> instantiateAction;
         List<Func<TView, float>> recycleAction = new List<Func<TView, float>>();
 
@@ -85,6 +87,7 @@ namespace ZergRush.ReactiveUI
             this.parent = parent;
             this.prefab = prefab;
             pool = new List<TView>();
+            parentIsLayout = parent.GetComponent<LayoutGroup>() != null;
         }
 
         public ViewPool(Transform parent, PrefabRef<TView> prefab, PresentOptions options) : this(parent, prefab.ExtractPrefab(parent))
@@ -159,6 +162,7 @@ namespace ZergRush.ReactiveUI
             {
                 view = Instantiate();
             }
+            view.parentIsLayout = parentIsLayout;
             view.OnBeforeUsed();
             if (view.autoDisableOnRecycle)
                 view.gameObject.SetActive(true);
