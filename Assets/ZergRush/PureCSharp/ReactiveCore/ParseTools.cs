@@ -2,17 +2,20 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using ZergRush;
+using ZergRush.CodeGen;
 
 public static class ParseTools
 {
-    public static string TakeString(this string str , int cnt)
+    public static string TakeString(this string str, int cnt)
     {
         return str.Substring(0, cnt);
     }
-    public static string TakeLastString(this string str , int cnt)
+
+    public static string TakeLastString(this string str, int cnt)
     {
         return str.Substring(str.Length - cnt, cnt);
     }
@@ -28,6 +31,7 @@ public static class ParseTools
         suff = str;
         return false;
     }
+
     public static bool HasSuffixAndStrip(this string str, string suff, out string pref)
     {
         if (str == null)
@@ -35,11 +39,13 @@ public static class ParseTools
             pref = str;
             return false;
         }
+
         if (str.EndsWith(suff))
         {
             pref = str.Substring(0, str.Length - suff.Length);
             return true;
         }
+
         pref = str;
         return false;
     }
@@ -69,13 +75,13 @@ public static class ParseTools
     public static int ParsePartToPercent(this string str, int def = 0)
     {
         if (string.IsNullOrEmpty(str)) return def;
-        return (int)Math.Round(float.Parse(str, CultureInfo.InvariantCulture) * 100);
+        return (int) Math.Round(float.Parse(str, CultureInfo.InvariantCulture) * 100);
     }
 
     public static int ParsePartToPercentStrict(this string str)
     {
         if (string.IsNullOrEmpty(str)) throw new ZergRushException($"can't parse part to percent from string\"{str}\"");
-        return (int)Math.Round(float.Parse(str, CultureInfo.InvariantCulture) * 100);
+        return (int) Math.Round(float.Parse(str, CultureInfo.InvariantCulture) * 100);
     }
 
     public static float ParseFloat(this string str, float def = 0)
@@ -83,6 +89,7 @@ public static class ParseTools
         if (string.IsNullOrEmpty(str)) return def;
         return float.TryParse(str, out var i) ? i : def;
     }
+
     public static int ParseInt(this string str, int def = 0)
     {
         if (string.IsNullOrEmpty(str)) return def;
@@ -116,6 +123,7 @@ public static class ParseTools
         {
             builder.Append(s.UpperFirstLetter());
         }
+
         return builder.ToString();
     }
 
@@ -129,7 +137,7 @@ public static class ParseTools
 
         return str.ToUpper();
     }
-    
+
     public static string LowerFirstLetter(this string str)
     {
         if (str == null)
@@ -164,7 +172,7 @@ public static class ParseTools
 
         return (TEnum) Enum.ToObject(typeof(TEnum), val);
     }
-    
+
     public static TEnum ParseEnumFlags<TEnum>(this string str) where TEnum : struct
     {
         int val = 0;
@@ -177,7 +185,7 @@ public static class ParseTools
 
         return (TEnum) Enum.ToObject(typeof(TEnum), val);
     }
-    
+
     public static List<TEnum> ParseEnumListStrict<TEnum>(this string str) where TEnum : struct
     {
         var result = new List<TEnum>();
@@ -212,7 +220,81 @@ public static class ParseTools
         {
             return def;
         }
+
         return val;
+    }
+
+    public static Type TypeFromNameStrict(this string name, Assembly assembly, List<string> namespaceSearchList = null)
+    {
+        var t = name.TypeFromName(assembly, namespaceSearchList);
+        if (t == null)
+        {
+            LogSink.errLog($"requested type {name} not found");
+        }
+
+        return t;
+    }
+
+    // By default assembly and namespace will be taken form type T
+    public static T InstanceFromNameStrict<T>(this string name, List<string> namespaceSearchList = null, Assembly assembly = null)
+    {
+        var t = TypeFromName(name, assembly ?? Assembly.GetAssembly(typeof(T)), namespaceSearchList ?? new List<string>{typeof(T).Namespace});
+        if (t == null)
+        {
+            throw new ZergRushException($"type {name} not found, can't create instance");
+        }
+
+        if (typeof(T).IsAssignableFrom(t) == false)
+        {
+            throw new ZergRushException($"type of {name} expected to be {typeof(T)} but it is not");
+        }
+
+        return (T) Activator.CreateInstance(t);
+    }
+
+    // By default assembly and namespace will be taken form type T
+    public static T InstanceFromName<T>(this string name, Type defaultType, List<string> namespaceSearchList = null, Assembly assembly = null)
+    {
+        var t = TypeFromName(name, assembly ?? Assembly.GetAssembly(typeof(T)), namespaceSearchList ?? new List<string>{typeof(T).Namespace});
+        if (t == null)
+        {
+            LogSink.errLog($"type: {name} not found");
+            t = defaultType;
+        }
+
+        return (T) Activator.CreateInstance(t);
+    }
+
+    public static Type TypeFromName(this string name, Assembly assembly, List<string> namespaceSearchList = null)
+    {
+        Assembly ass = assembly;
+        if (Utils.IsNullOrWhitespace(name))
+        {
+            LogSink.errLog($"bad type name: {name}");
+            return null;
+        }
+
+        Type t = ass.GetType(name, false, true);
+
+        if (t == null)
+        {
+            if (namespaceSearchList != null)
+            {
+                foreach (var ns in namespaceSearchList)
+                {
+                    if ((t = ass.GetType(ns + "." + name, false, true)) != null)
+                    {
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                t = ass.GetType(name, false, true);
+            }
+        }
+
+        return t;
     }
 
     public struct IgnoreCaseComp
