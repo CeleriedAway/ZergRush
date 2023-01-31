@@ -42,5 +42,19 @@ namespace ZergRush.ReactiveCore
             return cell.ListenUpdates(_ => action());
         }
 
+        public static IDisposable PresentCell<T>(this ICell<T> val, Action<T, Connections> changes)
+        {
+            var changeCollection = new Connections();
+            return new DoubleDisposable
+            {
+                First = val.Bind(v =>
+                {
+                    changeCollection.Dispose();
+                    changes(v, changeCollection);
+                }),
+                Second = changeCollection
+            };
+        }
+
     }
 }
