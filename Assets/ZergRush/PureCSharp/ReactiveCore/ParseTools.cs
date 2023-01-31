@@ -296,6 +296,45 @@ public static class ParseTools
 
         return t;
     }
+    
+    public static List<string> ParseStringList(this string str)
+    {
+        var list = new List<string>();
+        if (Utils.IsNullOrWhitespace(str)) return list;
+        list.AddRange(str.Split(',').SelectMany(s => s.Split(' ').Select(ss => ss.Trim())));
+        return list;
+    }
+    
+    public static (string, string) SplitAtIndex(this string str, int i)
+    {
+        if (i >= 0 && i < str.Length) return (str.Substring(0, i), str.Substring(i));
+        return (str, String.Empty);
+    }
+
+    static (string, string) SplitAtIndexSkipped(this string str, int i)
+    {
+        if (i >= 0 && i < str.Length) return (str.Substring(0, i), str.Substring(i + 1));
+        return (str, String.Empty);
+    }
+
+    public static (string, string) SplitFirst(this string str, char delim)
+    {
+        var i = str.IndexOf(delim);
+        return SplitAtIndexSkipped(str, i);
+    }
+
+    public static (string, string) SplitLast(this string str, char delim)
+    {
+        var i = str.LastIndexOf(delim);
+        return SplitAtIndexSkipped(str, i);
+    }
+
+    public static (string, string) SplitFirst(this string str, Func<char, bool> delim)
+    {
+        var i = Utils.IndexOf(str, delim);
+        if (i != -1) return (str.Substring(0, i), str.Substring(i + 1));
+        return (str, String.Empty);
+    }
 
     public struct IgnoreCaseComp
     {
