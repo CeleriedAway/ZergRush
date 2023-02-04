@@ -430,6 +430,11 @@ namespace ZergRush
             {
                 valueBuffer = new CycleBuffer<T>(samples, prefillValue);
             }
+
+            public void Clear()
+            {
+                valueBuffer.Clear();
+            }
             
             public void Fill(T value)
             {
@@ -517,6 +522,11 @@ namespace ZergRush
             {
                 values[i] = prefillFactory();
             }
+        }
+
+        public void Clear()
+        {
+            total = 0;
         }
 
         public int Count => total < max ? total : max;
@@ -614,7 +624,7 @@ namespace ZergRush
                 result += gauss * valueBuffer.Sample(i);
             }
             this.value = result;
-            return value;
+            return result;
         }
 
         public GaussFilteredFloat(int samples) : base(samples)
