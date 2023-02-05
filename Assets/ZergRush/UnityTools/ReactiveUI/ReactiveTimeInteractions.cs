@@ -514,6 +514,7 @@ namespace ZergRush
             {
                 values[i] = prefillValue;
             }
+            total = max;
         }
         
         public CycleBuffer(int sampleCount, Func<T> prefillFactory) : this(sampleCount)
@@ -522,6 +523,7 @@ namespace ZergRush
             {
                 values[i] = prefillFactory();
             }
+            total = max;
         }
 
         public void Clear()

@@ -393,6 +393,16 @@ namespace ZergRush
 
             return result;
         }
+        
+        public static T TakeValue<TKey, T>(this IDictionary<TKey, T> dict, TKey key, T def = default)
+        {
+            if (dict.TryGetValue(key, out var value))
+            {
+                dict.Remove(key);
+                return value;
+            }
+            return def;
+        }
 
         public static T TakeAt<T>(this IList<T> list, int index)
         {
