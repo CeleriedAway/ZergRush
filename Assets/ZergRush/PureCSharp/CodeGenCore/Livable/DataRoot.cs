@@ -1,4 +1,6 @@
 ﻿//#define LogRegistering
+
+using System;
 using System.Collections.Generic;
 using ZergRush.Alive;
 using ZergRush.CodeGen;
@@ -13,10 +15,8 @@ namespace ZergRush.Alive
         [GenIgnore] public ObjectPool pool;
         
         // Ignore almost all id interaction during updatefrom 
-        [GenIgnore] bool updating => updatingProcess.value;
+        [GenIgnore] public bool __updating;
         [GenIgnore] public string __debugTag;
-
-        [GenIgnore] public Cell<bool> updatingProcess = new Cell<bool>();
 
         [GenIgnore] List<INeedUpdateFromPostProcess> updatePostProcess = new List<INeedUpdateFromPostProcess>();
 
@@ -37,16 +37,30 @@ namespace ZergRush.Alive
             }
         }
 
+        // you should call this only when otherData is loaded from somewhere, its id structure will be trashed in process
+        public virtual void RootUpdateFromPartial<T>(T selfData, T otherData) where T : DataNode
+        {
+            otherData.root = this;
+            otherData.__GenIds(this);
+            __updating = true;
+            selfData.UpdateFrom(otherData);
+            __updating = false;
+            foreach (var needUpdateFromPostProcess in updatePostProcess)
+            {
+                needUpdateFromPostProcess.OnUpdateFinished();
+            }
+            updatePostProcess.Clear();
+        }
         public virtual void RootUpdateFrom(DataRoot other, ZRUpdateFromHelper __helper)
         {
             // All ids will be refilled from other model
             gameEntities.Clear();
-            updatingProcess.value = true;
+            __updating = true;
             
             UpdateFrom(other, __helper);
             this.__entityIdFactory = other.__entityIdFactory;
             
-            updatingProcess.value = false;
+            __updating = false;
             
             foreach (var needUpdateFromPostProcess in updatePostProcess)
             {
@@ -122,7 +136,7 @@ namespace ZergRush.Alive
 
         public void Forget(int id, object entity)
         {
-            if (updating) return;
+            if (__updating) return;
             
             #if LogRegistering
             Debug.Log($"DeregisterEntity {entity.ToString()} id={id}");
@@ -156,6 +170,7 @@ namespace ZergRush.Alive
         public void ForceId(int newId, object obj)
         {
             //if (!updating) Debug.LogError($"This one should be called only during update from {obj} {newId}");
+            __entityIdFactory = Math.Max(__entityIdFactory, newId + 1);
             gameEntities[newId] = obj;
         }
 
