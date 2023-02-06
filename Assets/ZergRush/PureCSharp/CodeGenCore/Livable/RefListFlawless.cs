@@ -212,5 +212,10 @@ namespace ZergRush.Alive
         public void __PropagateHierarchyAndRememberIds()
         {
         }
+
+        public void SetRootAndCarrier(DataRoot dataRoot, DataNode carrier)
+        {
+            this.root = dataRoot;
+        }
     }
 }
