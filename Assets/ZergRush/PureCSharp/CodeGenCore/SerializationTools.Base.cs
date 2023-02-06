@@ -80,7 +80,7 @@ public static partial class SerializationTools
         // remove redundant self items if any
         for (; i < self.Count; i++)
         {
-            self.RemoveAt(i);
+            self.RemoveAt(self.Count - 1);
         }
     }
     
