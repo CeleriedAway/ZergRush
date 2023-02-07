@@ -77,8 +77,9 @@ public static partial class SerializationTools
             }
         }
 
+        var toRemove = self.Count - i;
         // remove redundant self items if any
-        for (; i < self.Count; i++)
+        for (int j = 0; j < toRemove; j++)
         {
             self.RemoveAt(self.Count - 1);
         }
