@@ -131,7 +131,7 @@ public static partial class SerializationTools
         return instance;
     }
 
-    public static byte[] SerializeToBytes(this ISerializable val)
+    public static byte[] SerializeToBytes(this IBinarySerializable val)
     {
         using (MemoryStream memStream = new MemoryStream())
         {
@@ -144,21 +144,21 @@ public static partial class SerializationTools
         }
     }
 
-    public static string EncodeToString(this ISerializable val)
+    public static string EncodeToString(this IBinarySerializable val)
     {
         byte[] encodedBytes = val.SerializeToBytes();
         string encodedString = Convert.ToBase64String(encodedBytes);
         return encodedString;
     }
 
-    public static T DecodeFromString<T>(string encodedString) where T : class, ISerializable, new()
+    public static T DecodeFromString<T>(string encodedString) where T : class, IBinaryDeserializable, new()
     {
         byte[] bytesEncoded = Convert.FromBase64String(encodedString);
         T val = DeserializeFromBytes<T>(bytesEncoded);
         return val;
     }
 
-    public static byte[] SaveToBinary<T>(this T data) where T : ISerializable
+    public static byte[] SaveToBinary<T>(this T data) where T : IBinarySerializable
     {
         using var stream = new MemoryStream();
         var writer = new BinaryWriter(stream);
