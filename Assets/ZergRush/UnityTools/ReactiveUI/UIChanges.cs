@@ -1,5 +1,7 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
+using JetBrains.Annotations;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -11,6 +13,7 @@ namespace ZergRush.ReactiveUI
 {
     public static class PresentTools
     {
+        [MustUseReturnValue]
         public static IDisposable PresentCell<T>(this ICell<T> val, Action<T, UIChanges> changes)
         {
             var changeCollection = new UIChanges();
@@ -24,6 +27,35 @@ namespace ZergRush.ReactiveUI
                 Second = changeCollection
             };
         }
+        
+        [MustUseReturnValue]
+        public static IDisposable PresentEach<TData>(
+            this IReactiveCollection<TData> data, Action<TData, UIChanges> present)
+        {
+            var disp = new DoubleDisposable();
+            var dict = new Dictionary<TData, UIChanges>();
+            disp.First = data.BindEach(d =>
+            {
+                if (d == null) return;
+                var conns = new UIChanges();
+                dict[d] = conns;
+                present(d, conns);
+            }, d =>
+            {
+                if (d == null) return;
+                dict[d].Dispose();
+                dict.Remove(d);
+            });
+            disp.Second = new AnonymousDisposable(() =>
+            {
+                foreach (var dictValue in dict.Values)
+                {
+                    dictValue.Dispose();
+                }
+            });
+            return disp;
+        }
+
     }
 
     public class UIChanges : IDisposable, IConnectionSink
