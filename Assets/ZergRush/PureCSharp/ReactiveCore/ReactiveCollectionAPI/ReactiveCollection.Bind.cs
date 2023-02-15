@@ -40,7 +40,7 @@ namespace ZergRush.ReactiveCore
         {
             var itemConnectionsDict = new Dictionary<T, Connections>();
 
-            collection.BindEach(item =>
+            var collConn = collection.BindEach(item =>
             {
                 var itemConnections = new Connections();
                 if (itemConnectionsDict.ContainsKey(item))
@@ -56,6 +56,7 @@ namespace ZergRush.ReactiveCore
 
             return new AnonymousDisposable(() =>
             {
+                collConn.Dispose();
                 foreach (var connections in itemConnectionsDict.Values)
                 {
                     connections.DisconnectAll();
