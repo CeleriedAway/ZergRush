@@ -37,13 +37,12 @@ namespace ZergRush.Alive
         
         public T ReachCarrierHierarchy<T>() where T : DataNode
         {
-            var c = carrier;
+            var c = this;
             while (c != null)
             {
                 if (c is T t) return t;
                 c = c.carrier;
             }
-
             return null;
         }
 
