@@ -193,6 +193,15 @@ namespace ZergRush.ReactiveUI
             });
             image.color = color;
         }
+        public void SetColor(SpriteRenderer image, Color color)
+        {
+            var prevState = image.color;
+            connections += new AnonymousDisposable(() =>
+            {
+                if (image) image.color = prevState;
+            });
+            image.color = color;
+        }
 
         public void SetText(TextMeshProUGUI textMesh, string text)
         {
