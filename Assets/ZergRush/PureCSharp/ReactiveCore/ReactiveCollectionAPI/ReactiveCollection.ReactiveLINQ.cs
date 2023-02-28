@@ -59,9 +59,9 @@ namespace ZergRush.ReactiveCore
             return index.FlatMap(v => collection.AtIndex(v, ifNoElement));
         }
 
-        public static ICell<T> LastElementCell<T>(this IReactiveCollection<T> collection)
+        public static ICell<T> LastElementCell<T>(this IReactiveCollection<T> collection, T ifNoElements = default)
         {
-            return collection.AsCell().Map(c => c.LastElement());
+            return collection.AsCell().Map(c => c.LastElement(ifNoElements));
         }
 
         public static IReactiveCollection<T> Reverse<T>(this IReactiveCollection<T> original)
