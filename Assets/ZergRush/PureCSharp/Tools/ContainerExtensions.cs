@@ -410,6 +410,14 @@ namespace ZergRush
             list.RemoveAt(index);
             return t;
         }
+        
+        public static void TakeAtIndexes<T>(this IList<T> list, IEnumerable<int> index, IList<T> result)
+        {
+            foreach (var i1 in index.OrderBy(i => -i))
+            {
+                result.Add(list.TakeAt(i1));
+            }
+        }
 
         public static T TakeLast<T>(this IList<T> list)
         {
@@ -419,6 +427,15 @@ namespace ZergRush
             return t;
         }
 
+        public static List<T> TakeFirstSome<T>(this IList<T> list, int count)
+        {
+            var result = new List<T>();
+            for (int i = 0; i < count; i++)
+            {
+                result.Add(list.TakeAt(0));
+            }
+            return result;
+        }
         public static T TakeFirst<T>(this IList<T> list)
         {
             var t = list[0];
