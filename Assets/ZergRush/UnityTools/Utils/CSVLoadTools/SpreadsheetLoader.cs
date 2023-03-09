@@ -1,6 +1,5 @@
 ﻿//#define GOOGLE_AUTH
 
-#if UNITY_EDITOR
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -15,7 +14,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -156,7 +154,9 @@ namespace ZergRush
             {
                 foreach (var page in config.pages)
                 {
-                    EditorUtility.DisplayProgressBar($"Downloading {config.name} page", $"Page {page.Key}", i++ * part);
+                    #if UNITY_EDITOR
+                    UnityEditor.EditorUtility.DisplayProgressBar($"Downloading {config.name} page", $"Page {page.Key}", i++ * part);
+                    #endif
                     var content = LoadTableAsCSV(config.id, page.Value, page.Key.ToString());
                     var path = $"{pathToConfigs}{config.name}";
                     filesToWrite.Add(($"{path}/{page.Key}.csv", content));
@@ -177,7 +177,9 @@ namespace ZergRush
             
             Debug.Log("Load csv data complete!");
 
-            EditorUtility.ClearProgressBar();
+            #if UNITY_EDITOR
+            UnityEditor.EditorUtility.ClearProgressBar();
+            #endif
         }
 
         private static async Task<string> LoadTableAsCSV(string tableId, string pageId, string info)
@@ -206,12 +208,15 @@ namespace ZergRush
                 "https://omnigames.atlassian.net/wiki/plugins/viewstorage/viewpagestorage.action?pageId=";
             var www = UnityWebRequest.Get($"{url}{id}");
             www.SendWebRequest();
+            
+            #if UNITY_EDITOR
             while (!www.isDone)
-                EditorUtility.DisplayProgressBar($"Downloading atlassian configs", $"Page {name}",
+                UnityEditor.EditorUtility.DisplayProgressBar($"Downloading atlassian configs", $"Page {name}",
                     www.downloadProgress / part + part * i);
 
             if (part == 1 || i == 0)
-                EditorUtility.ClearProgressBar();
+                UnityEditor.EditorUtility.ClearProgressBar();
+            #endif
 
             if (www.result != UnityWebRequest.Result.Success)
             {
@@ -310,4 +315,3 @@ namespace ZergRush
         }
     }
 }
-#endif
