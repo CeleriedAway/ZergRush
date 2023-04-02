@@ -39,9 +39,9 @@ namespace ZergRush
             if (Application.isEditor)
                 return fileName;
             else if (Application.isConsolePlatform == false && Application.isMobilePlatform == false)
-                return BuildsPath + fileName;
+                return Path.Combine(BuildsPath, fileName);
             else
-                return Application.persistentDataPath + "/" + fileName;
+                return Path.Combine(Application.persistentDataPath, fileName);
         }
         
         public static string BuildsPath

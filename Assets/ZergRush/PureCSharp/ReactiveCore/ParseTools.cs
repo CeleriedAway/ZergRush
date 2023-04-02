@@ -20,9 +20,9 @@ public static class ParseTools
         return str.Substring(str.Length - cnt, cnt);
     }
 
-    public static bool HasPrefixAndStrip(this string str, string prefix, out string suff)
+    public static bool HasPrefixAndStrip(this string str, string prefix, out string suff, StringComparison comp = StringComparison.OrdinalIgnoreCase)
     {
-        if (str.StartsWith(prefix))
+        if (str.StartsWith(prefix, comp))
         {
             suff = str.Substring(prefix.Length);
             return true;
@@ -259,6 +259,10 @@ public static class ParseTools
         if (t == null)
         {
             LogSink.errLog($"type: {name} not found");
+            if (defaultType == null)
+            {
+                return default;
+            }
             t = defaultType;
         }
 

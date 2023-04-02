@@ -96,7 +96,7 @@ public static partial class SerializationFileTools
         return instance;
     }
 
-    public static void SaveToFile(this ISerializable obj, string filePath, bool wrapfile)
+    public static void SaveToFile(this IBinarySerializable obj, string filePath, bool wrapfile)
     {
         using (BinaryWriter writer = new BinaryWriter(OpenFileWrap(filePath, FileMode.Create, wrapfile)))
         {
@@ -140,7 +140,7 @@ public static partial class SerializationFileTools
             return false;
         }
     }
-    public static bool LoadFromBinaryFile<T>(string path, out T data) where T : ISerializable, new()
+    public static bool LoadFromBinaryFile<T>(string path, out T data) where T : IBinaryDeserializable, new()
     {
         data = new T();
         try

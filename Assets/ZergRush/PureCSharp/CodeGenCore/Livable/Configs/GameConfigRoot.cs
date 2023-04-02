@@ -13,7 +13,7 @@
     /// </summary>
     /// <typeparam name="T">Inherited type</typeparam>
     [GenTask(GenTaskFlags.ConfigData & ~GenTaskFlags.PolymorphicConstruction), GenInLocalFolder]
-    public abstract partial class GameConfigRoot<T> : ISerializable where T : GameConfigRoot<T>, new()
+    public abstract partial class GameConfigRoot<T> : IBinarySerializable, IBinaryDeserializable where T : GameConfigRoot<T>, new()
     {
         /// <summary>
         /// Your config container.

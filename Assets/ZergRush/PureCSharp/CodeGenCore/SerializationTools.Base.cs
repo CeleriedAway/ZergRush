@@ -233,14 +233,14 @@ public static partial class SerializationTools
         }
     }
 
-    public static T ReadSerializable<T>(this BinaryReader r) where T : ISerializable, new()
+    public static T ReadSerializable<T>(this BinaryReader r) where T : IBinaryDeserializable, new()
     {
         var val = new T();
         val.Deserialize(r);
         return val;
     }
 
-    public static void Write(this BinaryWriter r, ISerializable data)
+    public static void Write(this BinaryWriter r, IBinarySerializable data)
     {
         data.Serialize(r);
     }
@@ -329,7 +329,7 @@ public static partial class SerializationTools
         return hash;
     }
 
-    public static void ReadFromStream<T>(this List<T> data, BinaryReader stream) where T : ISerializable, new()
+    public static void ReadFromStream<T>(this List<T> data, BinaryReader stream) where T : IBinaryDeserializable, new()
     {
         var size = stream.ReadInt32();
         data.Capacity = size;
@@ -339,7 +339,7 @@ public static partial class SerializationTools
         }
     }
 
-    public static void WriteToStream<T>(this List<T> data, BinaryWriter stream) where T : ISerializable, new()
+    public static void WriteToStream<T>(this List<T> data, BinaryWriter stream) where T : IBinarySerializable, new()
     {
         ushort size = (ushort)data.Count;
         stream.Write(size);
@@ -499,7 +499,7 @@ public static partial class SerializationTools
     }
 
     public static bool LoadFromBinary<T>(this T t, byte[] content)
-        where T : ISerializable
+        where T : IBinaryDeserializable
     {
         try
         {
