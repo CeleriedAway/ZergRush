@@ -229,7 +229,7 @@ public static partial class TypeReader
                     {
                         attr = childNode.Attributes?.Item(0);
                         if (attr?.Value == null) continue;
-                        if (projectFile.Contains("ZergRush.Core") == false && attr.Value.EndsWith(".gen.cs")) continue;
+                        if (projectFile.Contains("ZergRush.Core") == false && !attr.Value.Contains("DataNode.gen.cs") && !attr.Value.Contains("Livable.gen.cs") && attr.Value.EndsWith(".gen.cs")) continue;
                         files.Add(Path.Combine(projectPath,attr.Value));
                         continue;
                     }

@@ -117,6 +117,7 @@ namespace ZergRush.CodeGen
 
         public static bool CanBeAncestor(this Type t)
         {
+            if (t.IsHierarchySupportContainer()) return false;
             if (t.IsSealed) return false;
             if (t.IsGenericParameter)
             {

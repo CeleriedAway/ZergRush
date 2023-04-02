@@ -1,16 +1,19 @@
 
+using System;
+
 namespace ZergRush.Alive
 {
     public partial class ModifiableLivableList<T> : LivableList<T>, IStaticallyModifiable, IReferencableFromDataRoot where T : Livable, IReferencableFromDataRoot
     {
         public int id;
         public int Id { get { return id; } set { id = value; root?.ForceId(value, this); } }
+        public bool supportId => true;
 
         public void ModifyAddInstance(StaticConnections connections, T item)
         {
             item.SetRootAndCarrier(root, carrier);
             item.__PropagateHierarchyAndRememberIds();
-            item.__parent_id = connections.ownerId;
+            //item.__parent_id = connections.ownerId;
             if (item.Id == 0)
             {
                 item.__GenIds(root);
@@ -47,5 +50,10 @@ namespace ZergRush.Alive
             }
         }
         
+        public new void VisitNode(Action<object> action)
+        {
+            action(this);
+            base.VisitNode(action);
+        }
     }
 }

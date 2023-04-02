@@ -22,6 +22,7 @@ namespace ZergRush.CodeGen
                 var checkAlive = ""; //type.IsLivableGen() ? "if (alive) " : "";
                 classSink.content("public override int Id { get { return id; } set { id = value; " + checkAlive +
                                   "root?.ForceId(value, this); } }");
+                classSink.content("public override bool supportId => true;");
             }
 
             // Auto id generation on creation
@@ -199,11 +200,11 @@ namespace ZergRush.CodeGen
         
         static bool IsDataList(this Type t)
         {
-            return t.IsLivableList() || t.IsConstructedGenericType && t.IsGenericOfType(typeof(DataList<>));
+            return t.IsLivableList() || t.IsGenericOfType(typeof(DataList<>));
         }
         public static bool IsDataNode(this Type t)
         {
-            return typeof(DataNode).IsAssignableFrom(t);
+            return !t.IsHierarchySupportContainer() && typeof(DataNode).IsAssignableFrom(t);
         }
         static bool IsReferencableDataNode(this Type t)
         {
@@ -219,8 +220,7 @@ namespace ZergRush.CodeGen
         }
         static bool IsRef(this Type t)
         {
-            return t.IsConstructedGenericType &&
-                   t.IsGenericOfType(typeof(Ref<>));
+            return t.IsConstructedGenericType && t.IsGenericOfType(typeof(Ref<>));
         }
         static bool HasChildrenThatNeedsRootSetup(this Type t)
         {

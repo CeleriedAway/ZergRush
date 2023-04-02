@@ -241,7 +241,7 @@ namespace ZergRush.CodeGen
             bool pooled)
         {
             string count = listType.IsList() ? "Count" : "Length";
-            if (listType.IsDataList()) sink.content($"{path}.{updatemod} = true;");
+            if (listType.IsDataList() || listType.IsLivableList()) sink.content($"{path}.{updatemod} = true;");
 
             sink.content($"var size = {stream}.ReadInt32();");
             sink.SinkCountCheck("size");

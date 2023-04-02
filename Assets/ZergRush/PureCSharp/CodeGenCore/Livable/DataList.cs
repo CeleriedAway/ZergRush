@@ -213,5 +213,14 @@ namespace ZergRush.Alive
                 item?.__ForgetIds();
             }
         }
+
+        public void VisitNode(Action<object> action)
+        {
+            foreach (var item in items)
+            {
+                if (item == null) continue;
+                item.VisitNode(action);
+            }            
+        }
     }
 }

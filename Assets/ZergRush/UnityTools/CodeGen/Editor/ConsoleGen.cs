@@ -89,6 +89,8 @@ namespace ZergRush.CodeGen
                 {
                     var task = tasks.Dequeue();
                     var type = task.type;
+                    
+                    if ((type.IsDataList() || type.IsLivableList()) && type.IsConstructedGenericType == false) continue;
 
                     if (type.HasAttribute<DoNotGen>()) continue;
 
