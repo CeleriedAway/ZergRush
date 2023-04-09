@@ -83,14 +83,14 @@ namespace ZergRush
             return result;
         }
         
-        public static T RandomElement<T>(this IEnumerable<T> list, ZergRandom random)
+        public static T RandomElement<T>(this IEnumerable<T> list, ZergRandom random, T def = default)
         {
-            return list.ToList().RandomElement(random);
+            return list.ToList().RandomElement(random, def);
         }
 
-        public static T RandomElement<T>(this ICollection<T> list, ZergRandom random)
+        public static T RandomElement<T>(this ICollection<T> list, ZergRandom random, T def = default)
         {
-            if (list.Count < 1) return default(T);
+            if (list.Count < 1) return def;
             return list.ElementAt(random.Range(0, list.Count));
         }
         
@@ -128,21 +128,21 @@ namespace ZergRush
         }
 
         public static T RandomWeightedElement<T>(this IEnumerable<T> elements, ZergRandom random,
-            Func<T, int> weightFunc)
+            Func<T, int> weightFunc, T def = default)
         {
-            return RandomWeightedElement(elements.ToList(), weightFunc, random, out _);
+            return RandomWeightedElement(elements.ToList(), weightFunc, random, out _, def);
         }
-        public static T RandomWeightedElement<T>(this IList<T> elements, ZergRandom random, Func<T, int> weightFunc)
+        public static T RandomWeightedElement<T>(this IList<T> elements, ZergRandom random, Func<T, int> weightFunc, T def = default)
         {
-            return RandomWeightedElement(elements, weightFunc, random, out _);
+            return RandomWeightedElement(elements, weightFunc, random, out _, def);
         }
-        public static T RandomWeightedElement<T>(this IList<T> elements, Func<T, int> weightFunc, ZergRandom random, out int index)
+        public static T RandomWeightedElement<T>(this IList<T> elements, Func<T, int> weightFunc, ZergRandom random, out int index, T def = default)
         {
             if (elements.Count == 0)
             {
                 //Debug.LogError("random with zero element count");
                 index = -1;
-                return default;
+                return def;
             }
             if (elements.Count == 1)
             {

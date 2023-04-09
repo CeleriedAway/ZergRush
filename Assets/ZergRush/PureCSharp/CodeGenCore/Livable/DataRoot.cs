@@ -69,7 +69,7 @@ namespace ZergRush.Alive
             {
                 var node = obj as DataNode;
                 if (node == null) return;
-                LogSink.log($"updating static connections for {node}");
+                //LogSink.log($"updating static connections for {node}");
                 for (var i = 0; i < node.staticConnections.connections.Count; i++)
                 {
                     var conn = node.staticConnections.connections[i];
