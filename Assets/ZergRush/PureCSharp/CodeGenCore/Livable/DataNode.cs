@@ -21,7 +21,7 @@ namespace ZergRush.Alive
         [GenIgnore] public DataNode carrier;
         
         public StaticConnections staticConnections;
-        public int __parent_id;
+        //public int __parent_id;
 
         public bool IsInHierarchy => !dead;
         
@@ -92,22 +92,26 @@ namespace ZergRush.Alive
         public virtual void ReturnToPool(ObjectPool pool)
         {
         }
-
-//        public virtual void __ForgetIds()
-//        {
-//        }
         
+        public virtual void VisitNode(Action<object> visitor)
+        {
+            visitor(this);
+        }
+
         [GenIgnore] EventStream _destroyEvent;
         
         // Use HasRefId class tag for codegen to generate Id logic
+        // must be here unfortunately because console gen need interfaces to be implemented
         public virtual int Id
         {
             get => throw new NotImplementedException();
             set => throw new NotImplementedException();
         }
+
+        public virtual bool supportId => false;
     }
 
-    public interface IDataNode : IReferencableFromDataRoot
+    public interface IDataNode 
     {
         IEventStream destroyEvent { get; }
         bool IsInHierarchy { get; }

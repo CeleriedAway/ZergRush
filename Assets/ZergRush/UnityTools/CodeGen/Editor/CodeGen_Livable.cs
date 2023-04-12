@@ -46,8 +46,7 @@ namespace ZergRush.CodeGen
         }
         static bool IsLivableList(this Type t)
         {
-            return t.IsConstructedGenericType &&
-                   (t.IsGenericOfType(typeof(LivableList<>)) || t.IsGenericOfType(typeof(ModifiableLivableList<>)));
+            return (t.IsGenericOfType(typeof(LivableList<>)) || t.IsGenericOfType(typeof(ModifiableLivableList<>)));
         }
         static bool IsLivableSlot(this Type t)
         {
@@ -126,7 +125,22 @@ namespace ZergRush.CodeGen
                 sinkEnliveChildren.content($"{info.baseAccess}.{LivableEntryEnliveName}();");
                 sinkMortifyChildren.content($"{info.baseAccess}.{LivableEntryMortifyName}();");
             });
-            
+
+            TraverseGenCustomType(new TraversStrategy
+            {
+                funcName = "VisitNode",
+                funcArgs = "Action<object> action",
+                interfaceType = null,
+                needMembersGenRequest = false,
+                memberPredicate = info => !info.justData && !info.type.IsRef() && !info.type.IsRefList() &&(info.type.IsDataNode() || info.type.IsLivableContainer() || info.type.IsDataList()),
+                elemProcess = (sink, info) => {
+                    // if (info.type.IsHierarchySupportContainer() == false)
+                    //     sink.content($"action({info.baseAccess});");
+                    sink.content($"{info.baseAccess}.VisitNode(action);");
+                },
+                flag = GenTaskFlags.OwnershipHierarchy
+            }, type, funcPrefix);
+
         }
         
         static string CreateLivableInRootFunc(this Type t)

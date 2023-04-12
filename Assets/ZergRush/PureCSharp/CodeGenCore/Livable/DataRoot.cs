@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 using ZergRush.Alive;
 using ZergRush.CodeGen;
 using ZergRush.ReactiveCore;
@@ -41,7 +42,20 @@ namespace ZergRush.Alive
         public virtual void RootUpdateFromPartial<T>(T selfData, T otherData) where T : DataNode
         {
             otherData.root = this;
-            otherData.__GenIds(this);
+            Dictionary<int, int> idDict = new Dictionary<int, int>();
+            otherData.VisitNode(node =>
+            {
+                if (node is IReferencableFromDataRoot idNode && idNode.supportId)
+                {
+                    var currId = idNode.Id;
+                    var newId = __entityIdFactory++;
+                    idDict[currId] = newId;
+                    idNode.Id = newId;
+                    LogSink.log($"{node} id {currId} -> {newId}");
+                }
+            });
+            // otherData.__GenIds(this);
+            // otherData.VisitNode(node => node.OnInsertedIntoHierarchy(node.staticConnections));
             __updating = true;
             selfData.UpdateFrom(otherData);
             __updating = false;
@@ -50,6 +64,25 @@ namespace ZergRush.Alive
                 needUpdateFromPostProcess.OnUpdateFinished();
             }
             updatePostProcess.Clear();
+            
+            selfData.VisitNode(obj =>
+            {
+                var node = obj as DataNode;
+                if (node == null) return;
+                //LogSink.log($"updating static connections for {node}");
+                for (var i = 0; i < node.staticConnections.connections.Count; i++)
+                {
+                    var conn = node.staticConnections.connections[i];
+                    if (idDict.ContainsKey(conn.ownerId) == false || idDict.ContainsKey(conn.entityId) == false)
+                    {
+                        LogSink.errLog($"idDict doesn't contain {conn.ownerId} or {conn.entityId}");
+                        continue;
+                    }
+                    conn.ownerId = idDict[conn.ownerId];
+                    conn.entityId = idDict[conn.entityId];
+                    node.staticConnections.connections[i] = conn;
+                }
+            });
         }
         public virtual void RootUpdateFrom(DataRoot other, ZRUpdateFromHelper __helper)
         {

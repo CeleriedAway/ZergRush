@@ -53,6 +53,11 @@ namespace ZergRush.Alive {
         {
 
         }
+        public override void VisitNode(Action<object> action) 
+        {
+            base.VisitNode(action);
+
+        }
         public override void __GenIds(DataRoot __root) 
         {
             base.__GenIds(__root);

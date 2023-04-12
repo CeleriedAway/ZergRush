@@ -167,5 +167,13 @@ namespace ZergRush.Alive
             _value = null;
             otherSlotOfSameParent._value = temp;
         }
+
+        public override void VisitNode(Action<object> action)
+        {
+            if (_value != null)
+            {
+                _value.VisitNode(action);
+            }
+        }
     }
 }
