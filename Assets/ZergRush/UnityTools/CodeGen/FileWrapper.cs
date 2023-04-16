@@ -11,6 +11,15 @@ namespace ZergRush
         {
             return File.Exists(PathForPersistentData(filename));
         }
+
+        public static void WriteAllBytes(string filename, byte[] content)
+        {
+            File.WriteAllBytes(PathForPersistentData(filename), content);
+        }
+        public static void WriteAllText(string filename, string content)
+        {
+            File.WriteAllText(PathForPersistentData(filename), content);
+        }
         public static void RemoveIfExists(string filename)
         {
             if (Exists(filename))

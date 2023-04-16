@@ -330,6 +330,17 @@ public static partial class UnityExtensions
 
         return self.StartCoroutine(DelayCoro(action, delay));
     }
+    
+    public static IEnumerable FlagsToList(Type enumType, int mask)
+    {
+        if (enumType.IsSubclassOf(typeof(Enum)) == false)
+            throw new ArgumentException();
+
+        return Enum.GetValues(enumType)
+            .Cast<int>()
+            .Where(Mathf.IsPowerOfTwo)
+            .Where(m => ((int)mask & (int)m) != 0);
+    }
 
     public static IEnumerable<T> FlagsToList<T>(int mask)
     {

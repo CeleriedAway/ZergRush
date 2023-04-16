@@ -75,11 +75,23 @@ namespace ZergRush.ReactiveUI
             if (prefab != null) view = prefab as TView;
             else if (type != null)
             {
-                var type1 = type;
-                view = parent.GetComponentsInChildren(type1, true).FirstOrDefault(v => v.GetType() == type1) as TView;
+                var childCount = parent.childCount;
+                for (int i = 0; i < childCount; i++)
+                {
+                    view = parent.GetChild(i).GetComponent(type) as TView;
+                    if (view != null) break;
+                }
             }
             else if (name != null) view = parent.Find(name)?.GetComponent<TView>();
-            else view = parent.GetComponentInChildren<TView>();
+            else
+            {
+                var childCount = parent.childCount;
+                for (int i = 0; i < childCount; i++)
+                {
+                    view = parent.GetChild(i).GetComponent<TView>();
+                    if (view != null) break;
+                }
+            }
 
             if (view == null)
             {
