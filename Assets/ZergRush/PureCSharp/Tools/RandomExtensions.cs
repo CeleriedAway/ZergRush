@@ -136,6 +136,41 @@ namespace ZergRush
         {
             return RandomWeightedElement(elements, weightFunc, random, out _, def);
         }
+        public static T RandomWeightedElement<T>(this IList<T> elements, Func<T, float> weightFunc, ZergRandom random, out int index, T def = default)
+        {
+            if (elements.Count == 0)
+            {
+                //Debug.LogError("random with zero element count");
+                index = -1;
+                return def;
+            }
+            if (elements.Count == 1)
+            {
+                index = 0;
+                return elements[0];
+            }
+            // Sum all not selectedTypeName weights.
+            float sum = 0;
+            for (int i = 0; i < elements.Count; i++)
+            {
+                sum += weightFunc(elements[i]);
+            }
+            // Find next random ind.
+            float rand = random.Range(1f, sum);
+            int selectedInd = -1;
+            for (int i = 0; i < elements.Count; i++)
+            {
+                rand -= weightFunc(elements[i]);
+                if (rand <= 0)
+                {
+                    selectedInd = i;
+                    break;
+                }
+            }
+            if (selectedInd == -1) throw new ZergRushException("wtf");
+            index = selectedInd;
+            return elements[selectedInd];
+        }
         public static T RandomWeightedElement<T>(this IList<T> elements, Func<T, int> weightFunc, ZergRandom random, out int index, T def = default)
         {
             if (elements.Count == 0)
