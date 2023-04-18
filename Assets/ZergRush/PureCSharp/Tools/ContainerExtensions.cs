@@ -143,6 +143,26 @@ namespace ZergRush
             return best;
         }
 
+        public static (T, int) BestWithIndex<T>(this IEnumerable<T> coll, Func<T, float> predicate)
+        {
+            var best = default(T);
+            var bestIndex = -1;
+            var curr = Single.MinValue;
+            var i = 0;
+            foreach (var v in coll)
+            {
+                var r = predicate(v);
+                if (r > curr)
+                {
+                    curr = r;
+                    best = v;
+                    bestIndex = i;
+                }
+                i++;
+            }
+            return (best, bestIndex);
+        }
+        
         public static T Best<T>(this IEnumerable<T> coll, Func<T, float> predicate)
         {
             var best = default(T);
@@ -156,7 +176,6 @@ namespace ZergRush
                     best = v;
                 }
             }
-
             return best;
         }
 
