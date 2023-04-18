@@ -339,18 +339,20 @@ public static partial class UnityExtensions
         return Enum.GetValues(enumType)
             .Cast<int>()
             .Where(Mathf.IsPowerOfTwo)
-            .Where(m => ((int)mask & (int)m) != 0);
+            .Where(m => ((int)mask & (int)m) != 0)
+            .Select(e => Enum.ToObject(enumType, e));
     }
 
-    public static IEnumerable<T> FlagsToList<T>(int mask)
+    public static IEnumerable<T> FlagsToList<T>(T mask)
     {
+        var intMask = (int) (object) mask;
         if (typeof(T).IsSubclassOf(typeof(Enum)) == false)
             throw new ArgumentException();
 
         return Enum.GetValues(typeof(T))
             .Cast<int>()
             .Where(Mathf.IsPowerOfTwo)
-            .Where(m => ((int) mask & (int) m) != 0)
+            .Where(m => (intMask & (int) m) != 0)
             .Cast<T>();
     }
 
