@@ -133,28 +133,28 @@ namespace ZergRush.ReactiveCore
         /// Bind with two cells in one call
         public static IDisposable MergeBind<T, T2>(this ICell<T> cell, ICell<T2> cell2, Action<T, T2> func)
         {
-            return Merge(cell, cell2, Tuple.Create<T, T2>).Bind(val => func(val.Item1, val.Item2));
+            return Merge(cell, cell2, (v1, v2) => (v1, v2)).Bind(val => func(val.Item1, val.Item2));
         }
 
         /// Bind with three cells in one call
         public static IDisposable MergeBind<T1, T2, T3>(this ICell<T1> cell1, ICell<T2> cell2, ICell<T3> cell3,
             Action<T1, T2, T3> func)
         {
-            return Merge(cell1, cell2, cell3, Tuple.Create<T1, T2, T3>)
+            return Merge(cell1, cell2, cell3, (arg1, arg2, arg3) => (arg1, arg2, arg3))
                 .Bind(val => func(val.Item1, val.Item2, val.Item3));
         }
 
         public static IDisposable MergeBind<T1, T2, T3, T4>(this ICell<T1> cell1, ICell<T2> cell2, ICell<T3> cell3,
             ICell<T4> cell4, Action<T1, T2, T3, T4> func)
         {
-            return Merge(cell1, cell2, cell3, cell4, Tuple.Create<T1, T2, T3, T4>)
+            return Merge(cell1, cell2, cell3, cell4, (arg1, arg2, arg3, arg4) => (arg1, arg2, arg3, arg4))
                 .Bind(val => func(val.Item1, val.Item2, val.Item3, val.Item4));
         }
 
         public static IDisposable MergeBind<T1, T2, T3, T4, T5>(this ICell<T1> cell1, ICell<T2> cell2,
             ICell<T3> cell3, ICell<T4> cell4, ICell<T5> cell5, Action<T1, T2, T3, T4, T5> func)
         {
-            return Merge(cell1, cell2, cell3, cell4, cell5, Tuple.Create<T1, T2, T3, T4, T5>)
+            return Merge(cell1, cell2, cell3, cell4, cell5, (arg1, arg2, arg3, arg4, arg5) => (arg1, arg2, arg3, arg4, arg5))
                 .Bind(val => func(val.Item1, val.Item2, val.Item3, val.Item4, val.Item5));
         }
     }
