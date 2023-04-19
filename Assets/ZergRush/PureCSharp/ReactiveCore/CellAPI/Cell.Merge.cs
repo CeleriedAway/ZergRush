@@ -6,33 +6,33 @@ namespace ZergRush.ReactiveCore
     public static partial class CellReactiveApi
     {
         /// Merge two dynamic values into a tuple.
-        public static ICell<Tuple<T, T2>> Merge<T, T2>(this ICell<T> cell, ICell<T2> cell2)
+        public static ICell<(T, T2)> Merge<T, T2>(this ICell<T> cell, ICell<T2> cell2)
         {
-            return Merge(cell, cell2, Tuple.Create<T, T2>);
+            return Merge(cell, cell2, (v1, v2) => (v1, v2));
         }
 
         /// Merge three dynamic values into a tuple.
-        public static ICell<Tuple<T, T2, T3>> Merge<T, T2, T3>(this ICell<T> cell, ICell<T2> cell2, ICell<T3> cell3)
+        public static ICell<(T, T2, T3)> Merge<T, T2, T3>(this ICell<T> cell, ICell<T2> cell2, ICell<T3> cell3)
         {
-            return Merge(cell, cell2, cell3, Tuple.Create<T, T2, T3>);
+            return Merge(cell, cell2, cell3, (arg1, arg2, arg3) => (arg1, arg2, arg3));
         }
 
-        public static ICell<Tuple<T, T2, T3, T4>> Merge<T, T2, T3, T4>(this ICell<T> cell, ICell<T2> cell2,
+        public static ICell<(T, T2, T3, T4)> Merge<T, T2, T3, T4>(this ICell<T> cell, ICell<T2> cell2,
             ICell<T3> cell3, ICell<T4> cell4)
         {
-            return Merge(cell, cell2, cell3, cell4, Tuple.Create<T, T2, T3, T4>);
+            return Merge(cell, cell2, cell3, cell4, (arg1, arg2, arg3, arg4) => (arg1, arg2, arg3, arg4));
         }
 
-        public static ICell<Tuple<T, T2, T3, T4, T5>> Merge<T, T2, T3, T4, T5>(this ICell<T> cell, ICell<T2> cell2,
+        public static ICell<(T, T2, T3, T4, T5)> Merge<T, T2, T3, T4, T5>(this ICell<T> cell, ICell<T2> cell2,
             ICell<T3> cell3, ICell<T4> cell4, ICell<T5> cell5)
         {
-            return Merge(cell, cell2, cell3, cell4, cell5, Tuple.Create<T, T2, T3, T4, T5>);
+            return Merge(cell, cell2, cell3, cell4, cell5, (arg1, arg2, arg3, arg4, arg5) => (arg1, arg2, arg3, arg4, arg5));
         }
 
-        public static ICell<Tuple<T, T2, T3, T4, T5, T6>> Merge<T, T2, T3, T4, T5, T6>(this ICell<T> cell,
+        public static ICell<(T, T2, T3, T4, T5, T6)> Merge<T, T2, T3, T4, T5, T6>(this ICell<T> cell,
             ICell<T2> cell2, ICell<T3> cell3, ICell<T4> cell4, ICell<T5> cell5, ICell<T6> cell6)
         {
-            return Merge(cell, cell2, cell3, cell4, cell5, cell6, Tuple.Create<T, T2, T3, T4, T5, T6>);
+            return Merge(cell, cell2, cell3, cell4, cell5, cell6, (arg1, arg2, arg3, arg4, arg5, arg6) => (arg1, arg2, arg3, arg4, arg5, arg6));
         }
 
         /// Merge two dynamic values in new dynamic value with transformation function.
