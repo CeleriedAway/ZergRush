@@ -62,6 +62,15 @@
                 $" ConfigStorageList or Dict in somewhere in game config and is loaded earlier then required id");
         }
 
+        public static IUniquelyIdentifiable TryGetConfig(ulong uid)
+        {
+            if (Instance.allConfigs.TryGetValue(uid, out var c))
+            {
+                return c;
+            }
+            return null;
+        }
+
         /// <summary>
         /// Executes actions to fulfill game config with members.
         /// </summary>
