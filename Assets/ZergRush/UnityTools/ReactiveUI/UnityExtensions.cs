@@ -108,7 +108,13 @@ public static partial class UnityExtensions
 
     public static IDisposable SetTextContent<T>(this TextMeshProUGUI text, ICell<T> val)
     {
-        return val.Bind(v => text.text = v.ToString());
+        return val.Bind(v =>
+        {
+            if (v != null)
+                text.text = v.ToString();
+            else
+                text.text = String.Empty;
+        });
     }
 
     public static void SetPointerEventListener(this EventTrigger trigger, EventTriggerType eventType, Action action)
