@@ -2,10 +2,7 @@
 
 using System;
 using System.Collections.Generic;
-using UnityEngine;
-using ZergRush.Alive;
 using ZergRush.CodeGen;
-using ZergRush.ReactiveCore;
 
 namespace ZergRush.Alive
 {
