@@ -671,6 +671,15 @@ public static partial class UnityExtensions
             UnityEngine.Object.Destroy(((Transform) child).gameObject);
         }
     }
+    
+    public static void DisableChildren(this Transform t, Func<Transform, bool> predicate = null)
+    {
+        foreach (var child in t)
+        {
+            if (predicate == null || predicate((Transform) child))
+                ((Transform) child).SetActiveSafe(false);
+        }
+    }
 
     public static void SetLayerSpeed(this Animator animator, int layer, float speed)
     {
