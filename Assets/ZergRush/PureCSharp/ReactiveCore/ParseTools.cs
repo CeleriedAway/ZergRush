@@ -253,8 +253,12 @@ public static class ParseTools
     }
 
     // By default assembly and namespace will be taken form type T
-    public static T InstanceFromName<T>(this string name, Type defaultType, List<string> namespaceSearchList = null, Assembly assembly = null)
+    public static T InstanceFromName<T>(this string name, Type defaultType, List<string> namespaceSearchList = null, Assembly assembly = null) where T : class
     {
+        if (name.IsNullOrWhitespace())
+        {
+            return null;
+        }
         var t = TypeFromName(name, assembly ?? Assembly.GetAssembly(typeof(T)), namespaceSearchList ?? new List<string>{typeof(T).Namespace});
         if (t == null)
         {
@@ -266,7 +270,7 @@ public static class ParseTools
             t = defaultType;
         }
 
-        return (T) Activator.CreateInstance(t);
+        return Activator.CreateInstance(t) as T;
     }
 
     public static Type TypeFromName(this string name, Assembly assembly, List<string> namespaceSearchList = null)
