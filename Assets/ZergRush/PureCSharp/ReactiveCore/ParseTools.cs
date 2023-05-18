@@ -87,7 +87,7 @@ public static class ParseTools
     public static float ParseFloat(this string str, float def = 0)
     {
         if (string.IsNullOrEmpty(str)) return def;
-        return float.TryParse(str, out var i) ? i : def;
+        return float.TryParse(str, NumberStyles.Any, CultureInfo.InvariantCulture, out var i) ? i : def;
     }
 
     public static int ParseInt(this string str, int def = 0)
