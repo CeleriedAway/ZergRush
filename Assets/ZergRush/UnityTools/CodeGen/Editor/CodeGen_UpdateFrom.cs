@@ -185,7 +185,7 @@ namespace ZergRush.CodeGen
                 sink.content($"{OptVar(needCreateVar)}{info.access} = {other};");
                 return;
             }
-            else if (t.IsArray && t.GetElementType() != typeof(byte))
+            else if (t.IsArray)
             {
                 baseReadCall = (s, info1) =>
                 {

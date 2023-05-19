@@ -169,6 +169,11 @@ public static partial class SerializationTools
     {
         print($"{path.Reverse().PrintCollection("/")}/{name} is different, self: {self} other: {other}");
     }
+    
+    public static void UpdateFrom(this byte[] data, byte[] other, ZRUpdateFromHelper __helper)
+    {
+        Array.Copy(other, data, other.Length);
+    }
 
     public static void CompareCheck(this byte[] bytes, byte[] bytesOTher, Stack<string> path, Action<string> printer)
     {
