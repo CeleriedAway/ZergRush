@@ -108,7 +108,13 @@ public static partial class UnityExtensions
 
     public static IDisposable SetTextContent<T>(this TextMeshProUGUI text, ICell<T> val)
     {
-        return val.Bind(v => text.text = v.ToString());
+        return val.Bind(v =>
+        {
+            if (v != null)
+                text.text = v.ToString();
+            else
+                text.text = String.Empty;
+        });
     }
 
     public static void SetPointerEventListener(this EventTrigger trigger, EventTriggerType eventType, Action action)
@@ -669,6 +675,15 @@ public static partial class UnityExtensions
         foreach (var child in t)
         {
             UnityEngine.Object.Destroy(((Transform) child).gameObject);
+        }
+    }
+    
+    public static void DisableChildren(this Transform t, Func<Transform, bool> predicate = null)
+    {
+        foreach (var child in t)
+        {
+            if (predicate == null || predicate((Transform) child))
+                ((Transform) child).SetActiveSafe(false);
         }
     }
 
