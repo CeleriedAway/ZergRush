@@ -173,7 +173,7 @@ public static class ParseTools
         return (TEnum) Enum.ToObject(typeof(TEnum), val);
     }
 
-    public static TEnum ParseEnumFlags<TEnum>(this string str) where TEnum : struct
+    public static TEnum ParseEnumFlags<TEnum>(this string str, TEnum defaultValue = default) where TEnum : struct
     {
         int val = 0;
         if (str.IsNullOrEmpty() == false)
@@ -183,6 +183,7 @@ public static class ParseTools
                 val = val | Convert.ToInt32(s.ParseEnum<TEnum>());
             }
 
+        if (val == 0) return defaultValue; 
         return (TEnum) Enum.ToObject(typeof(TEnum), val);
     }
 
@@ -257,7 +258,7 @@ public static class ParseTools
     {
         if (name.IsNullOrWhitespace())
         {
-            return null;
+            return Activator.CreateInstance(defaultType) as T;
         }
         var t = TypeFromName(name, assembly ?? Assembly.GetAssembly(typeof(T)), namespaceSearchList ?? new List<string>{typeof(T).Namespace});
         if (t == null)
