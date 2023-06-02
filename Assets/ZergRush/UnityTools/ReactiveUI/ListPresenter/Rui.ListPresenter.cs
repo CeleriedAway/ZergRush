@@ -23,16 +23,17 @@ namespace ZergRush.ReactiveUI
         {
         }
         public ListPresenter(
-            TView prefab,
             Transform parent,
+            PrefabRef<TView> prefabRef,
             Action<TData, TView> onShow = null,
             Func<TView, float> unload = null,
             Func<TData, int> visualIdGetter = null,
             Func<TData, bool> needView = null,
             bool updateOnShow = true,
-            bool disableOnRecycle = true
+            bool disableOnRecycle = true,
+            PresentOptions options = PresentOptions.UseChildWithSameTypeAsView
         )
-            : this(new ViewPool<TView, TData>(parent, prefab), onShow, unload, visualIdGetter, needView, updateOnShow, disableOnRecycle)
+            : this(new ViewPool<TView, TData>(parent, prefabRef, options), onShow, unload, visualIdGetter, needView, updateOnShow, disableOnRecycle)
         {
         }
 
