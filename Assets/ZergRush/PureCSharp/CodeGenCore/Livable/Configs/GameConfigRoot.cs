@@ -45,6 +45,9 @@
             allConfigs[config.UId()] = config;
         }
 
+
+        public static T GetConfig<T>(ulong uid) where T : IUniquelyIdentifiable => (T) GetConfig(uid);
+
         /// <summary>
         /// Retrieves config member from ConfigsRegister by id.
         /// Used to deserialize references to config member instances.
