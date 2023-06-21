@@ -7,9 +7,9 @@ using ZergRush;
 
 public static class CodeGenTools
 {
-    public static T GetAttribute<T>(this Type type) where T : Attribute
+    public static T GetAttribute<T>(this Type type, bool inherit = false) where T : Attribute
     {
-        var customAttributes = type.GetCustomAttributes(typeof(T), false);
+        var customAttributes = type.GetCustomAttributes(typeof(T), inherit);
         return customAttributes.Length > 0 ? (T)customAttributes[0] : null;
     }
 

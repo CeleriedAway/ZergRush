@@ -236,9 +236,9 @@ namespace ZergRush.CodeGen
         public static void RegisterTypeContext(Type type, Type requester)
         {
             if (contextsForTypes.ContainsKey(type)) return;
-            if (type.HasAttribute<GenTargetFolder>())
+            if (type.HasAttribute<GenTargetFolder>(true))
             {
-                var genTargetFolder = type.GetAttribute<GenTargetFolder>();
+                var genTargetFolder = type.GetAttribute<GenTargetFolder>(true);
                 if (genTargetFolder.folder == null)
                 {
                     contextsForTypes[type] = defaultContext;

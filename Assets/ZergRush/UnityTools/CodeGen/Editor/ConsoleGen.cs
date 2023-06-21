@@ -23,7 +23,7 @@ namespace ZergRush.CodeGen
             allTypesInAssemblies.Clear();
             allTypesInAssemblies.AddRange(typesEnumerable.ToList());
             var priorityList = allTypesInAssemblies.Select(t => {
-                var tf = t.GetAttribute<GenTargetFolder>();
+                var tf = t.GetAttribute<GenTargetFolder>(true);
                 if (tf != null)
                 {
                     return (t, pathPartPriority.IndexOf(p => tf.folder.Contains(p)));
