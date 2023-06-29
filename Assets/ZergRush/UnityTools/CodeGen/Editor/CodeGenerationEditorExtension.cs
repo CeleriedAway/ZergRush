@@ -3,9 +3,11 @@
 using System;
 using UnityEditor;
 using System.Collections.Generic;
+using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using UnityEditor.Compilation;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
@@ -28,7 +30,7 @@ namespace ZergRush.CodeGen
         public static readonly bool IsWindows = Application.platform == RuntimePlatform.WindowsEditor;
 
         // No need to look for it on Mac - assuming we got it through `brew install dotnet-sdk` - @ micktu
-        public static readonly string DotnetExecutablePath = IsWindows ? "dotnet" : GetPathToDotnetMac();
+        public static readonly string DotnetExecutablePath = IsWindows ? "dotnet" : TryGetPathToDotnetMac(out var path) ? path : "/usr/local/bin/dotnet";
 
         static bool hasErrors;
         
@@ -106,6 +108,20 @@ namespace ZergRush.CodeGen
             }
         }
 
+        static bool TryGetPathToDotnetMac(out string path)
+        {
+            try
+            {
+                path = GetPathToDotnetMac();
+                return true;
+            }
+            catch (Exception e)
+            {
+                path = "";
+                return false;
+            }
+        }
+        
         static string GetPathToDotnetMac()
         {
             string res = "error";
@@ -132,6 +148,7 @@ namespace ZergRush.CodeGen
             p.BeginErrorReadLine();
             p.BeginOutputReadLine();
             p.WaitForExit();
+            
             if (res == "error" || !File.Exists(res))
                 throw new ZergRushException("Install dotnet");
             return res;
