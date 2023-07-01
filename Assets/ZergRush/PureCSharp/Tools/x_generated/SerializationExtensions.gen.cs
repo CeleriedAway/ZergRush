@@ -19,7 +19,7 @@ public static partial class SerializationExtensions
     public static System.Int32[] ReadSystem_Int32_Array(this BinaryReader reader) 
     {
         var size = reader.ReadInt32();
-        if(size > 1000) throw new ZergRushCorruptedOrInvalidDataLayout();
+        if(size > 100000) throw new ZergRushCorruptedOrInvalidDataLayout();
         var array = new int[size];
         for (int i = 0; i < size; i++)
         {

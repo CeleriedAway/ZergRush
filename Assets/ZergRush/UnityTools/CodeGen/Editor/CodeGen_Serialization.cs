@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using ZergRush.Alive;
 using ZergRush.CodeGen;
 
@@ -234,7 +235,11 @@ namespace ZergRush.CodeGen
 
         static void SinkCountCheck(this MethodBuilder sink, string countVar)
         {
-            sink.content($"if({countVar} > 1000) throw new {nameof(ZergRushCorruptedOrInvalidDataLayout)}();");
+            // TODO need external info to customize size check count
+            // var constrain = elem.sharpMemberInfo.GetCustomAttribute<GenArrayLengthConstraint>();
+            // if (constrain != null && constrain.constrainElementCount == -1) return;
+            // sink.content($"if({countVar} > {(constrain != null ? constrain.constrainElementCount : 1000)}) throw new {nameof(ZergRushCorruptedOrInvalidDataLayout)}();");
+            sink.content($"if({countVar} > 100000) throw new {nameof(ZergRushCorruptedOrInvalidDataLayout)}();");
         }
 
         public static void SinkListReaderCode(Type listType, MethodBuilder sink, Type type, string path, string stream,

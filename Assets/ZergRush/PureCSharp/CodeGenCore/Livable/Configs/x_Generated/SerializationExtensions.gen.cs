@@ -12,7 +12,7 @@ public static partial class SerializationExtensions
     public static void Deserialize(this ZergRush.Alive.ConfigStorageList<ZergRush.Alive.SomeItemFromConfig> self, BinaryReader reader) 
     {
         var size = reader.ReadInt32();
-        if(size > 1000) throw new ZergRushCorruptedOrInvalidDataLayout();
+        if(size > 100000) throw new ZergRushCorruptedOrInvalidDataLayout();
         self.Capacity = size;
         for (int i = 0; i < size; i++)
         {

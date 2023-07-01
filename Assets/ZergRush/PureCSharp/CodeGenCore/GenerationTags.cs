@@ -135,6 +135,23 @@ public class GenDoNotInheritGenTags : Attribute
 {
 }
 
+[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
+public class GenArrayLengthConstraint : Attribute
+{
+    public int constrainElementCount;
+    public GenArrayLengthConstraint(int constrainElementCount)
+    {
+        this.constrainElementCount = constrainElementCount;
+    }
+}
+
+public class GenUnconstrainedArrayLength : GenArrayLengthConstraint
+{
+    public GenUnconstrainedArrayLength() : base(-1)
+    {
+    }
+}
+
 [AttributeUsage(AttributeTargets.Method)]
 public class IsDebug : Attribute
 {
