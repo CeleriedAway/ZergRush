@@ -183,7 +183,31 @@ public static partial class SerializationTools
             if (b != bytesOTher[i]) LogCompError(path, i.ToString(), printer, b, bytesOTher[i]);
         }
     }
+    
+    public static void CompareCheck(this Guid guid, Guid guid2, Stack<string> path, Action<string> printer)
+    {
+        if (guid.CompareTo(guid2) != 0)
+        {
+            LogCompError(path, "guid", printer, guid, guid2);
+        }
+    }
 
+    public static bool CompareNullable<T>(Stack<string> path, string name, Action<string> printer, T? val, T? val2)
+    {
+        if (val == null && val2 == null)
+        {
+            return false;
+        }
+
+        if (val != null && val2 != null)
+        {
+            return true;
+        }
+
+        Func<T, string> pr = t => t == null ? "null" : "not null";
+        printer($"{path.Reverse().PrintCollection("/")}/{name} is different, self: {pr(val)} other: {pr(val2)}");
+        return false;
+    }
     // Return if needs to check further
     public static bool CompareNull<T>(Stack<string> path, string name, Action<string> printer, T val, T val2)
         where T : class

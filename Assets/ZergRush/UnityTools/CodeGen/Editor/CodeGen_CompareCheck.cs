@@ -9,7 +9,7 @@ namespace ZergRush.CodeGen
         public static string CompareFuncName = "CompareCheck";
         public static string CompErrorFunc = "SerializationTools.LogCompError";
         public static string CompNullComp = "SerializationTools.CompareNull";
-        public static string CompNullNullbaleComp = "SerializationTools.CompareNullNullable";
+        public static string CompNullbaleFunc = "SerializationTools.CompareNullable";
         public static string CompRef = "SerializationTools.CompareRefs";
         public static string CompClassId = "SerializationTools.CompareClassId";
         public static string PrinterArg = "Action<string> printer";
@@ -20,40 +20,57 @@ namespace ZergRush.CodeGen
         {
             if (info.type.IsAlmostPrimitive() || info.type.IsEnum || info.type.IsString())
             {
-                sink.content($"if ({info.access} != {otherValueReader}) {CompErrorFunc}({HelperName}, {info.pathName}, {PrinterName}, {otherValueReader}, {info.access});");
+                sink.content(
+                    $"if ({info.access} != {otherValueReader}) {CompErrorFunc}({HelperName}, {info.pathName}, {PrinterName}, {otherValueReader}, {info.access});");
             }
             else
             {
+                string accessSuffix = "";
                 if (info.canBeNull)
                 {
-                    var compNull = info.type.IsNullable() ? CompNullNullbaleComp : CompNullComp;
-                    sink.content($"if ({compNull}({HelperName}, {info.pathName}, {PrinterName}, {info.access}, {otherValueReader})) {{");
+                    var compNull = info.type.IsNullable() ? CompNullbaleFunc : CompNullComp;
+                    sink.content(
+                        $"if ({compNull}({HelperName}, {info.pathName}, {PrinterName}, {info.access}, {otherValueReader})) {{");
                     sink.indent++;
+                    if (info.type.IsNullable())
+                    {
+                        accessSuffix = ".Value";
+                    }
                 }
+
                 if (info.type.CanBeAncestor())
                 {
-                    sink.content($"if ({CompClassId}({HelperName}, {info.pathName}, {PrinterName}, {info.access}, {otherValueReader})) {{");
+                    sink.content(
+                        $"if ({CompClassId}({HelperName}, {info.pathName}, {PrinterName}, {info.access}, {otherValueReader})) {{");
                     sink.indent++;
                 }
+
                 if (info.type.IsMultipleReference())
                 {
                     sink.content($"if ({HelperName}.{nameof(ZRCompareCheckHelper.NeedCompareCheck)}({info.pathName}," +
                                  $" {PrinterName}, {info.access}, {otherValueReader})) {{");
                     sink.indent++;
                 }
+
                 sink.content($"{HelperName}.Push({info.pathName});");
                 if (info.type.IsLoadableConfig())
                 {
-                    sink.content($"if ({info.access}.id != {otherValueReader}.id) {CompErrorFunc}({HelperName}, {info.pathName}, {PrinterName}, {otherValueReader}.id, {info.access}.id);");
+                    sink.content(
+                        $"if ({info.access}{accessSuffix}.id != {otherValueReader}{accessSuffix}.id) {CompErrorFunc}({HelperName}, {info.pathName}, {PrinterName}, {otherValueReader}.id, {info.access}.id);");
                 }
                 else
                 {
                     RequestGen(info.type, sink.classType, GenTaskFlags.CompareChech);
-                    sink.content($"{info.access}.{CompareFuncName}({otherValueReader}, {HelperName}, {PrinterName});");
+                    sink.content(
+                        $"{info.access}{accessSuffix}.{CompareFuncName}({otherValueReader}{accessSuffix}, {HelperName}, {PrinterName});");
                 }
-                
+
                 sink.content($"{HelperName}.Pop();");
-                
+                if (info.canBeNull)
+                {
+                    sink.indent--;
+                    sink.content($"}}");
+                }
                 if (info.type.IsMultipleReference())
                 {
                     sink.indent--;
@@ -64,71 +81,77 @@ namespace ZergRush.CodeGen
                     sink.indent--;
                     sink.content($"}}");
                 }
-                if (info.canBeNull)
+            }
+        }
+
+        public static void GenerateComparisonFunc(Type type, string funcPrefix)
+            {
+                const string instanceCastedName = "otherConcrete";
+                const string instanceName = "other";
+
+                string otherName = instanceName;
+
+                var updateFromType = type.TopParentImplementingFlag(GenTaskFlags.CompareChech) ?? type;
+
+                MethodBuilder sink = MakeGenMethod(type, GenTaskFlags.CompareChech, funcPrefix + CompareFuncName,
+                    typeof(void),
+                    $"{updateFromType.RealName(true)} {instanceName}, {CCHelper} {HelperName}, {PrinterArg}");
+
+                if (type.IsList() || type.IsArray)
                 {
+                    var countName = !type.IsArray ? "Count" : "Length";
+                    var elemType = type.FirstGenericArg();
+                    CompareCheckValue(sink, new DataInfo
+                    {
+                        type = typeof(int), pathLog = $"\"{countName}\"",
+                        baseAccess = $"self.{countName}"
+                    }, $"{otherName}.{countName}");
+                    sink.content($"var count = Math.Min(self.{countName}, {otherName}.{countName});");
+                    sink.content($"for (int i = 0; i < count; i++)");
+                    sink.content($"{{");
+                    sink.indent++;
+                    CompareCheckValue(sink, new DataInfo
+                    {
+                        type = elemType, canBeNull = !elemType.IsValueType,
+                        baseAccess = $"self[i]", pathLog = $"i.ToString()"
+                    }, $"{otherName}[i]");
                     sink.indent--;
                     sink.content($"}}");
                 }
+                else
+                {
+                    if (type.IsControllable())
+                    {
+                        GenClassSink(type)
+                            .inheritance($"ICompareChechable<{updateFromType.RealName(true)}>");
+                    }
+
+                    if (type != updateFromType)
+                    {
+                        otherName = instanceCastedName;
+                        sink.content($"var {instanceCastedName} = ({type.RealName(true)}){instanceName};");
+                    }
+
+                    var hasMembers = type.ProcessMembers(GenTaskFlags.CompareChech, true,
+                        memberInfo =>
+                        {
+                            CompareCheckValue(sink, memberInfo,
+                                memberInfo.valueTransformer($"{otherName}.{memberInfo.baseAccess}"));
+                        });
+                    if (!hasMembers && sink.type == MethodType.Override)
+                    {
+                        sink.doNotGen = true;
+                    }
+                }
             }
-        }
-        
-        public static void GenerateComparisonFunc(Type type, string funcPrefix)
-        {
-            const string instanceCastedName = "otherConcrete";
-            const string instanceName = "other";
 
-            string otherName = instanceName;
-            
-            var updateFromType = type.TopParentImplementingFlag(GenTaskFlags.CompareChech) ?? type;
-
-            MethodBuilder sink = MakeGenMethod(type, GenTaskFlags.CompareChech, funcPrefix + CompareFuncName, typeof(void),
-                $"{updateFromType.RealName(true)} {instanceName}, {CCHelper} {HelperName}, {PrinterArg}");
-            
-            if (type.IsList() || type.IsArray)
+            static void GeneratePrintHash(Type t, string prefix)
             {
-                var countName = !type.IsArray ? "Count" : "Length";
-                var elemType = type.FirstGenericArg();
-                CompareCheckValue(sink, new DataInfo {type = typeof(int), pathLog = $"\"{countName}\"",
-                    baseAccess = $"self.{countName}"}, $"{otherName}.{countName}"); 
-                sink.content($"var count = Math.Min(self.{countName}, {otherName}.{countName});");
-                sink.content($"for (int i = 0; i < count; i++)");
-                sink.content($"{{");
-                sink.indent++;
-                CompareCheckValue(sink, new DataInfo {type = elemType, canBeNull = !elemType.IsValueType,
-                    baseAccess = $"self[i]", pathLog = $"i.ToString()"}, $"{otherName}[i]"); 
-                sink.indent--;
-                sink.content($"}}");
             }
-            else
-            {
-                if (type.IsControllable())
-                {
-                    GenClassSink(type)
-                        .inheritance($"ICompareChechable<{updateFromType.RealName(true)}>");
-                }
-                if (type != updateFromType)
-                {
-                    otherName = instanceCastedName;
-                    sink.content($"var {instanceCastedName} = ({type.RealName(true)}){instanceName};");
-                }
 
-                var hasMembers = type.ProcessMembers(GenTaskFlags.CompareChech, true, memberInfo =>
-                {
-                    CompareCheckValue(sink, memberInfo, memberInfo.valueTransformer($"{otherName}.{memberInfo.baseAccess}"));
-                });
-                if (!hasMembers && sink.type == MethodType.Override)
-                {
-                    sink.doNotGen = true;
-                }
+            static bool IsAlmostPrimitive(this Type t)
+            {
+                return t.IsPrimitive || t.IsFix64() || t.IsNullablePrimitive() || t.IsGuid();
             }
-        }
-        static void GeneratePrintHash(Type t, string prefix)
-        {
-        }
-        
-		static bool IsAlmostPrimitive(this Type t)
-		{
-			return t.IsPrimitive || t.IsFix64() || t.IsNullablePrimitive() || t.IsGuid();
         }
     }
-}

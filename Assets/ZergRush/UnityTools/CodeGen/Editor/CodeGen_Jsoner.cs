@@ -23,7 +23,7 @@ namespace ZergRush.CodeGen
         
         public static bool IsGuid(this Type type)
         {
-            return type == typeof(Guid);
+            return type == typeof(Guid) || type == typeof(Guid?);
         }
 
         public static void WriteJsonValueStatement(MethodBuilder sink, DataInfo info, bool inList, bool writeDataNodeAsId = false)
@@ -51,13 +51,17 @@ namespace ZergRush.CodeGen
             }
             
             if (!inList) sink.content($"writer.WritePropertyName(\"{info.name}\");");
-            
-            
+
+
             if (t.IsFix64())
             {
                 sink.content($"writer.WriteValue({info.access}.RawValue);");
                 sink.content($"writer.WriteFixedPreview({info.access}, \"{info.access}\");");
                 return;
+            }
+            else if (t == typeof(Guid))
+            {
+                sink.content($"writer.WriteValue({info.access}.ToString());");
             }
             else if (writeDataNodeAsId && typeof(IReferencableFromDataRoot).IsAssignableFrom(t))
             {
@@ -122,13 +126,13 @@ namespace ZergRush.CodeGen
             {
                 baseCall = (s, info1) => s.content( $"reader.ReadFromRef(ref {info1.access});");
             }
-            if (t != typeof(byte[]) && t.IsImmutableType())
-            {
-                baseCall = (s, info1) => s.content($"{info1.access} = ({t.RealName()}) reader.Value;");
-            }
-            if ((t.IsValueType && t.IsControllable() == false) || t == typeof(byte[]) || t == typeof(Guid))
+            if ((t.IsValueType && t.IsControllable() == false) || t == typeof(byte[]) || t.IsGuid())
             {
                 baseCall = (s, info1) => s.content($"{info1.access} = {DirectJsonImmutableTypeReader(t)};");
+            }
+            else if (t != typeof(byte[]) && t.IsImmutableType())
+            {
+                baseCall = (s, info1) => s.content($"{info1.access} = ({t.RealName()}) reader.Value;");
             }
             
             if (t.Name == "Fix64")
@@ -156,7 +160,7 @@ namespace ZergRush.CodeGen
         {
             var str = $"({t.RealName(true)})";
 
-            if (t == typeof(Guid))
+            if (t.IsGuid())
                 return $"Guid.Parse((string)reader.Value)";
             if (t.IsEnum)
                 return $"((string)reader.Value).ParseEnum<{t.RealName(true)}>()";
