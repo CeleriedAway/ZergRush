@@ -83,7 +83,7 @@ namespace ZergRush.ReactiveUI
 
         public ViewPool(Transform parent, TView prefab)
         {
-            if (prefab == null) throw new ZergRushException($"prefab is null");
+            if (prefab == null) throw new ZergRushException($"prefab is null for {typeof(TView)} in {parent}");
             this.parent = parent;
             this.prefab = prefab;
             pool = new List<TView>();
