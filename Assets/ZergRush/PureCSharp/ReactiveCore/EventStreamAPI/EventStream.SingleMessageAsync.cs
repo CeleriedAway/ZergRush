@@ -18,6 +18,7 @@ namespace ZergRush.ReactiveCore
             });
             while (!finished)
                 await frame;
+            waiting.Dispose();
             return result;
         }
 
@@ -27,6 +28,7 @@ namespace ZergRush.ReactiveCore
             var waiting = stream.Subscribe(() => { finished = true; });
             while (!finished)
                 await frame;
+            waiting.Dispose();
         }
     }
 }
