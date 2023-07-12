@@ -47,6 +47,7 @@
 
 
         public static T GetConfig<T>(ulong uid) where T : IUniquelyIdentifiable => (T) GetConfig(uid);
+        public static T GetConfigIfAny<T>(ulong uid, T ifNotFound) where T : IUniquelyIdentifiable => (T) TryGetConfig(uid) ?? ifNotFound;
 
         /// <summary>
         /// Retrieves config member from ConfigsRegister by id.
