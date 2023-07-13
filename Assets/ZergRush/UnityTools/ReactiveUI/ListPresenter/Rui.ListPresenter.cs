@@ -142,7 +142,7 @@ namespace ZergRush.ReactiveUI
             }
             catch (Exception e)
             {
-                Debug.LogError($"exception during update {typeof(TView)}: {e.Message}\n{e.StackTrace}");
+                Debug.LogError($"exception during update {typeof(TView)}: {e.ToError()}");
             }
         }
 
