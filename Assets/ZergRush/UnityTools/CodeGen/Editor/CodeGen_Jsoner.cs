@@ -159,6 +159,10 @@ namespace ZergRush.CodeGen
         public static string DirectJsonImmutableTypeReader(Type t)
         {
             var str = $"({t.RealName(true)})";
+            if (t.IsNullable())
+            {
+                t = Nullable.GetUnderlyingType(t);
+            }
 
             if (t.IsGuid())
                 return $"Guid.Parse((string)reader.Value)";
@@ -168,12 +172,12 @@ namespace ZergRush.CodeGen
                 return $"Fix64.FromRaw((Int64)reader.Value)";
             if (t == typeof(bool))
                 return str + $"reader.Value";
-            if (t.IsNullable())
-            {
-                var valtype = Nullable.GetUnderlyingType(t);
-                var cast = valtype == typeof(float) || valtype == typeof(double) ? "double" : "Int64";
-                return $"(reader.Value == null ? ({valtype.RealName()})({cast})reader.Value : ({t.RealName()})null)";
-            }
+            // if (t.IsNullable())
+            // {
+            //     var valtype = Nullable.GetUnderlyingType(t);
+            //     var cast = valtype == typeof(float) || valtype == typeof(double) ? "double" : "Int64";
+            //     return $"(reader.Value == null ? ({valtype.RealName()})({cast})reader.Value : ({t.RealName()})null)";
+            // }
             if (t == typeof(float) || t == typeof(double))
                 return str + $"(double)reader.Value";
             if (t == typeof(ulong))

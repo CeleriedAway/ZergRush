@@ -33,31 +33,37 @@ namespace ZergRush.CodeGen
             bool writeDataNodeAsId = false)
         {
             var t = info.type;
+            var access = info.access;
+
+            if (t.IsNullable())
+            {
+                access += ".Value";
+                t = Nullable.GetUnderlyingType(t);
+            }
+            
             if (t == typeof(byte[]))
-                sink.content($"{stream}.WriteByteArray({info.access});");
+                sink.content($"{stream}.WriteByteArray({access});");
             else if (t.IsConfig() && info.insideConfigStorage == false)
             {
-                sink.content($"{stream}.Write({info.access}.{UIdFuncName}());");
+                sink.content($"{stream}.Write({access}.{UIdFuncName}());");
                 return;
             }
-            else if (info.type.IsNullable())
-                sink.content($"{stream}.Write({info.access}.Value);");
             else if (t.IsRef())
-                sink.content($"{stream}.Write({info.access}.id);");
+                sink.content($"{stream}.Write({access}.id);");
             else if (t.IsReferencableDataNode() && writeDataNodeAsId)
-                sink.content($"{stream}.Write({info.access}.Id);");
+                sink.content($"{stream}.Write({access}.Id);");
             else if (t.IsPrimitive || t == typeof(Guid) || t.IsString())
-                sink.content($"{stream}.Write({info.access});");
+                sink.content($"{stream}.Write({access});");
             else if (t.IsEnum)
-                sink.content($"{stream}.Write(({t.GetEnumUnderlyingType().Name}){info.access});");
+                sink.content($"{stream}.Write(({t.GetEnumUnderlyingType().Name}){access});");
             else
             {
                 if (t.CanBeAncestor())
                 {
-                    sink.content($"{stream}.Write({info.access}.{CodeGen.PolymorphClassIdGetter});");
+                    sink.content($"{stream}.Write({access}.{CodeGen.PolymorphClassIdGetter});");
                 }
 
-                sink.content($"{info.access}.{WriteFuncName}({stream});");
+                sink.content($"{access}.{WriteFuncName}({stream});");
             }
         }
 
@@ -194,6 +200,13 @@ namespace ZergRush.CodeGen
         {
             var underlyingType = Nullable.GetUnderlyingType(t);
             if (underlyingType != null && underlyingType.IsClass) return true;
+            return false;
+        }
+        
+        public static bool IsNullableEnum(this Type t)
+        {
+            var underlyingType = Nullable.GetUnderlyingType(t);
+            if (underlyingType != null && underlyingType.IsEnum) return true;
             return false;
         }
         
