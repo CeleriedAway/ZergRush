@@ -24,15 +24,16 @@ namespace ZergRush.CodeGen
             allTypesInAssemblies.AddRange(typesEnumerable.ToList());
             var priorityList = allTypesInAssemblies.Select(t => {
                 var tf = t.GetAttribute<GenTargetFolder>(f => f.inheritable);
-                if (tf != null && tf.inheritable)
+                if (tf != null)
                 {
-                    return (t, pathPartPriority.IndexOf(p => tf.folder.Contains(p)));
+                    var indexOf = pathPartPriority.IndexOf(p => tf.folder.Contains(p));
+                    return (t, indexOf == -1 ? 99 : indexOf);
                 }
-                return (t, -2);
+                return (t, 100);
             }).ToList();
             priorityList.Sort((tp1, tp2) =>
             {
-                if (tp1.Item2 != tp2.Item2) return tp2.Item2.CompareTo(tp1.Item2);
+                if (tp1.Item2 != tp2.Item2) return tp1.Item2.CompareTo(tp2.Item2);
                 var t1 = tp1.t;
                 var t2 = tp2.t;
                 return (t1.Namespace, t1.Name).CompareTo((t2.Namespace, t2.Name));
