@@ -12,7 +12,7 @@
     /// See examples below.
     /// </summary>
     /// <typeparam name="T">Inherited type</typeparam>
-    [GenTask(GenTaskFlags.ConfigData & ~GenTaskFlags.PolymorphicConstruction), GenInLocalFolder]
+    [GenTask(GenTaskFlags.ConfigData & ~GenTaskFlags.PolymorphicConstruction), GenZergRushFolder()]
     public abstract partial class GameConfigRoot<T> : IBinarySerializable, IBinaryDeserializable where T : GameConfigRoot<T>, new()
     {
         /// <summary>
@@ -113,14 +113,4 @@
             Instance.ReadFromJson(reader);
         }
     }
-
-    #region Example
-
-    [GenInLocalFolder]
-    public partial class GameConfigExample : GameConfigRoot<GameConfigExample>
-    {
-        public ConfigStorageList<SomeItemFromConfig> items;
-    }
-
-    #endregion
 }

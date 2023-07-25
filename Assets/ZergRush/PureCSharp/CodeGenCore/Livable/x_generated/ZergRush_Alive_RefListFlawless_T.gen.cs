@@ -12,29 +12,29 @@ namespace ZergRush.Alive {
     {
         public void UpdateFrom(ZergRush.Alive.RefListFlawless<T> other, ZRUpdateFromHelper __helper) 
         {
-            ids.UpdateFrom(other.ids, __helper);
+            // ids.UpdateFrom(other.ids, __helper);
         }
         public void Deserialize(BinaryReader reader) 
         {
-            ids.Deserialize(reader);
+            // ids.Deserialize(reader);
         }
         public void Serialize(BinaryWriter writer) 
         {
-            ids.Serialize(writer);
+            // ids.Serialize(writer);
         }
         public ulong CalculateHash(ZRHashHelper __helper) 
         {
             System.UInt64 hash = 345093625;
             hash += (ulong)1091248618;
             hash += hash << 11; hash ^= hash >> 7;
-            hash += ids.CalculateHash(__helper);
+            // hash += ids.CalculateHash(__helper);
             hash += hash << 11; hash ^= hash >> 7;
             return hash;
         }
         public void CompareCheck(ZergRush.Alive.RefListFlawless<T> other, ZRCompareCheckHelper __helper, Action<string> printer) 
         {
             __helper.Push("ids");
-            ids.CompareCheck(other.ids, __helper, printer);
+            // ids.CompareCheck(other.ids, __helper, printer);
             __helper.Pop();
         }
         public bool ReadFromJsonField(ZRJsonTextReader reader, string __name) 
@@ -42,7 +42,7 @@ namespace ZergRush.Alive {
             switch(__name)
             {
                 case "ids":
-                ids.ReadFromJson(reader);
+                // ids.ReadFromJson(reader);
                 break;
                 default: return false; break;
             }
@@ -51,7 +51,7 @@ namespace ZergRush.Alive {
         public void WriteJsonFields(ZRJsonTextWriter writer) 
         {
             writer.WritePropertyName("ids");
-            ids.WriteJson(writer);
+            // ids.WriteJson(writer);
         }
     }
 }

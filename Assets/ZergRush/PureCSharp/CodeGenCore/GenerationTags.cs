@@ -79,13 +79,15 @@ namespace ZergRush.CodeGen
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Enum, AllowMultiple = false)]
 public class GenTargetFolder : Attribute
 {
+    public bool inheritable;
     public int priority;
     public string folder;
 
-    public GenTargetFolder(string folder, int priority = 1)
+    public GenTargetFolder(string folder, bool inheritable = true, int priority = 1)
     {
         this.folder = folder;
         this.priority = priority;
+        this.inheritable = inheritable;
     }
 }
 
@@ -106,8 +108,8 @@ public class GenInLocalFolder : GenTargetFolder
         return Path.Combine(path, $"{dir}");
     }
 
-    public GenInLocalFolder(string dir = "x_generated", [CallerFilePath] string sourceFilePath = "") : base(
-        GetPath(dir, sourceFilePath), 100)
+    public GenInLocalFolder(string dir = "x_generated", bool inheritable = true, [CallerFilePath] string sourceFilePath = "") : base(
+        GetPath(dir, sourceFilePath), inheritable, 100)
     {
         //Debug.Log("~~~~~~~~~" + folder);
     }
@@ -115,8 +117,7 @@ public class GenInLocalFolder : GenTargetFolder
 
 public class GenZergRushFolder : GenInLocalFolder
 {
-    public GenZergRushFolder(string dir = "x_generated", [CallerFilePath] string sourceFilePath = "") : base(dir,
-        sourceFilePath)
+    public GenZergRushFolder(string dir = "x_generated", [CallerFilePath] string sourceFilePath = "") : base(dir, false, sourceFilePath)
     {
         priority = 10000;
     }

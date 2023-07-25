@@ -17,7 +17,7 @@ namespace ZergRush.CodeGen
         public static GeneratorContext defaultContext;
         public static Dictionary<string, GeneratorContext> contexts = new Dictionary<string, GeneratorContext>();
         public static Dictionary<Type, GeneratorContext> contextsForTypes = new Dictionary<Type, GeneratorContext>();
-        
+
         static Dictionary<string, SharpClassBuilder> classes = new Dictionary<string, SharpClassBuilder>();
         static HashSet<string> extensionsSignaturesGenerated = new HashSet<string>();
 
@@ -53,16 +53,17 @@ namespace ZergRush.CodeGen
             public Type type;
             public GenTaskFlags flags;
         }
-        
+
 
         static List<GeneratorContext> tempContexts = new List<GeneratorContext>();
+
         public static GeneratorContext GetContext(Type t, HashSet<Type> involved = null)
         {
             // if (involved == null) involved = new HashSet<Type>();
             // else if (involved.Contains(t)) return defaultContext;
             // involved.Add(t);
             if (contextsForTypes.TryGetValue(t, out var context)) return context;
-            
+
             if (typeRequestMap.TryGetValue(t, out var requesters))
             {
                 tempContexts.Clear();
@@ -77,9 +78,11 @@ namespace ZergRush.CodeGen
                     {
                         return tempContexts.Best(c => c.priority);
                     }
+
                     if (tempContexts.Count == 1) return tempContexts[0];
                 }
             }
+
             return defaultContext;
         }
 
@@ -90,8 +93,9 @@ namespace ZergRush.CodeGen
             {
                 return context.extensionSink;
             }
+
             if (classes.ContainsKey(t.UniqueName())) return classes[t.UniqueName()];
-            
+
             var classSink = context.createSharpClass(t.RealName(), t.FileName(), namespaceName: t.Namespace,
                 isPartial: true, isStruct: t.IsValueType, isSealed: false);
             classSink.stubMode = stubMode;
@@ -102,7 +106,7 @@ namespace ZergRush.CodeGen
 
             // Do not generate constructe generic types... hack
             if (t.IsControllable() && t.IsGenericType && t.IsGenericTypeDecl() == false) classSink.doNotGen = true;
-            
+
             return classSink;
         }
 
@@ -110,7 +114,7 @@ namespace ZergRush.CodeGen
         {
             if (t.IsValueType || t.GetConstructors().Length == 0) return;
             if ((t.ReadGenFlags() & GenTaskFlags.DefaultConstructor) != 0) return;
-            
+
             var constructor = t.GetConstructor(Type.EmptyTypes);
             if (constructor == null)
             {
@@ -122,8 +126,9 @@ namespace ZergRush.CodeGen
         {
             return !t.IsControllable() ? "self" : "";
         }
-        
-        static bool ProcessMembers(this Type type, GenTaskFlags currFlag, bool needMembersGen, Action<DataInfo> strategy)
+
+        static bool ProcessMembers(this Type type, GenTaskFlags currFlag, bool needMembersGen,
+            Action<DataInfo> strategy)
         {
             bool hasMembers = false;
             foreach (var member in type.GetMembersForCodeGen(currFlag))
@@ -134,6 +139,7 @@ namespace ZergRush.CodeGen
                 strategy(member);
                 hasMembers = true;
             }
+
             return hasMembers;
         }
 
@@ -149,10 +155,13 @@ namespace ZergRush.CodeGen
                 {
                     acceptableClass = baseClass;
                 }
+
                 baseClass = baseClass.BaseType;
             }
+
             return acceptableClass;
         }
+
         static bool HasBaseClassImplementingFlag(this Type type, GenTaskFlags flag)
         {
             var baseClass = type.BaseType;
@@ -161,9 +170,10 @@ namespace ZergRush.CodeGen
                 if ((baseClass.ReadGenFlags() & flag) != 0) return true;
                 baseClass = baseClass.BaseType;
             }
+
             return false;
         }
-        
+
         // Base class that skips ignored classes
         static Type ValidBaseClass(this Type type)
         {
@@ -173,29 +183,32 @@ namespace ZergRush.CodeGen
                 if (baseClass.IsControllable()) return baseClass;
                 baseClass = baseClass.BaseType;
             }
+
             return baseClass;
         }
 
         static bool NeedBaseCallForFlag(this Type t, GenTaskFlags flag)
         {
-            return t.IsControllable() && t.HasBaseClassImplementingFlag(flag) && (flag != GenTaskFlags.DefaultConstructor);
+            return t.IsControllable() && t.HasBaseClassImplementingFlag(flag) &&
+                   (flag != GenTaskFlags.DefaultConstructor);
         }
 
-        public static MethodBuilder MakeGenMethod(Type type, GenTaskFlags currTask, string funcName, Type returnType, string args,
+        public static MethodBuilder MakeGenMethod(Type type, GenTaskFlags currTask, string funcName, Type returnType,
+            string args,
             bool disablebleFirstArg = false)
         {
             bool controllable = type.IsControllable();
             var classSink = GenClassSink(type);
 
             var mode = controllable ? Mode.PartialClass : Mode.ExtensionMethod;
-            
+
             var genericSuffix = mode == Mode.ExtensionMethod ? type.GenericParametersSuffix() : "";
             var constraints = "";
             if (genericSuffix.Length > 0)
             {
                 constraints = type.GenericParametersConstraints();
             }
-            
+
             // TODO-- HACK rewrite
             bool IsCustomImpl = funcName.StartsWith("Base");
 
@@ -204,6 +217,7 @@ namespace ZergRush.CodeGen
             {
                 mType = disablebleFirstArg ? MethodType.StaticFunction : MethodType.Extension;
             }
+
             if (IsCustomImpl)
             {
                 mType = MethodType.Instance;
@@ -220,40 +234,45 @@ namespace ZergRush.CodeGen
             var method = classSink.Method(funcName, type, mType, returnType, args, genericSuffix, constraints);
             method.stubMode = stubMode;
             method.needBaseValCall = type.NeedBaseCallForFlag(currTask);
-            
+
             if (mode == Mode.ExtensionMethod)
             {
                 if (extensionsSignaturesGenerated.Contains(method.sig()))
                 {
                     method.doNotGen = true;
                 }
+
                 extensionsSignaturesGenerated.Add(method.sig());
             }
-            
+
             return method;
         }
-        
+
         public static void RegisterTypeContext(Type type, Type requester)
         {
             if (contextsForTypes.ContainsKey(type)) return;
-            if (type.HasAttribute<GenTargetFolder>(true))
+            GenTargetFolder genTargetFolder = type.GetAttribute<GenTargetFolder>(f => f.inheritable);
+            if (genTargetFolder != null)
             {
-                var genTargetFolder = type.GetAttribute<GenTargetFolder>(true);
                 if (genTargetFolder.folder == null)
                 {
                     contextsForTypes[type] = defaultContext;
                 }
+
                 if (contexts.TryGetValue(genTargetFolder.folder, out var c) == false)
                 {
-                    var generatorContext = new GeneratorContext(new GenInfo{sharpGenPath = genTargetFolder.folder}, stubMode);
+                    var generatorContext =
+                        new GeneratorContext(new GenInfo { sharpGenPath = genTargetFolder.folder }, stubMode);
                     generatorContext.priority = genTargetFolder.priority;
                     contexts[genTargetFolder.folder] = generatorContext;
                     customContextFolders.Add(genTargetFolder.folder);
                     c = generatorContext;
                 }
+
                 contextsForTypes[type] = c;
                 return;
             }
+
             if (requester != null)
             {
                 contextsForTypes[type] = contextsForTypes[requester];
@@ -265,13 +284,13 @@ namespace ZergRush.CodeGen
         }
 
         static bool stubMode = false;
-        
+
         public static void Gen(List<string> includeAssemblies, bool stubs)
         {
             var allAssemblies = AppDomain.CurrentDomain.GetAssemblies();
-            var assemblies = includeAssemblies.Select(i => allAssemblies.FirstOrDefault(a => a.GetName().Name == i)).Where(a => a != null);
+            var assemblies = includeAssemblies.Select(i => allAssemblies.FirstOrDefault(a => a.GetName().Name == i))
+                .Where(a => a != null);
             RawGen(assemblies.ToList(), "Assets/zGenerated", stubs);
         }
     }
 }
-

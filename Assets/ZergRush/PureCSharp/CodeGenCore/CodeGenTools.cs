@@ -12,6 +12,19 @@ public static class CodeGenTools
         var customAttributes = type.GetCustomAttributes(typeof(T), inherit);
         return customAttributes.Length > 0 ? (T)customAttributes[0] : null;
     }
+    
+    public static T GetAttribute<T>(this Type type, Func<T, bool> validInheritance) where T : Attribute
+    {
+        var t = type;
+        T result = null;
+        while (t != null)
+        {
+            var val = t.GetAttribute<T>(false);
+            if (val != null && validInheritance(val)) result = val;
+            t = t.BaseType;
+        }
+        return result;
+    }
 
     public static bool HasAttribute<T>(this MemberInfo field) where T : Attribute
     {
