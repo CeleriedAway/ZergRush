@@ -4,7 +4,7 @@ using ZergRush.CodeGen;
 namespace ZergRush
 {
     // Copy paste from system random diassembly
-    [GenTask(GenTaskFlags.SimpleDataPack), GenTaskCustomImpl(GenTaskFlags.DefaultConstructor), GenInLocalFolder]
+    [GenTask(GenTaskFlags.SimpleDataPack), GenTaskCustomImpl(GenTaskFlags.DefaultConstructor), GenZergRushFolder()]
     public partial class ZergRandom
     {
         public static ZergRandom global = new ZergRandom();
