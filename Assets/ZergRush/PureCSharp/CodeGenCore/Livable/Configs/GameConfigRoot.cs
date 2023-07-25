@@ -46,8 +46,8 @@
         }
 
 
-        public static T GetConfig<T>(ulong uid) where T : IUniquelyIdentifiable => (T) GetConfig(uid);
-        public static T GetConfigIfAny<T>(ulong uid, T ifNotFound) where T : IUniquelyIdentifiable => (T) TryGetConfig(uid) ?? ifNotFound;
+        public static TConf GetConfig<TConf>(ulong uid) where TConf : IUniquelyIdentifiable => (TConf) GetConfig(uid);
+        public static TConf GetConfigIfAny<TConf>(ulong uid, TConf ifNotFound) where TConf : class, IUniquelyIdentifiable => TryGetConfig(uid) as TConf ?? ifNotFound;
 
         /// <summary>
         /// Retrieves config member from ConfigsRegister by id.
