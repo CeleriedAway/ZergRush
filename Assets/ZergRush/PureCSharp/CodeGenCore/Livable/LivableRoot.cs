@@ -2,7 +2,7 @@
 
 namespace ZergRush.Alive
 {
-    [GenInLocalFolder, GenTask(GenTaskFlags.LivableNodePack & ~GenTaskFlags.PolymorphicConstruction), GenTaskCustomImpl(GenTaskFlags.LifeSupport)]
+    [GenZergRushFolder(), GenTask(GenTaskFlags.LivableNodePack & ~GenTaskFlags.PolymorphicConstruction), GenTaskCustomImpl(GenTaskFlags.LifeSupport)]
     public abstract partial class LivableRoot : DataRoot, ILivable
     {
         [GenIgnore] bool alive;

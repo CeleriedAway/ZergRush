@@ -11,7 +11,7 @@ namespace ZergRush.Alive
      *     Enlive and Mortify will be automatically called when added or removed to special containers like LivableSlot/LivableList
      *     So you never call Enlive methods manually
      */
-    [GenTask(GenTaskFlags.LivableNodePack & ~GenTaskFlags.PolymorphicConstruction), GenInLocalFolder]
+    [GenTask(GenTaskFlags.LivableNodePack & ~GenTaskFlags.PolymorphicConstruction), GenZergRushFolder()]
     public abstract partial class Livable : DataNode, IConnectionSink, ILivable
     {
         [GenIgnore] public bool isAlive { get; private set; }
@@ -132,7 +132,7 @@ namespace ZergRush.Alive
         void DisposeAffect(int itemId);
     }
     
-    [GenInLocalFolder]
+    [GenZergRushFolder()]
     public class StaticConnections
     {
         public int ownerId;
@@ -167,7 +167,7 @@ namespace ZergRush.Alive
         }
     }
     
-    [GenInLocalFolder]
+    [GenZergRushFolder()]
     public struct SerializableConnection
     {
         public SerializableConnection(int ownerId, int entityId)

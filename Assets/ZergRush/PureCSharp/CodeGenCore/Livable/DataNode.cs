@@ -13,7 +13,7 @@ namespace ZergRush.Alive
      *     Data node can have reference id to be referenced from other parts of data tree
      *     To make it referensable add "int id;" field and [HasRefId] tag on the class
      */
-    [GenTask(GenTaskFlags.NodePack & ~GenTaskFlags.PolymorphicConstruction), GenInLocalFolder]
+    [GenTask(GenTaskFlags.NodePack & ~GenTaskFlags.PolymorphicConstruction), GenZergRushFolder()]
     public abstract partial class DataNode : IDataNode, IReferencableFromDataRoot
     {
         bool dead;

@@ -20,7 +20,11 @@ public static class CodeGenTools
         while (t != null)
         {
             var val = t.GetAttribute<T>(false);
-            if (val != null && validInheritance(val)) result = val;
+            if (val != null && (t == type || validInheritance(val)))
+            {
+                result = val;
+                break;
+            }
             t = t.BaseType;
         }
         return result;

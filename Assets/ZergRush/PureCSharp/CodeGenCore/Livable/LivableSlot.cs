@@ -5,7 +5,7 @@ using ZergRush.ReactiveCore;
 
 namespace ZergRush.Alive
 {
-    [GenTaskCustomImpl(GenTaskFlags.NodePack), GenInLocalFolder]
+    [GenTaskCustomImpl(GenTaskFlags.NodePack), GenZergRushFolder()]
     public sealed partial class DataSlot<TLivable> : DataNode, ICell<TLivable>, IConnectable  where TLivable : DataNode
     {
         [CanBeNull] TLivable _value;
@@ -53,7 +53,7 @@ namespace ZergRush.Alive
         public int getConnectionCount => up != null ? up.getConnectionCount : 0;
     }
 
-    [GenTaskCustomImpl(GenTaskFlags.LivableNodePack), GenInLocalFolder]
+    [GenTaskCustomImpl(GenTaskFlags.LivableNodePack), GenZergRushFolder()]
     public sealed partial class LivableSlot<TLivable> : Livable, ICell<TLivable> where TLivable : Livable
     {
         [CanBeNull] TLivable _value;

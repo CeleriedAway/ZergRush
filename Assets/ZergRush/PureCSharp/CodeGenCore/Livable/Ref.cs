@@ -5,7 +5,7 @@ using ZergRush.ReactiveCore;
 
 namespace ZergRush.Alive
 {
-    [GenInLocalFolder, GenTask(GenTaskFlags.CompareChech), GenTaskCustomImpl(GenTaskFlags.PooledUpdateFrom | GenTaskFlags.JsonSerialization | GenTaskFlags.DefaultConstructor)]
+    [GenZergRushFolder, GenTask(GenTaskFlags.CompareChech), GenTaskCustomImpl(GenTaskFlags.PooledUpdateFrom | GenTaskFlags.JsonSerialization | GenTaskFlags.DefaultConstructor)]
     public sealed partial class Ref<T> : DataNode, ICell<T>, IConnectable
         where T : class, IReferencableFromDataRoot, IDataNode
     {

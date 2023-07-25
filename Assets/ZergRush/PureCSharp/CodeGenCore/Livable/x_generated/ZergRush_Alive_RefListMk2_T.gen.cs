@@ -12,18 +12,18 @@ namespace ZergRush.Alive {
     {
         public void Deserialize(BinaryReader reader) 
         {
-            // ids.Deserialize(reader);
+            ids.Deserialize(reader);
         }
         public void Serialize(BinaryWriter writer) 
         {
-            // ids.Serialize(writer);
+            ids.Serialize(writer);
         }
         public bool ReadFromJsonField(ZRJsonTextReader reader, string __name) 
         {
             switch(__name)
             {
                 case "ids":
-                // ids.ReadFromJson(reader);
+                ids.ReadFromJson(reader);
                 break;
                 default: return false; break;
             }
@@ -32,7 +32,7 @@ namespace ZergRush.Alive {
         public void WriteJsonFields(ZRJsonTextWriter writer) 
         {
             writer.WritePropertyName("ids");
-            // ids.WriteJson(writer);
+            ids.WriteJson(writer);
         }
     }
 }

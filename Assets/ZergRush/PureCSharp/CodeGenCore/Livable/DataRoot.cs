@@ -6,7 +6,7 @@ using ZergRush.CodeGen;
 
 namespace ZergRush.Alive
 {
-    [GenInLocalFolder]
+    [GenZergRushFolder()]
     public abstract partial class DataRoot : DataNode
     {
         [GenIgnore] Dictionary<int, object> gameEntities = new Dictionary<int, object>();
