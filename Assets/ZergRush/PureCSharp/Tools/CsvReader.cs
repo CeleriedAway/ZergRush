@@ -26,7 +26,7 @@ namespace ZergRush
         {
             get
             {
-                var i = table[0].data.FindIndex(e => String.Equals(e, name, StringComparison.CurrentCultureIgnoreCase));
+                var i = table[0].data.FindIndex(e => String.Equals(e.Trim(), name, StringComparison.CurrentCultureIgnoreCase));
                 if (i == -1) return null;
                 return data[i];
             }
@@ -36,9 +36,9 @@ namespace ZergRush
         {
             get
             {
-                var i = table[0].data.FindIndex(e => String.Equals(e, name, StringComparison.CurrentCultureIgnoreCase));
+                var i = table[0].data.FindIndex(e => String.Equals(e.Trim(), name, StringComparison.CurrentCultureIgnoreCase));
                 if (i == -1) return null;
-                var j = table[1].data.FindIndex(i, e => String.Equals(e, subName, StringComparison.CurrentCultureIgnoreCase));
+                var j = table[1].data.FindIndex(i, e => String.Equals(e.Trim(), subName, StringComparison.CurrentCultureIgnoreCase));
                 if (j == -1 || j < i) return null;
                 for (int k = i + 1; k <= j; k++)
                 {
