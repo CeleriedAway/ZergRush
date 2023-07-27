@@ -187,15 +187,16 @@ public static class ParseTools
         return (TEnum) Enum.ToObject(typeof(TEnum), val);
     }
 
-    public static List<TEnum> ParseEnumListStrict<TEnum>(this string str) where TEnum : struct
+    public static List<TEnum> ParseEnumListStrict<TEnum>(this string str, params char[] separator) where TEnum : struct
     {
+        if (separator.Length == 0) separator = new []{',', ' '};
         var result = new List<TEnum>();
         if (str.IsNullOrEmpty() == false)
         {
-            foreach (var s in str.Split(' ', ','))
+            foreach (var s in str.Split(separator))
             {
                 if (s.IsNullOrWhitespace()) continue;
-                result.Add(s.ParseEnumStrict<TEnum>());
+                result.Add(s.Trim().ParseEnumStrict<TEnum>());
             }
         }
 
@@ -306,11 +307,30 @@ public static class ParseTools
         return t;
     }
     
-    public static List<string> ParseStringList(this string str)
+    public static List<string> ParseStringList(this string str, params char [] separator)
     {
+        if (separator.Length == 0) separator = new []{',', ' '};
         var list = new List<string>();
         if (Utils.IsNullOrWhitespace(str)) return list;
-        list.AddRange(str.Split(',').SelectMany(s => s.Split(' ').Select(ss => ss.Trim())));
+        list.AddRange(str.Split(separator).Select(ss => ss.Trim()));
+        return list;
+    }
+    
+    public static List<int> ParseIntList(this string str, params char [] separator)
+    {
+        if (separator.Length == 0) separator = new []{',', ' '};
+        var list = new List<int>();
+        if (str.IsNullOrWhitespace()) return list;
+        list.AddRange(str.Split(separator).Select(ss => ss.Trim()).Select(ss => ss.ParseIntStrict()));
+        return list;
+    }
+    
+    public static List<float> ParseFloatList(this string str, params char [] separator)
+    {
+        if (separator.Length == 0) separator = new []{',', ' '};
+        var list = new List<float>();
+        if (str.IsNullOrWhitespace()) return list;
+        list.AddRange(str.Split(separator).Select(ss => ss.Trim()).Select(ss => ss.ParseFloatStrict()));
         return list;
     }
     
