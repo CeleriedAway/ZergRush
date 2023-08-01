@@ -113,13 +113,13 @@ public static class ParseTools
         return Enum.GetValues(typeof(TEnum)).Cast<TEnum>();
     }
 
-    public static string TextToCamelCase(this string str)
+    public static string TextToCamelCase(this string str, char delim = ' ')
     {
         if (str == null) return null;
         var builder = new StringBuilder();
         str = str.Replace(".", "");
         str = str.Replace("-", "");
-        foreach (var s in str.Split(' '))
+        foreach (var s in str.Split(delim))
         {
             builder.Append(s.UpperFirstLetter());
         }
