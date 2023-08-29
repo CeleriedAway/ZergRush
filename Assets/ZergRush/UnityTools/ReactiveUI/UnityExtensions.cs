@@ -23,11 +23,12 @@ public static partial class UnityExtensions
     {
         foreach (var child in t)
         {
-            var c = (Transform) child;
+            var c = (Transform)child;
             if (predicate(c))
                 Object.Destroy(c.gameObject);
         }
     }
+
     public static void AddConnection(this IConnectionSink sink, IConnectionSink dublicater, IDisposable connection)
     {
         sink.AddConnection(connection);
@@ -78,7 +79,7 @@ public static partial class UnityExtensions
         {
             var ua = new UnityAction(reaction);
             button.onClick.AddListener(ua);
-            return new UnityActionDisposable {action = ua, e = button.onClick};
+            return new UnityActionDisposable { action = ua, e = button.onClick };
         });
     }
 
@@ -102,7 +103,7 @@ public static partial class UnityExtensions
         {
             var ua = new UnityAction(reaction);
             button.onClick.AddListener(ua);
-            return new UnityActionDisposable {action = ua, e = button.onClick};
+            return new UnityActionDisposable { action = ua, e = button.onClick };
         });
     }
 
@@ -127,7 +128,7 @@ public static partial class UnityExtensions
 
     public static IDisposable OnPointerDown(this EventTrigger self, Action act)
     {
-        var entry = new EventTrigger.Entry {eventID = EventTriggerType.PointerDown};
+        var entry = new EventTrigger.Entry { eventID = EventTriggerType.PointerDown };
 
         entry.callback.AddListener(data => { act(); });
 
@@ -137,7 +138,7 @@ public static partial class UnityExtensions
 
     public static IDisposable OnPointerUp(this EventTrigger self, Action act)
     {
-        var entry = new EventTrigger.Entry {eventID = EventTriggerType.PointerUp};
+        var entry = new EventTrigger.Entry { eventID = EventTriggerType.PointerUp };
 
         entry.callback.AddListener(data => { act(); });
 
@@ -336,7 +337,7 @@ public static partial class UnityExtensions
 
         return self.StartCoroutine(DelayCoro(action, delay));
     }
-    
+
     public static IEnumerable FlagsToList(Type enumType, int mask)
     {
         if (enumType.IsSubclassOf(typeof(Enum)) == false)
@@ -351,14 +352,14 @@ public static partial class UnityExtensions
 
     public static IEnumerable<T> FlagsToList<T>(T mask)
     {
-        var intMask = (int) (object) mask;
+        var intMask = (int)(object)mask;
         if (typeof(T).IsSubclassOf(typeof(Enum)) == false)
             throw new ArgumentException();
 
         return Enum.GetValues(typeof(T))
             .Cast<int>()
             .Where(Mathf.IsPowerOfTwo)
-            .Where(m => (intMask & (int) m) != 0)
+            .Where(m => (intMask & (int)m) != 0)
             .Cast<T>();
     }
 
@@ -674,16 +675,16 @@ public static partial class UnityExtensions
     {
         foreach (var child in t)
         {
-            UnityEngine.Object.Destroy(((Transform) child).gameObject);
+            UnityEngine.Object.Destroy(((Transform)child).gameObject);
         }
     }
-    
+
     public static void DisableChildren(this Transform t, Func<Transform, bool> predicate = null)
     {
         foreach (var child in t)
         {
-            if (predicate == null || predicate((Transform) child))
-                ((Transform) child).SetActiveSafe(false);
+            if (predicate == null || predicate((Transform)child))
+                ((Transform)child).SetActiveSafe(false);
         }
     }
 
@@ -691,6 +692,23 @@ public static partial class UnityExtensions
     {
         animator.SetFloat(animator.LayerSpeedParamName(layer), speed);
     }
+
+    public static bool InRange(this Vector3Int pos, Vector3Int center, Vector2Int range)
+    {
+        var dist = center.Distance(pos);
+        return range.x <= dist && range.y >= dist;
+    }
+
+    public static float Distance(this Vector2 pos, Vector2 pos2 = default)
+    {
+        return Vector2.Distance(pos, pos2);
+    }
+
+    public static float Distance(this Vector3 pos, Vector3 pos2 = default)
+    {
+        return Vector3.Distance(pos, pos2);
+    }
+
 
     public static Transform FindRecursive(this Transform tr, string name)
     {
@@ -706,29 +724,29 @@ public static partial class UnityExtensions
 
         return null;
     }
-        public static async Task DoAsyncWithMaxSimultaneous(IEnumerable<Func<Task>> tasks, int maxSimultaneous)
+
+    public static async Task DoAsyncWithMaxSimultaneous(IEnumerable<Func<Task>> tasks, int maxSimultaneous)
+    {
+        Debug.Assert(maxSimultaneous >= 1, "should allow at least one task at a time");
+        List<Task> currTasks = new List<Task>();
+        foreach (var task in tasks)
         {
-            Debug.Assert(maxSimultaneous >= 1, "should allow at least one task at a time");
-            List<Task> currTasks = new List<Task>();
-            foreach (var task in tasks)
-            {
-                // Wait until simultaneous tasks count drops below limit.
-                await WaitingUntillTasksCountLessThan(maxSimultaneous);
-                // Start next task.
-                currTasks.Add(task());
-            }
-
-            // Wait until all tasks complete.
-            await WaitingUntillTasksCountLessThan(1);
-
-            async Task WaitingUntillTasksCountLessThan(int count)
-            {
-                while (currTasks.Count >= count)
-                {
-                    await Task.Yield();
-                    currTasks.RemoveAll(currTask => currTask.IsCompleted);
-                }
-            }
+            // Wait until simultaneous tasks count drops below limit.
+            await WaitingUntillTasksCountLessThan(maxSimultaneous);
+            // Start next task.
+            currTasks.Add(task());
         }
 
+        // Wait until all tasks complete.
+        await WaitingUntillTasksCountLessThan(1);
+
+        async Task WaitingUntillTasksCountLessThan(int count)
+        {
+            while (currTasks.Count >= count)
+            {
+                await Task.Yield();
+                currTasks.RemoveAll(currTask => currTask.IsCompleted);
+            }
+        }
+    }
 }
