@@ -693,12 +693,6 @@ public static partial class UnityExtensions
         animator.SetFloat(animator.LayerSpeedParamName(layer), speed);
     }
 
-    public static bool InRange(this Vector3Int pos, Vector3Int center, Vector2Int range)
-    {
-        var dist = center.Distance(pos);
-        return range.x <= dist && range.y >= dist;
-    }
-
     public static float Distance(this Vector2 pos, Vector2 pos2 = default)
     {
         return Vector2.Distance(pos, pos2);
