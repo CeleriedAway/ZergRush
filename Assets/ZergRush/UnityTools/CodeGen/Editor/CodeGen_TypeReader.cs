@@ -318,6 +318,11 @@ namespace ZergRush.CodeGen
             {
                 fieldFlags |= BindingFlags.NonPublic;
             }
+            else
+            {
+                inheretedMembers = true;
+                //fieldFlags |= BindingFlags.FlattenHierarchy;
+            }
 
             if (inheretedMembers)
             {
