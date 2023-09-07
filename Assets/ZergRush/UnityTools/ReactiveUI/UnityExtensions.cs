@@ -67,6 +67,24 @@ public static partial class UnityExtensions
         }
     }
 
+    public static ICell<bool> IsPressedCell(this Toggle toggle)
+    {
+        if (toggle == null)
+        {
+            Debug.LogError("toggle is null!!!");
+            return new Cell<bool>();
+        }
+
+        ICell<bool> toggleCell = new AnonymousCell<bool>((Action<bool> reaction) =>
+        {
+            var ua = new UnityAction<bool>(reaction);
+            toggle.onValueChanged.AddListener(ua);
+            return new UnityActionDisposable<bool> { action = ua, e = toggle.onValueChanged };
+        }, () => toggle.isOn);
+        
+        return toggleCell;
+    }
+
     public static IEventStream ClickStream(this Button button)
     {
         if (button == null)
