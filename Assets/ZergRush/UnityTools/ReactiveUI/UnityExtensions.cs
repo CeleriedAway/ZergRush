@@ -670,12 +670,24 @@ public static partial class UnityExtensions
         return str;
     }
 
+    public static void DestroyChildrenSafe(this Transform t)
+    {
+        if (Application.isPlaying) DestroyChildren(t);
+        else DestroyChildrenEditor(t);
+    }
 
+    public static void DestroyChildrenEditor(this Transform t)
+    {
+        while (t.childCount > 0)
+        {
+            UnityEngine.Object.DestroyImmediate(t.GetChild(t.childCount - 1).gameObject);
+        }
+    }
     public static void DestroyChildren(this Transform t)
     {
-        foreach (var child in t)
+        while (t.childCount > 0)
         {
-            UnityEngine.Object.Destroy(((Transform)child).gameObject);
+            Object.Destroy(((Transform)t.GetChild(t.childCount - 1)).gameObject);
         }
     }
 
