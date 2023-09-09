@@ -703,9 +703,9 @@ public static partial class UnityExtensions
     }
     public static void DestroyChildren(this Transform t)
     {
-        while (t.childCount > 0)
+        foreach (var o in t)
         {
-            Object.Destroy(((Transform)t.GetChild(t.childCount - 1)).gameObject);
+            Object.Destroy(((Transform)o).gameObject);
         }
     }
 
