@@ -133,6 +133,16 @@ namespace ZergRush.ReactiveUI
             });
             return obj;
         }
+        
+        public GameObject Instantiate(GameObject prefab, Transform parent, bool worldPosStay = false)
+        {
+            var obj = GameObject.Instantiate(prefab, parent, worldPosStay);
+            connections += new AnonymousDisposable(() =>
+            {
+                if (obj) GameObject.Destroy(obj);
+            });
+            return obj;
+        }
 
         public T Instantiate<T>(T prefab) where T : Component
         {
