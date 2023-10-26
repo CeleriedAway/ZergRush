@@ -483,7 +483,7 @@ namespace ZergRush
 
         public static T AtSafe<T>(this IReadOnlyList<T> list, int index, T ifNoElement = default(T))
         {
-            return index < list.Count ? list[index] : ifNoElement;
+            return index < list.Count && index >= 0 ? list[index] : ifNoElement;
         }
 
         public static T LastElement<T>(this T[] list, T ifNoElements = default(T))

@@ -438,6 +438,11 @@ public static partial class UnityExtensions
         return val.Bind(go.SetActiveSafe);
     }
 
+    public static IDisposable SetInteractable(this Button button, ICell<bool> val)
+    {
+        return val.Bind(b => button.interactable = b);
+    }
+
     public static void SetVisible(this Image image, bool val)
     {
         image.SetActiveSafe(val);
