@@ -69,7 +69,7 @@ namespace ZergRush.ReactiveCore
 
         public override string ToString()
         {
-            return value.ToString();
+            return value != null ? value.ToString() : "null";
         }
 
         public void SetValue(T v)
