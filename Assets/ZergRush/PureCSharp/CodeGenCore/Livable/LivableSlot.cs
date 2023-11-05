@@ -102,7 +102,10 @@ namespace ZergRush.Alive
                 {
                     _value.__ForgetIds();
                     if (isAlive) _value.Mortify();
-                    _value.ReturnToPool(root.pool);
+                    if (root != null)
+                    {
+                        _value.ReturnToPool(root.pool);
+                    }
                     if (!__update_mod)
                     {
                         _value.Destroy();
