@@ -210,7 +210,8 @@ namespace ZergRush.CodeGen
         static string NewPolymorphicFromClassIdExpression(this Type type, bool pooled)
         {
             return
-                $"({type.RealName(true)}){type.RealName(true)}.{PolymorphInstanceFuncNamePooled(pooled)}(({PolymorphClassIdTypeName}) classId{type.OptPoolSecondArg(pooled)})";
+                $"({type.RealName(true)}){type.RealName(true)}.{PolymorphInstanceFuncNamePooled(pooled)}(({PolymorphClassIdTypeName}) " +
+                $"{SerializationTools.ClassIdName}{type.OptPoolSecondArg(pooled)})";
         }
 
         static bool IsValidType(this Type t)
