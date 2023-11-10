@@ -50,6 +50,29 @@ namespace ZergRush
             }
         }
 
+        public string this[string name, string subName, string secondSubName]
+        {
+            get
+            {
+                var i = table[0].data.FindIndex(e => String.Equals(e.Trim(), name, StringComparison.CurrentCultureIgnoreCase));
+                if (i == -1) return null;
+                var j = table[1].data.FindIndex(i, e => String.Equals(e.Trim(), subName, StringComparison.CurrentCultureIgnoreCase));
+                if (j == -1) return null;
+                var k = table[2].data.FindIndex(j, e => String.Equals(e.Trim(), secondSubName, StringComparison.CurrentCultureIgnoreCase));
+                if (k == -1) return null;
+
+
+                for (int l = i + 1; l <= k; l++)
+                {
+                    if (!string.IsNullOrEmpty(table[0].data[l]))
+                        return null;
+                }
+
+                return data[k];
+            }
+        }
+
+
         public Row(List<string> fill)
         {
             data = fill;
@@ -265,11 +288,11 @@ namespace ZergRush
 
             for (int i = 0; i < rows.Count; i++)
             {
-//                if (i > 0)
-//                {
-//                    rows[i].prev = rows[i - 1];
-//                    rows[i - 1].next = rows[i];
-//                }
+                //                if (i > 0)
+                //                {
+                //                    rows[i].prev = rows[i - 1];
+                //                    rows[i - 1].next = rows[i];
+                //                }
 
                 rows[i].index = i;
                 rows[i].table = rows;
