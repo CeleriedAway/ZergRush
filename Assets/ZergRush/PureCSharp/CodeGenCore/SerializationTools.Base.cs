@@ -14,6 +14,8 @@ public interface IStableIdentifiable
 
 public static partial class SerializationTools
 {
+    public static string ClassIdName = "__classId";
+    
     public static void StableUpdateFrom<T>(this IList<T> self, IList<T> other, ZRUpdateFromHelper __helper) 
         where T : IStableIdentifiable, IUpdatableFrom<T>, new()
     {
@@ -398,7 +400,7 @@ public static partial class SerializationTools
         var polymorph = obj as IPolymorphable;
         if (polymorph != null)
         {
-            writer.WritePropertyName("classId");
+            writer.WritePropertyName(ClassIdName);
             writer.WriteValue(polymorph.GetClassId());
         }
 
@@ -475,7 +477,7 @@ public static partial class SerializationTools
     public static ushort ReadJsonClassId(this JsonTextReader reader)
     {
         reader.Read();
-        if (reader.TokenType == JsonToken.PropertyName && (string)reader.Value == "classId")
+        if (reader.TokenType == JsonToken.PropertyName && (string)reader.Value == ClassIdName)
         {
             return (ushort)reader.ReadAsInt32();
         }
