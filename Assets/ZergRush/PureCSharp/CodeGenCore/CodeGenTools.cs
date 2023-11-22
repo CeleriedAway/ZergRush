@@ -100,7 +100,7 @@ public static class CodeGenTools
 
         if (Nullable.GetUnderlyingType(t) != null)
         {
-            var valueToReturn = RealName(Nullable.GetUnderlyingType(t)) + "?"; ;
+            var valueToReturn = RealName(Nullable.GetUnderlyingType(t), withNamespace) + "?"; ;
             return valueToReturn;
         }
 
