@@ -607,6 +607,41 @@ public static partial class UnityExtensions
         return vec;
     }
 
+    public static Vector2Int ToVector2Int(this Vector3Int vec)
+    {
+        return new Vector2Int(vec.x, vec.y);
+    }
+    
+    public static Vector3Int RoundToInt(this Vector3 vec)
+    {
+        return new Vector3Int(Mathf.RoundToInt(vec.x), Mathf.RoundToInt(vec.y), Mathf.RoundToInt(vec.z));
+    }
+    
+    public static Vector3Int FloorToInt(this Vector3 vec)
+    {
+        return new Vector3Int(Mathf.FloorToInt(vec.x), Mathf.FloorToInt(vec.y), Mathf.FloorToInt(vec.z));
+    }
+    
+    public static Vector3Int CeilToInt(this Vector3 vec)
+    {
+        return new Vector3Int(Mathf.CeilToInt(vec.x), Mathf.CeilToInt(vec.y), Mathf.CeilToInt(vec.z));
+    }
+    
+    public static Vector2Int RoundToInt(this Vector2 vec)
+    {
+        return new Vector2Int(Mathf.RoundToInt(vec.x), Mathf.RoundToInt(vec.y));
+    }
+    
+    public static Vector2Int FloorToInt(this Vector2 vec)
+    {
+        return new Vector2Int(Mathf.FloorToInt(vec.x), Mathf.FloorToInt(vec.y));
+    }
+    
+    public static Vector2Int CeilToInt(this Vector2 vec)
+    {
+        return new Vector2Int(Mathf.CeilToInt(vec.x), Mathf.CeilToInt(vec.y));
+    }
+
     public static Vector2 WithY(this Vector2 vec, float y)
     {
         vec.y = y;
