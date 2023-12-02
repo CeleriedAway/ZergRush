@@ -813,4 +813,29 @@ public static partial class UnityExtensions
             }
         }
     }
+
+    public static (ICell<float>, ICell<float>, ICell<float>) SplitVector(this ICell<Vector3> vectorCell)
+    {
+        var x = vectorCell.Map(v => v.x);
+        var y = vectorCell.Map(v => v.y);
+        var z = vectorCell.Map(v => v.z);
+        return (x, y, z); 
+    }
+    
+    public static (ICell<float>, ICell<float>) SplitVector(this ICell<Vector2> vectorCell)
+    {
+        var x = vectorCell.Map(v => v.x);
+        var y = vectorCell.Map(v => v.y);
+        return (x, y); 
+    }
+    
+    public static ICell<Vector3> CombineToVector(this ICell<float> x, ICell<float> y, ICell<float> z)
+    {
+        return x.Merge(y, z, (x1, y1, z1) => new Vector3(x1, y1, z1));
+    }
+    
+    public static ICell<Vector2> CombineToVector(this ICell<float> x, ICell<float> y)
+    {
+        return x.Merge(y, (x1, y1) => new Vector2(x1, y1));
+    }
 }

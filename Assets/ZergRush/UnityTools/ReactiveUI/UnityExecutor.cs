@@ -104,6 +104,11 @@ namespace ZergRush
             return new RemoveUpdateDisposable { updatable = updatable };
         }
         
+        public ICell<float> StartTimer()
+        {
+            var curr = time.value;
+            return time.Map(t => t - curr);
+        }
 
         void Update()
         {
