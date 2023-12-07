@@ -113,12 +113,12 @@ namespace ZergRush.Alive
                     return;
                 }
                 #if LogRegistering
-                Debug.LogError($"This id {id} of {entity} is already taken by entity: {gameEntities[id]} id={id}");
+                LogSink.errLog($"This id {id} of {entity} is already taken by entity: {gameEntities[id]} id={id}");
                 #endif
                 return;
             }
             #if LogRegistering
-            Debug.Log($"RegisterEntity {entity.ToString()} id={id}");
+            LogSink.errLog($"RegisterEntity {entity.ToString()} id={id}");
             #endif
             gameEntities.Add(id, entity);
         }
@@ -132,7 +132,7 @@ namespace ZergRush.Alive
             #if LogRegistering
             if (gameEntities.ContainsKey(id) == false)
             {
-                Debug.LogError($"entity with id: {id} was not found, but it is fine (not really)");
+                LogSink.errLog($"entity with id: {id} was not found, but it is fine (not really)");
                 return null;
             }
             #endif
@@ -169,7 +169,7 @@ namespace ZergRush.Alive
             if (__updating) return;
             
             #if LogRegistering
-            Debug.Log($"DeregisterEntity {entity.ToString()} id={id}");
+            LogSink.log($"DeregisterEntity {entity.ToString()} id={id}");
             #endif
             object storedEntity;
             if (gameEntities.TryGetValue(id, out storedEntity))
@@ -177,21 +177,21 @@ namespace ZergRush.Alive
                 if (object.ReferenceEquals(storedEntity, entity))
                 {
                     #if LogRegistering
-                    Debug.Log($"removing {id} {entity}");
+                    LogSink.log($"removing {id} {entity}");
                     #endif
                     gameEntities.Remove(id);
                 }
                 else
                 {
                     #if LogRegistering
-                    Debug.Log("different entity was stored with same id");
+                    LogSink.log("different entity was stored with same id");
                     #endif
                 }
             }
             else
             {
                 #if LogRegistering
-                Debug.Log("no entity was stored with this id");
+                LogSink.log("no entity was stored with this id");
                 #endif
             }
         }
@@ -199,7 +199,24 @@ namespace ZergRush.Alive
 
         public void ForceId(int newId, object obj)
         {
-            //if (!updating) Debug.LogError($"This one should be called only during update from {obj} {newId}");
+            #if LogRegistering
+            if (!__updating) LogSink.errLog($"~~~~~~~~~~~~This one should be called only during update from {obj} {newId}");
+            if (gameEntities.TryGetValue(newId, out var val))
+            {
+                if (ReferenceEquals(val, obj))
+                {
+                    return;
+                }
+                LogSink.errLog($"~~~~~~~~~This id {newId} of {obj} is already taken by entity: {gameEntities[newId]} id={newId}");
+                return;
+            }
+            #endif
+
+            if (newId == 5)
+            {
+                LogSink.log($"~~~~~~~~~~~~ForceId {obj} {newId}");
+            }
+            
             __entityIdFactory = Math.Max(__entityIdFactory, newId + 1);
             gameEntities[newId] = obj;
         }
@@ -207,7 +224,7 @@ namespace ZergRush.Alive
         public void ChangeEntityId(int oldId, int newId, DataNode entity)
         {
             #if LogRegistering
-            Debug.Log($"ChangeEntityId {entity.ToString()} prev id={oldId}, new id={newId}");
+            LogSink.log($"ChangeEntityId {entity.ToString()} prev id={oldId}, new id={newId}");
             #endif
             object prevVal;
             if (oldId > 0 && gameEntities.TryGetValue(oldId, out prevVal))
@@ -219,7 +236,7 @@ namespace ZergRush.Alive
                 else
                 {
                     #if LogRegistering
-                    Debug.Log($"different object was stored for old id, old entity = {prevVal.ToString()}");
+                    LogSink.log($"different object was stored for old id, old entity = {prevVal.ToString()}");
                     #endif
                 }
             }
