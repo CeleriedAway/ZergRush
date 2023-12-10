@@ -189,6 +189,17 @@ public static partial class UnityExtensions
 
         return component;
     }
+    
+    static public T GetOrAddComponent<T>(this Component obj) where T : Component
+    {
+        var component = obj.GetComponent<T>();
+        if (component == null)
+        {
+            component = obj.gameObject.AddComponent<T>();
+        }
+
+        return component;
+    }
 
     static public void RemoveComponent<T>(this GameObject obj) where T : Component
     {
