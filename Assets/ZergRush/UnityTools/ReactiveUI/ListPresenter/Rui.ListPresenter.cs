@@ -17,9 +17,10 @@ namespace ZergRush.ReactiveUI
             Func<TData, int> visualIdGetter = null,
             Func<TData, bool> needView = null,
             bool updateOnShow = true,
-            bool disableOnRecycle = true
-        )
-            : this(new DistinctivePool<TView, TData>(parent, prefabSelector, PresentOptions.None), onShow, unload, visualIdGetter, needView, updateOnShow, disableOnRecycle)
+            bool disableOnRecycle = true,
+			PresentOptions options = PresentOptions.None
+		)
+            : this(new DistinctivePool<TView, TData>(parent, prefabSelector, options), onShow, unload, visualIdGetter, needView, updateOnShow, disableOnRecycle)
         {
         }
         public ListPresenter(
