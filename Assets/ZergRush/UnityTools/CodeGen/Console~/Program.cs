@@ -65,6 +65,14 @@ class Programm
 
         SyntaxAnalizeStuff(path, projects.Select(f => Path.GetFileName(f)).ToArray());
     }
+    private static readonly string[] RuntimeRequiredLibs =
+    {
+        "mscorlib",
+        "System",
+        "System.Core"
+    };
+    
+    private const string Runtime = "NetStandard";
 
     private static void SyntaxAnalizeStuff(string projectPath, string[] projectName)
     {
@@ -78,7 +86,7 @@ class Programm
             var (allFilePaths, dlls, projs) = TypeReader.FindAllFilesInProject(projectPath, p);
             foreach (var dll in dlls)
             {
-                //Console.WriteLine($"dll: {dll}");
+                Console.WriteLine($"dll: {dll}");
                 if (dll.Contains("ZergRush") || dll.Contains("CodeGen")) continue;
                 allReferencePaths.Add(dll);
             }
@@ -110,8 +118,17 @@ class Programm
             // }
             try
             {
+                // var a = AppDomain.CurrentDomain.Load(File.ReadAllBytes(portableExecutableReference.FilePath));
+                // loadedAssemblies[a.FullName] = a;
+                
+                // if (RuntimeRequiredLibs.Any(portableExecutableReference.FilePath.Contains) 
+                //     && !portableExecutableReference.FilePath.Contains(Runtime))
+                //     continue;
+
                 var a = AppDomain.CurrentDomain.Load(File.ReadAllBytes(portableExecutableReference.FilePath));
-                loadedAssemblies[a.FullName] = a;
+                var name = a.FullName.Split(',')[0].Trim().ToLower();
+                //Console.WriteLine($"~~~~~~ {name}");
+                loadedAssemblies[name] = a;
             }
             catch (Exception e)
             {
@@ -121,8 +138,9 @@ class Programm
         var compilation = CSharpCompilation.Create("assembly", pruned, references);
         AppDomain.CurrentDomain.AssemblyResolve += (sender, args) =>
         {
-            //Console.WriteLine($"!!!!!!!! {args.Name} {args.RequestingAssembly}");
-            return loadedAssemblies[args.Name];
+            var shortName = args.Name.Split(',')[0].Trim().ToLower();
+            //Console.WriteLine($"!!!!!!!! {shortName}");
+            return loadedAssemblies[shortName];
         };
         
         var assembly = Compile(compilation);
