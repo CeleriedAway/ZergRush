@@ -337,7 +337,34 @@ namespace ZergRush.ReactiveCore
         {
             sink.AddConnection(ModifyAdd(elem, ref priority));
         }
+
+        public IDisposable ModifyAddUnordered(T elem)
+        {
+            collection.Add(elem);
+            priorities.Add(0);
+            return new AnonymousDisposable(() =>
+            {
+                var i = collection.IndexOf(elem);
+                if (i >= 0)
+                {
+                    collection.RemoveAt(i);
+                    priorities.RemoveAt(i);
+                }
+            });
+        }
         
+        public IDisposable ModifyAddUnordered(ICell<T> elem)
+        {
+            var disp = new DoubleDisposable();
+            disp.First = ModifyAddUnordered(elem.value);
+            disp.Second = elem.BufferListenUpdates((newVal, oldVal) =>
+            {
+                //Debug.Log($"cell({cellMod.GetHashCode()}) value replaced from:{oldVal} to:{newVal} Connected to {GetHashCode()}}}");
+                var index = collection.IndexOf(m => EqualityComparer<T>.Default.Equals(m, oldVal));
+                collection[index] = newVal;
+            });
+            return disp;
+        }
 
         public IEnumerator<T> GetEnumerator()
         {

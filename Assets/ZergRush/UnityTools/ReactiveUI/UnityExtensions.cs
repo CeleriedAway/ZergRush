@@ -189,6 +189,17 @@ public static partial class UnityExtensions
 
         return component;
     }
+    
+    static public T GetOrAddComponent<T>(this Component obj) where T : Component
+    {
+        var component = obj.GetComponent<T>();
+        if (component == null)
+        {
+            component = obj.gameObject.AddComponent<T>();
+        }
+
+        return component;
+    }
 
     static public void RemoveComponent<T>(this GameObject obj) where T : Component
     {
@@ -607,6 +618,41 @@ public static partial class UnityExtensions
         return vec;
     }
 
+    public static Vector2Int ToVector2Int(this Vector3Int vec)
+    {
+        return new Vector2Int(vec.x, vec.y);
+    }
+    
+    public static Vector3Int RoundToInt(this Vector3 vec)
+    {
+        return new Vector3Int(Mathf.RoundToInt(vec.x), Mathf.RoundToInt(vec.y), Mathf.RoundToInt(vec.z));
+    }
+    
+    public static Vector3Int FloorToInt(this Vector3 vec)
+    {
+        return new Vector3Int(Mathf.FloorToInt(vec.x), Mathf.FloorToInt(vec.y), Mathf.FloorToInt(vec.z));
+    }
+    
+    public static Vector3Int CeilToInt(this Vector3 vec)
+    {
+        return new Vector3Int(Mathf.CeilToInt(vec.x), Mathf.CeilToInt(vec.y), Mathf.CeilToInt(vec.z));
+    }
+    
+    public static Vector2Int RoundToInt(this Vector2 vec)
+    {
+        return new Vector2Int(Mathf.RoundToInt(vec.x), Mathf.RoundToInt(vec.y));
+    }
+    
+    public static Vector2Int FloorToInt(this Vector2 vec)
+    {
+        return new Vector2Int(Mathf.FloorToInt(vec.x), Mathf.FloorToInt(vec.y));
+    }
+    
+    public static Vector2Int CeilToInt(this Vector2 vec)
+    {
+        return new Vector2Int(Mathf.CeilToInt(vec.x), Mathf.CeilToInt(vec.y));
+    }
+
     public static Vector2 WithY(this Vector2 vec, float y)
     {
         vec.y = y;
@@ -777,5 +823,30 @@ public static partial class UnityExtensions
                 currTasks.RemoveAll(currTask => currTask.IsCompleted);
             }
         }
+    }
+
+    public static (ICell<float>, ICell<float>, ICell<float>) SplitVector(this ICell<Vector3> vectorCell)
+    {
+        var x = vectorCell.Map(v => v.x);
+        var y = vectorCell.Map(v => v.y);
+        var z = vectorCell.Map(v => v.z);
+        return (x, y, z); 
+    }
+    
+    public static (ICell<float>, ICell<float>) SplitVector(this ICell<Vector2> vectorCell)
+    {
+        var x = vectorCell.Map(v => v.x);
+        var y = vectorCell.Map(v => v.y);
+        return (x, y); 
+    }
+    
+    public static ICell<Vector3> CombineToVector(this ICell<float> x, ICell<float> y, ICell<float> z)
+    {
+        return x.Merge(y, z, (x1, y1, z1) => new Vector3(x1, y1, z1));
+    }
+    
+    public static ICell<Vector2> CombineToVector(this ICell<float> x, ICell<float> y)
+    {
+        return x.Merge(y, (x1, y1) => new Vector2(x1, y1));
     }
 }

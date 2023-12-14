@@ -197,7 +197,7 @@ namespace ZergRush.CodeGen
                 {
                     var poolCreatorFunc = nodeClass.Method(PolymorphInstanceFuncNamePooled(pooled), node,
                         MethodType.StaticFunction, node,
-                        $"{enumName} classId{node.OptPoolSecondArgDecl(pooled)}", "", "");
+                        $"{enumName} {SerializationTools.ClassIdName}{node.OptPoolSecondArgDecl(pooled)}", "", "");
                     poolCreatorFunc.content($"return {node.NewPolymorphicFromClassIdExpression(pooled)};");
                 };
                 if (node.NeedsClassicPolymorphConstruction()) gen(false);
