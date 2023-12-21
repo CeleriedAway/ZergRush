@@ -212,11 +212,6 @@ namespace ZergRush.Alive
             }
             #endif
 
-            if (newId == 5)
-            {
-                LogSink.log($"~~~~~~~~~~~~ForceId {obj} {newId}");
-            }
-            
             __entityIdFactory = Math.Max(__entityIdFactory, newId + 1);
             gameEntities[newId] = obj;
         }
