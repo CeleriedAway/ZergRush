@@ -8,7 +8,7 @@ namespace ZergRush.Alive
 {
     public class DataList<T> : IList<T>, IReadOnlyList<T>
         , IReactiveCollection<T>, IConnectable
-        where T : DataNode, new()
+        where T : DataNode, ICloneInst
 
     {
         public bool __update_mod;

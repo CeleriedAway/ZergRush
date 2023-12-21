@@ -481,7 +481,8 @@ namespace ZergRush.CodeGen
 
                 var pooled = type.HasPool() && pooledMap;
 
-                var newInstOfSameType = tSink.Method(PolymorphNewInstOfSameType, type, mType, baseClass,
+                tSink.inheritance("ICloneInst");
+                var newInstOfSameType = tSink.Method(PolymorphNewInstOfSameType, type, mType, typeof(object),
                     pooledMap ? $"{PoolTypeName(null)} pool" : "");
 
                 newInstOfSameType.doNotCallBaseMethod = true;

@@ -6,10 +6,9 @@ using Newtonsoft.Json;
 using ZergRush;
 using ZergRush.Alive;
 
-public interface IStableIdentifiable
+public interface IStableIdentifiable 
 {
     public int stableId { get; }
-    public object NewInstThisType();
 }
 
 public static partial class SerializationTools
@@ -17,7 +16,7 @@ public static partial class SerializationTools
     public static string ClassIdName = "__classId";
     
     public static void StableUpdateFrom<T>(this IList<T> self, IList<T> other, ZRUpdateFromHelper __helper) 
-        where T : IStableIdentifiable, IUpdatableFrom<T>, new()
+        where T : IStableIdentifiable, IUpdatableFrom<T>, ICloneInst
     {
         var i = 0;
         for (; i < other.Count; i++)
@@ -58,7 +57,7 @@ public static partial class SerializationTools
             }
             else if (selfMatchingItemIndex == -1)
             {
-                var selfItem = (T) currOtherItem.NewInstThisType();
+                var selfItem = (T) currOtherItem.NewInst();
                 // self not found, creating new one
                 if (self is IAddCopyList<T> addCopyList)
                 {
