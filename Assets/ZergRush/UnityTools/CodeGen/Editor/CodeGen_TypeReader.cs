@@ -33,12 +33,13 @@ namespace ZergRush.CodeGen
             if (t.HasAttribute<GenIgnore>()) return null;
             //if (typeof(IZeroFormatterSegment).IsAssignableFrom(t)) return null;
 
-            if (t.HasAttribute<GenTask>(false) == false)
+            if (t.HasAttribute<GenTaskCustomImpl>(false) == false)
             {
                 var baseClass = t.BaseType;
                 while (baseClass != null)
                 {
-                    if (baseClass.HasAttribute<GenTask>(false))
+                    var genTaskCustomImpl = baseClass.GetAttribute<GenTaskCustomImpl>(false);
+                    if (genTaskCustomImpl != null && genTaskCustomImpl.inheritable)
                     {
                         t = baseClass;
                         break;
