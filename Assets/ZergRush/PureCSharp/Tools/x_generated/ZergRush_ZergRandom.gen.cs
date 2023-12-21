@@ -8,8 +8,20 @@ using Newtonsoft.Json;
 #if !INCLUDE_ONLY_CODE_GENERATION
 namespace ZergRush {
 
-    public partial class ZergRandom : IUpdatableFrom<ZergRush.ZergRandom>, IBinaryDeserializable, IBinarySerializable, IHashable, ICompareChechable<ZergRush.ZergRandom>, IJsonSerializable
+    public partial class ZergRandom : IBinaryDeserializable, IBinarySerializable, IUpdatableFrom<ZergRush.ZergRandom>, IHashable, ICompareChechable<ZergRush.ZergRandom>, IJsonSerializable
     {
+        public virtual void Deserialize(ZRBinaryReader reader) 
+        {
+            inext = reader.ReadInt32();
+            inextp = reader.ReadInt32();
+            SeedArray = reader.ReadSystem_Int32_Array();
+        }
+        public virtual void Serialize(ZRBinaryWriter writer) 
+        {
+            writer.Write(inext);
+            writer.Write(inextp);
+            SeedArray.Serialize(writer);
+        }
         public virtual void UpdateFrom(ZergRush.ZergRandom other, ZRUpdateFromHelper __helper) 
         {
             inext = other.inext;
@@ -19,18 +31,6 @@ namespace ZergRush {
             Array.Resize(ref SeedArrayTemp, SeedArrayCount);
             SeedArray = SeedArrayTemp;
             SeedArray.UpdateFrom(other.SeedArray, __helper);
-        }
-        public virtual void Deserialize(BinaryReader reader) 
-        {
-            inext = reader.ReadInt32();
-            inextp = reader.ReadInt32();
-            SeedArray = reader.ReadSystem_Int32_Array();
-        }
-        public virtual void Serialize(BinaryWriter writer) 
-        {
-            writer.Write(inext);
-            writer.Write(inextp);
-            SeedArray.Serialize(writer);
         }
         public virtual ulong CalculateHash(ZRHashHelper __helper) 
         {

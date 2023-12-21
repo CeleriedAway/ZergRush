@@ -62,8 +62,14 @@ namespace ZergRush.CodeGen
                 {
                     sink.content($"{stream}.Write({access}.{CodeGen.PolymorphClassIdGetter});");
                 }
-
-                sink.content($"{access}.{WriteFuncName}({stream});");
+                if (t.IsMultipleReference())
+                {
+                    sink.content($"writer.WriteObjectWithRef({access});");
+                }
+                else
+                {
+                    sink.content($"{access}.{WriteFuncName}({stream});");
+                }
             }
         }
 
@@ -153,7 +159,7 @@ namespace ZergRush.CodeGen
 
             const string writerName = "writer";
             var sinkWriter = MakeGenMethod(type, GenTaskFlags.Serialize, funcPrefix + WriteFuncName, Void,
-                $"BinaryWriter {writerName}");
+                $"ZRBinaryWriter {writerName}");
 
             var accessPrefix = type.AccessPrefixInGeneratedFunction();
             if (type.IsList())
@@ -226,6 +232,11 @@ namespace ZergRush.CodeGen
             // info can be transformed because read from can do temp value wrapping for it
             Action<MethodBuilder, DataInfo> baseCall = (s, info1) =>
                 s.content($"{info1.access}.{ReadFuncName}({stream}{(pooled && t.HasPooledDeserializeMethod() ? $", pool" : "")});");
+            
+            if (t.IsMultipleReference())
+            {
+                baseCall = (s, info1) => s.content( $"{stream}.ReadFromRef(ref {info1.access});");
+            }
             if (t.IsArray || t.IsImmutableType() || (t.IsValueType && t.IsControllable() == false))
                 baseCall = (s, info1) => s.content($"{info1.access} = {stream}.{ReadNewInstanceOfImmutableType(t, pooled)};");
 
@@ -242,7 +253,8 @@ namespace ZergRush.CodeGen
                 directReader: $"{stream}.{ReadNewInstanceOfImmutableType(t, pooled)}",
                 needCreateVar: needVar,
                 getDataNodeFromRootWithRefId: readDataNodeFromId,
-                useTempVarThenAssign: info.isValueWrapper != ValueVrapperType.None && info.type.IsControllableStruct()
+                useTempVarThenAssign: info.isValueWrapper != ValueVrapperType.None && info.type.IsControllableStruct() ||
+                                      (info.type.IsMultipleReference() && !needVar)
             );
         }
 
@@ -362,12 +374,12 @@ namespace ZergRush.CodeGen
             if (type.GenMode() == Mode.ExtensionMethod && type.IsStruct() || type.IsArray)
             {
                 sinkReader = MakeGenMethod(type, flag, $"Read{type.UniqueName()}", type,
-                    $"this BinaryReader {readerName}{type.OptPoolSecondArgDecl(pooled)}", disablebleFirstArg: true);
+                    $"this ZRBinaryReader {readerName}{type.OptPoolSecondArgDecl(pooled)}", disablebleFirstArg: true);
             }
             else
             {
                 sinkReader = MakeGenMethod(type, flag, funcPrefix + ReadFuncName, Void,
-                    $"BinaryReader {readerName}{type.OptPoolSecondArgDecl(pooled)}");
+                    $"ZRBinaryReader {readerName}{type.OptPoolSecondArgDecl(pooled)}");
             }
 
 

@@ -15,12 +15,12 @@ namespace ZergRush.Alive {
             dead = other.dead;
             staticConnections.UpdateFrom(other.staticConnections, __helper);
         }
-        public virtual void Deserialize(BinaryReader reader) 
+        public virtual void Deserialize(ZRBinaryReader reader) 
         {
             dead = reader.ReadBoolean();
             staticConnections.Deserialize(reader);
         }
-        public virtual void Serialize(BinaryWriter writer) 
+        public virtual void Serialize(ZRBinaryWriter writer) 
         {
             writer.Write(dead);
             staticConnections.Serialize(writer);

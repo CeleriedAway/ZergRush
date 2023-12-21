@@ -1,13 +1,14 @@
 using System.IO;
+using ZergRush;
 
 public interface IBinaryDeserializable
 {
-    void Deserialize(BinaryReader reader);
+    void Deserialize(ZRBinaryReader reader);
 }
 
 public interface IBinarySerializable
 {
-    void Serialize(BinaryWriter writer);
+    void Serialize(ZRBinaryWriter writer);
 }
 
 public interface ISerializable : IBinarySerializable, IBinaryDeserializable

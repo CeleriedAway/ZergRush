@@ -30,7 +30,7 @@ public static partial class SerializationFileTools
         {
             using (var reader = new MemoryStream(content))
             {
-                data.Deserialize(new BinaryReader(reader));
+                data.Deserialize(new ZRBinaryReader(reader));
             }
         }
         catch (Exception e)
@@ -98,7 +98,7 @@ public static partial class SerializationFileTools
 
     public static void SaveToFile(this IBinarySerializable obj, string filePath, bool wrapfile)
     {
-        using (BinaryWriter writer = new BinaryWriter(OpenFileWrap(filePath, FileMode.Create, wrapfile)))
+        using (var writer = new ZRBinaryWriter(OpenFileWrap(filePath, FileMode.Create, wrapfile)))
         {
             obj.Serialize(writer);
         }
@@ -112,7 +112,7 @@ public static partial class SerializationFileTools
             Debug.Log($"Saving {data} to : " + path);
             using (var file = FileWrapper.Open(path, FileMode.Create))
             {
-                data.Serialize(new BinaryWriter(file));
+                data.Serialize(new ZRBinaryWriter(file));
                 file.Flush();
                 file.Close();
             }
@@ -129,7 +129,7 @@ public static partial class SerializationFileTools
         {
             using (var file = FileWrapper.Open(path, FileMode.Open))
             {
-                data.Deserialize(new BinaryReader(file));
+                data.Deserialize(new ZRBinaryReader(file));
                 if (data is ILivable livable && livable.isAlive == false) livable.Enlive();
             }
             return true;
@@ -147,7 +147,7 @@ public static partial class SerializationFileTools
         {
             using (var file = FileWrapper.Open(path, FileMode.Open))
             {
-                data.Deserialize(new BinaryReader(file));
+                data.Deserialize(new ZRBinaryReader(file));
                 if (data is ILivable livable) livable.Enlive();
             }
 
@@ -231,7 +231,7 @@ public static partial class SerializationFileTools
     public static T ReadFromFile<T>(string filePath, bool wrapPath, T instance = null)
         where T : class, IBinaryDeserializable, new()
     {
-        using (BinaryReader reader = new BinaryReader(OpenFileWrap(filePath, FileMode.Open, wrapPath)))
+        using (var reader = new ZRBinaryReader(OpenFileWrap(filePath, FileMode.Open, wrapPath)))
         {
             if (instance == null)
                 instance = new T();

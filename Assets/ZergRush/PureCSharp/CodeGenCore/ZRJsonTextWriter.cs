@@ -5,42 +5,6 @@ using ZergRush;
 
 namespace ZergRush
 {
-    // public class ZRBinaryWriter : BinaryWriter
-    // {
-    //     ObjectIDGenerator generator = new ObjectIDGenerator();
-    //
-    //     public void WriteObjectWithRef(IBinarySerializable obj)
-    //     {
-    //         var writer = this;
-    //         if (obj == null)
-    //         {
-    //             writer.WriteNull();
-    //             return;
-    //         }
-    //
-    //         writer.WriteStartObject();
-    //         var polymorph = obj as IPolymorphable;
-    //         if (polymorph != null)
-    //         {
-    //             writer.WritePropertyName("classId");
-    //             writer.WriteValue(polymorph.GetClassId());
-    //         }
-    //
-    //         var refId = generator.GetId(obj, out bool firstTime);
-    //         writer.WritePropertyName("isRef");
-    //         writer.WriteValue(!firstTime);
-    //
-    //         writer.WritePropertyName("refId");
-    //         writer.WriteValue(refId.ToString());
-    //
-    //         if (firstTime)
-    //         {
-    //             obj.WriteJsonFields(writer);
-    //         }
-    //         writer.WriteEndObject();
-    //     }
-    // }
-    
     public class ZRJsonTextWriter : JsonTextWriter
     {
         ObjectIDGenerator generator = new ObjectIDGenerator();

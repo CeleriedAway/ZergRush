@@ -14,12 +14,12 @@ public static partial class SerializationExtensions
         self.connections.UpdateFrom(other.connections, __helper);
         self.ownerId = other.ownerId;
     }
-    public static void Deserialize(this ZergRush.Alive.StaticConnections self, BinaryReader reader) 
+    public static void Deserialize(this ZergRush.Alive.StaticConnections self, ZRBinaryReader reader) 
     {
         self.connections.Deserialize(reader);
         self.ownerId = reader.ReadInt32();
     }
-    public static void Serialize(this ZergRush.Alive.StaticConnections self, BinaryWriter writer) 
+    public static void Serialize(this ZergRush.Alive.StaticConnections self, ZRBinaryWriter writer) 
     {
         self.connections.Serialize(writer);
         writer.Write(self.ownerId);
@@ -101,14 +101,14 @@ public static partial class SerializationExtensions
             self.RemoveAt(self.Count - 1);
         }
     }
-    public static ZergRush.Alive.SerializableConnection ReadZergRush_Alive_SerializableConnection(this BinaryReader reader) 
+    public static ZergRush.Alive.SerializableConnection ReadZergRush_Alive_SerializableConnection(this ZRBinaryReader reader) 
     {
         var self = new ZergRush.Alive.SerializableConnection();
         self.entityId = reader.ReadInt32();
         self.ownerId = reader.ReadInt32();
         return self;
     }
-    public static void Deserialize(this System.Collections.Generic.List<ZergRush.Alive.SerializableConnection> self, BinaryReader reader) 
+    public static void Deserialize(this System.Collections.Generic.List<ZergRush.Alive.SerializableConnection> self, ZRBinaryReader reader) 
     {
         var size = reader.ReadInt32();
         if(size > 100000) throw new ZergRushCorruptedOrInvalidDataLayout();
@@ -120,12 +120,12 @@ public static partial class SerializationExtensions
             self.Add(val);
         }
     }
-    public static void Serialize(this ZergRush.Alive.SerializableConnection self, BinaryWriter writer) 
+    public static void Serialize(this ZergRush.Alive.SerializableConnection self, ZRBinaryWriter writer) 
     {
         writer.Write(self.entityId);
         writer.Write(self.ownerId);
     }
-    public static void Serialize(this System.Collections.Generic.List<ZergRush.Alive.SerializableConnection> self, BinaryWriter writer) 
+    public static void Serialize(this System.Collections.Generic.List<ZergRush.Alive.SerializableConnection> self, ZRBinaryWriter writer) 
     {
         writer.Write(self.Count);
         for (int i = 0; i < self.Count; i++)
@@ -269,7 +269,7 @@ public static partial class SerializationExtensions
             if (self[i] != other[i]) SerializationTools.LogCompError(__helper, i.ToString(), printer, other[i], self[i]);
         }
     }
-    public static void Deserialize(this System.Collections.Generic.List<int> self, BinaryReader reader) 
+    public static void Deserialize(this System.Collections.Generic.List<int> self, ZRBinaryReader reader) 
     {
         var size = reader.ReadInt32();
         if(size > 100000) throw new ZergRushCorruptedOrInvalidDataLayout();
@@ -281,7 +281,7 @@ public static partial class SerializationExtensions
             self.Add(val);
         }
     }
-    public static void Serialize(this System.Collections.Generic.List<int> self, BinaryWriter writer) 
+    public static void Serialize(this System.Collections.Generic.List<int> self, ZRBinaryWriter writer) 
     {
         writer.Write(self.Count);
         for (int i = 0; i < self.Count; i++)

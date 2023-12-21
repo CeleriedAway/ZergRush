@@ -10,11 +10,11 @@ namespace ZergRush.Alive {
 
     public partial class RefListMk2<T> : IBinaryDeserializable, IBinarySerializable, IJsonSerializable
     {
-        public void Deserialize(BinaryReader reader) 
+        public void Deserialize(ZRBinaryReader reader) 
         {
             ids.Deserialize(reader);
         }
-        public void Serialize(BinaryWriter writer) 
+        public void Serialize(ZRBinaryWriter writer) 
         {
             ids.Serialize(writer);
         }
