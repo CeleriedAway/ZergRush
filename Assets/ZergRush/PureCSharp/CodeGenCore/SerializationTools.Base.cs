@@ -5,6 +5,7 @@ using System.Linq;
 using Newtonsoft.Json;
 using ZergRush;
 using ZergRush.Alive;
+using ZergRush.CodeGen;
 
 public interface IStableIdentifiable 
 {
@@ -14,6 +15,17 @@ public interface IStableIdentifiable
 public static partial class SerializationTools
 {
     public static string ClassIdName = "__classId";
+    
+    public static ulong CalculateHash(this IHashable t)
+    {
+        return t.CalculateHash(new ZRHashHelper());
+    }
+    
+    public static void CompareCheck<T>(this T t, T other) where T : ICompareChechable<T>
+    {
+        t.CompareCheck(other, new ZRCompareCheckHelper(), LogSink.errLog);
+    }
+    
     
     public static void StableUpdateFrom<T>(this IList<T> self, IList<T> other, ZRUpdateFromHelper __helper) 
         where T : IStableIdentifiable, IUpdatableFrom<T>

@@ -8,16 +8,6 @@ using ZergRush.CodeGen;
 
 public static class CodeGenTools
 {
-    public static ulong CalculateHash<T>(this T t) where T : IHashable
-    {
-        return t.CalculateHash(new ZRHashHelper());
-    }
-    
-    public static void CompareCheck<T>(this T t, T other) where T : ICompareChechable<T>
-    {
-        t.CompareCheck(other, new ZRCompareCheckHelper(), LogSink.errLog);
-    }
-    
     public static T GetAttribute<T>(this Type type, bool inherit = false) where T : Attribute
     {
         var customAttributes = type.GetCustomAttributes(typeof(T), inherit);
