@@ -17,9 +17,11 @@ namespace ZergRush
         const int MSEED = 161803398;
         const int MZ = 0;
 
-        public ZergRandom()
-            : this(Environment.TickCount)
+        public ZergRandom() : this(0) {}
+
+        public static ZergRandom FromEnvTicks()
         {
+            return new ZergRandom(Environment.TickCount);
         }
 
         public ZergRandom(int Seed)
