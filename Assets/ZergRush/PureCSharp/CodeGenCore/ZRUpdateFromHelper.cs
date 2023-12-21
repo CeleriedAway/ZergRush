@@ -9,7 +9,7 @@ namespace ZergRush
         Dictionary<long, object> alreadyUpdated = new Dictionary<long, object>();
         HashSet<object> registeredTargets = new HashSet<object>();
 
-        public bool TryLoadAlreadyUpdated<T>(T source, ref T target) where T : ICloneInst
+        public bool TryLoadAlreadyUpdated<T>(T source, ref T target)
         {
             var id = generator.GetId(source, out var firstTime);
             if (firstTime)
@@ -19,7 +19,7 @@ namespace ZergRush
                 // symptoms of this bug is same instance of object contains in alreadyUpdated dict for different source ids.
                 if (registeredTargets.Add(target) == false)
                 {
-                    target = (T)source.NewInst();
+                    target = (T)((ICloneInst)source).NewInst();
                 }
                 alreadyUpdated[id] = target;
                 return false;

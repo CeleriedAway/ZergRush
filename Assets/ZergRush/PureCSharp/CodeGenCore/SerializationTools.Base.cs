@@ -16,7 +16,7 @@ public static partial class SerializationTools
     public static string ClassIdName = "__classId";
     
     public static void StableUpdateFrom<T>(this IList<T> self, IList<T> other, ZRUpdateFromHelper __helper) 
-        where T : IStableIdentifiable, IUpdatableFrom<T>, ICloneInst
+        where T : IStableIdentifiable, IUpdatableFrom<T>
     {
         var i = 0;
         for (; i < other.Count; i++)
@@ -57,7 +57,7 @@ public static partial class SerializationTools
             }
             else if (selfMatchingItemIndex == -1)
             {
-                var selfItem = (T) currOtherItem.NewInst();
+                var selfItem = (T) ((ICloneInst)currOtherItem).NewInst();
                 // self not found, creating new one
                 if (self is IAddCopyList<T> addCopyList)
                 {

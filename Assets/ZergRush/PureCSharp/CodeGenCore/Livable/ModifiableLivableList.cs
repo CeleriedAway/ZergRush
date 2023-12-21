@@ -4,7 +4,7 @@ using System;
 namespace ZergRush.Alive
 {
     public partial class ModifiableLivableList<T> : LivableList<T>, IStaticallyModifiable, IReferencableFromDataRoot 
-        where T : Livable, IReferencableFromDataRoot, ICloneInst
+        where T : Livable, IReferencableFromDataRoot
     {
         public int id;
         public int Id { get { return id; } set { id = value; root?.ForceId(value, this); } }
