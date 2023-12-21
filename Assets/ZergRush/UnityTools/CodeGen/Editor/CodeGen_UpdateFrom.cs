@@ -26,7 +26,7 @@ namespace ZergRush.CodeGen
             string tempVar = null; 
             if (useTempVarThenAssign)
             {
-                tempVar = "__" + originalInfo.baseAccess.Replace("[", "").Replace("]", "");
+                tempVar = "__" + originalInfo.baseAccess.Replace('.', '_').Replace('-', '_').Replace(' ', '_').Replace('[', '_').Replace(']', '_');
                 sink.content($"var {tempVar} = {originalInfo.access};");
                 info = new DataInfo
                 {

@@ -120,7 +120,7 @@ namespace ZergRush.CodeGen
                     {
                         poolArg = "pool";
                     }
-                    newExpr = $"({info.type.RealName(true)}){refInst}.{PolymorphNewInstOfSameType}({poolArg})";
+                    newExpr = $"{refInst}.{PolymorphNewInstOfSameType}({poolArg})";
                 }
                 else
                 {

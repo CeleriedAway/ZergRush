@@ -86,9 +86,9 @@ public static partial class SerializationExtensions
         int crossCount = Math.Min(oldCount, other.Count);
         for (; i < crossCount; ++i)
         {
-            var __selfi = self[i];
-            __selfi.UpdateFrom(other[i], __helper);
-            self[i] = __selfi;
+            var __self_i_ = self[i];
+            __self_i_.UpdateFrom(other[i], __helper);
+            self[i] = __self_i_;
         }
         for (; i < other.Count; ++i)
         {
