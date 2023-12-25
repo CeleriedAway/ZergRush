@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using ZergRush.CodeGen;
 using ZergRush.ReactiveCore;
 using Object = UnityEngine.Object;
 
@@ -11,6 +12,10 @@ namespace ZergRush.ReactiveUI
     {
         public static PrefabRef<TView> ToPrefabRef<TView>(this TView view) where TView : ReusableView
         {
+            if (view == null)
+            {
+                LogSink.errLog($"prefab is null in ToPrefabRef function for type {typeof(TView).Name}");
+            }
             return new PrefabRef<TView> {prefab = view};
         }
     }
@@ -68,6 +73,8 @@ namespace ZergRush.ReactiveUI
             if (prefab != null) return prefab.name;
             return null;
         }
+        
+        public bool Valid() => name != null || type != null || prefab != null;
 
         public TView ExtractPrefab(Transform parent)
         {
@@ -85,12 +92,7 @@ namespace ZergRush.ReactiveUI
             else if (name != null) view = parent.Find(name)?.GetComponent<TView>();
             else
             {
-                var childCount = parent.childCount;
-                for (int i = 0; i < childCount; i++)
-                {
-                    view = parent.GetChild(i).GetComponent<TView>();
-                    if (view != null) break;
-                }
+                // No prefab found
             }
 
             if (view == null)

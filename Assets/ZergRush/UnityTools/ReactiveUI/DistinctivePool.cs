@@ -37,6 +37,7 @@ namespace ZergRush.ReactiveUI
             if (pools.TryGetValue(prefabRef, out pool) == false)
             {
                 var prefab = prefabRef.ExtractPrefab(parent);
+                if (prefab == null) return null;
                 
                 // if we have pool for this concrete prefab already we use that pool
                 // and also make this pool default for this prefab key
@@ -66,14 +67,16 @@ namespace ZergRush.ReactiveUI
             Pool(prefab).AddViewToUse(prefab, view);
         }
 
-        public Vector2 sampleViewSize(TData data)
+        public Vector2 SampleViewSize(TData data)
         {
-            return Pool(data).sampleViewSize(data);
+            var viewPool = Pool(data);
+            if (viewPool == null) return Vector2.zero;
+            return viewPool.SampleViewSize(data);
         }
 
         public TView Get(TData data)
         {
-            return Pool(data).Get(data);
+            return Pool(data)?.Get(data);
         }
 
         public void Recycle(TView view, float delay)
