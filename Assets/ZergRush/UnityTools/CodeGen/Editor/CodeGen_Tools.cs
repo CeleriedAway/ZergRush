@@ -23,7 +23,7 @@ namespace ZergRush.CodeGen
 
         public static bool IsMultipleReference(this Type t)
         {
-	        return t.HasAttribute<GenMultipleRefs>();
+	        return t.HasAttribute<GenMultipleRefs>(true);
         }
         public static bool IsRefList(this Type t)
         {
