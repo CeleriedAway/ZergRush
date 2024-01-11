@@ -3,6 +3,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using ZergRush;
+using ZergRush.CodeGen;
 
 
 public static class CodeGenTools

@@ -101,7 +101,7 @@
             await fillInstance(Instance);
         }
 
-        public static void LoadFrom(BinaryReader reader)
+        public static void LoadFrom(ZRBinaryReader reader)
         {
             Instance = new T();
             Instance.Deserialize(reader);

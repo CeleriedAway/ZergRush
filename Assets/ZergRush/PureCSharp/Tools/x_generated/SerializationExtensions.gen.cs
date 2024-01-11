@@ -16,7 +16,7 @@ public static partial class SerializationExtensions
             self[i] = other[i];
         }
     }
-    public static System.Int32[] ReadSystem_Int32_Array(this BinaryReader reader) 
+    public static System.Int32[] ReadSystem_Int32_Array(this ZRBinaryReader reader) 
     {
         var size = reader.ReadInt32();
         if(size > 100000) throw new ZergRushCorruptedOrInvalidDataLayout();
@@ -27,7 +27,7 @@ public static partial class SerializationExtensions
         }
         return array;
     }
-    public static void Serialize(this System.Int32[] self, BinaryWriter writer) 
+    public static void Serialize(this System.Int32[] self, ZRBinaryWriter writer) 
     {
         writer.Write(self.Length);
         for (int i = 0; i < self.Length; i++)

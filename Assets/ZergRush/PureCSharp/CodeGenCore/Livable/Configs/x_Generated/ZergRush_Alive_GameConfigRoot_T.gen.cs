@@ -10,11 +10,11 @@ namespace ZergRush.Alive {
 
     public partial class GameConfigRoot<T> : IBinaryDeserializable, IBinarySerializable, IHashable, IJsonSerializable
     {
-        public virtual void Deserialize(BinaryReader reader) 
+        public virtual void Deserialize(ZRBinaryReader reader) 
         {
 
         }
-        public virtual void Serialize(BinaryWriter writer) 
+        public virtual void Serialize(ZRBinaryWriter writer) 
         {
 
         }

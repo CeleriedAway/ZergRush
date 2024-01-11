@@ -20,12 +20,12 @@ namespace ZergRush.Alive {
         {
             this.UpdateFrom((ZergRush.Alive.DataNode)other, __helper);
         }
-        public override void Deserialize(BinaryReader reader) 
+        public override void Deserialize(ZRBinaryReader reader) 
         {
             base.Deserialize(reader);
             __entityIdFactory = reader.ReadInt32();
         }
-        public override void Serialize(BinaryWriter writer) 
+        public override void Serialize(ZRBinaryWriter writer) 
         {
             base.Serialize(writer);
             writer.Write(__entityIdFactory);

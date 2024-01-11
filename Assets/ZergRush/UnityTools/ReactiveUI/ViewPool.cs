@@ -15,7 +15,7 @@ namespace ZergRush.ReactiveUI
         void AddInstantiateAction(Action<TView> act);
         void EnsurePreloadedViewInstance(TView prefab, int count);
         void AddViewToUse(TView prefab, TView view);
-        Vector2 sampleViewSize(TData data);
+        Vector2 SampleViewSize(TData data);
     }
 
     public class ViewPoolProxyMap<TView, TData, TData2> : IViewPool<TView, TData>
@@ -52,9 +52,9 @@ namespace ZergRush.ReactiveUI
             viewPoolImplementation.AddViewToUse(prefab, view);
         }
 
-        public Vector2 sampleViewSize(TData data)
+        public Vector2 SampleViewSize(TData data)
         {
-            return viewPoolImplementation.sampleViewSize(map(data));
+            return viewPoolImplementation.SampleViewSize(map(data));
         }
     }
 
@@ -83,7 +83,10 @@ namespace ZergRush.ReactiveUI
 
         public ViewPool(Transform parent, TView prefab)
         {
-            if (prefab == null) throw new ZergRushException($"prefab is null for {typeof(TView)} in {parent}");
+            if (prefab == null)
+            {
+                throw new ZergRushException($"prefab is null for {typeof(TView)} in {parent}");
+            }
             this.parent = parent;
             this.prefab = prefab;
             pool = new List<TView>();
@@ -129,7 +132,7 @@ namespace ZergRush.ReactiveUI
             //pool.Add(view);
         }
 
-        public Vector2 sampleViewSize(TData data)
+        public Vector2 SampleViewSize(TData data)
         {
             return prefab.rectTransform.rect.size;
         }

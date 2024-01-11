@@ -14,11 +14,11 @@ namespace ZergRush.Alive {
         {
             ids.UpdateFrom(other.ids, __helper);
         }
-        public void Deserialize(BinaryReader reader) 
+        public void Deserialize(ZRBinaryReader reader) 
         {
             ids.Deserialize(reader);
         }
-        public void Serialize(BinaryWriter writer) 
+        public void Serialize(ZRBinaryWriter writer) 
         {
             ids.Serialize(writer);
         }

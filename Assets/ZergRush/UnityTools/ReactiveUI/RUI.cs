@@ -220,6 +220,10 @@ namespace ZergRush.ReactiveUI
                 else
                 {
                     var actualPrefab = prefab.ExtractPrefab(parent);
+                    if (actualPrefab == null)
+                    {
+                        throw new ZergRushException($"can not extract prefab {prefab} in {parent}");
+                    }
                     layout?.UpdatePrefabSizeInfo(actualPrefab.GetComponent<RectTransform>().rect.size);
                     pool = new ViewPool<TView, TData>(parent, actualPrefab);
                     if (options.Has(PresentOptions.__UseLoadedViews))
@@ -418,7 +422,7 @@ namespace ZergRush.ReactiveUI
                     groupItem.collection = groupColl;
                     groupItem.viewPort = viewPort;
                     groupItem.layout = layoutFactory(groupItem.collection);
-                    groupItem.layout.UpdatePrefabSizeInfo(viewPool.sampleViewSize(firstItem));
+                    groupItem.layout.UpdatePrefabSizeInfo(viewPool.SampleViewSize(firstItem));
                     groupItem.g = g;
                     return groupItem;
                 }
@@ -441,7 +445,7 @@ namespace ZergRush.ReactiveUI
                         // Lazy read group view size
                         if (settings.forceSize == Vector2.zero)
                         {
-                            settings.forceSize = groupViewPool.sampleViewSize(g);
+                            settings.forceSize = groupViewPool.SampleViewSize(g);
                         }
 
                         if (grouped.TryFind(elem => EqualityComparer<TGroup>.Default.Equals(g, elem.g), out var coll))

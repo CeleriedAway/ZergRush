@@ -20,13 +20,13 @@ namespace ZergRush {
             SeedArray = SeedArrayTemp;
             SeedArray.UpdateFrom(other.SeedArray, __helper);
         }
-        public virtual void Deserialize(BinaryReader reader) 
+        public virtual void Deserialize(ZRBinaryReader reader) 
         {
             inext = reader.ReadInt32();
             inextp = reader.ReadInt32();
             SeedArray = reader.ReadSystem_Int32_Array();
         }
-        public virtual void Serialize(BinaryWriter writer) 
+        public virtual void Serialize(ZRBinaryWriter writer) 
         {
             writer.Write(inext);
             writer.Write(inextp);

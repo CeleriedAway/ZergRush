@@ -5,19 +5,30 @@ using System.Linq;
 using Newtonsoft.Json;
 using ZergRush;
 using ZergRush.Alive;
+using ZergRush.CodeGen;
 
-public interface IStableIdentifiable
+public interface IStableIdentifiable 
 {
     public int stableId { get; }
-    public object NewInstThisType();
 }
 
 public static partial class SerializationTools
 {
     public static string ClassIdName = "__classId";
     
+    public static ulong CalculateHash(this IHashable t)
+    {
+        return t.CalculateHash(new ZRHashHelper());
+    }
+    
+    public static void CompareCheck<T>(this T t, T other) where T : ICompareChechable<T>
+    {
+        t.CompareCheck(other, new ZRCompareCheckHelper(), LogSink.errLog);
+    }
+    
+    
     public static void StableUpdateFrom<T>(this IList<T> self, IList<T> other, ZRUpdateFromHelper __helper) 
-        where T : IStableIdentifiable, IUpdatableFrom<T>, new()
+        where T : IStableIdentifiable, IUpdatableFrom<T>
     {
         var i = 0;
         for (; i < other.Count; i++)
@@ -58,7 +69,7 @@ public static partial class SerializationTools
             }
             else if (selfMatchingItemIndex == -1)
             {
-                var selfItem = (T) currOtherItem.NewInstThisType();
+                var selfItem = (T) ((ICloneInst)currOtherItem).NewInst();
                 // self not found, creating new one
                 if (self is IAddCopyList<T> addCopyList)
                 {
@@ -125,7 +136,7 @@ public static partial class SerializationTools
     public static T DeserializeFromBytes<T>(byte[] bytes, T instance = null) where T : class, IBinaryDeserializable, new()
     {
         if (instance == null) instance = new T();
-        using (BinaryReader reader = new BinaryReader(new MemoryStream(bytes)))
+        using (var reader = new ZRBinaryReader(new MemoryStream(bytes)))
         {
             instance.Deserialize(reader);
         }
@@ -137,7 +148,7 @@ public static partial class SerializationTools
     {
         using (MemoryStream memStream = new MemoryStream())
         {
-            using (BinaryWriter writer = new BinaryWriter(memStream))
+            using (var writer = new ZRBinaryWriter(memStream))
             {
                 val.Serialize(writer);
             }
@@ -163,7 +174,7 @@ public static partial class SerializationTools
     public static byte[] SaveToBinary<T>(this T data) where T : IBinarySerializable
     {
         using var stream = new MemoryStream();
-        var writer = new BinaryWriter(stream);
+        var writer = new ZRBinaryWriter(stream);
         data.Serialize(writer);
         return stream.ToArray();
     }
@@ -264,14 +275,14 @@ public static partial class SerializationTools
         }
     }
 
-    public static T ReadSerializable<T>(this BinaryReader r) where T : IBinaryDeserializable, new()
+    public static T ReadSerializable<T>(this ZRBinaryReader r) where T : IBinaryDeserializable, new()
     {
         var val = new T();
         val.Deserialize(r);
         return val;
     }
 
-    public static void Write(this BinaryWriter r, IBinarySerializable data)
+    public static void Write(this ZRBinaryWriter r, IBinarySerializable data)
     {
         data.Serialize(r);
     }
@@ -360,7 +371,7 @@ public static partial class SerializationTools
         return hash;
     }
 
-    public static void ReadFromStream<T>(this List<T> data, BinaryReader stream) where T : IBinaryDeserializable, new()
+    public static void ReadFromStream<T>(this List<T> data, ZRBinaryReader stream) where T : IBinaryDeserializable, new()
     {
         var size = stream.ReadInt32();
         data.Capacity = size;
@@ -370,7 +381,7 @@ public static partial class SerializationTools
         }
     }
 
-    public static void WriteToStream<T>(this List<T> data, BinaryWriter stream) where T : IBinarySerializable, new()
+    public static void WriteToStream<T>(this List<T> data, ZRBinaryWriter stream) where T : IBinarySerializable, new()
     {
         ushort size = (ushort)data.Count;
         stream.Write(size);
@@ -536,7 +547,7 @@ public static partial class SerializationTools
         {
             using (var reader = new MemoryStream(content))
             {
-                t.Deserialize(new BinaryReader(reader));
+                t.Deserialize(new ZRBinaryReader(reader));
             }
         }
         catch (Exception e)
