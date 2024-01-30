@@ -27,7 +27,7 @@ public static partial class SerializationExtensions
     public static ulong CalculateHash(this ZergRush.Alive.StaticConnections self, ZRHashHelper __helper) 
     {
         System.UInt64 hash = 345093625;
-        hash += (ulong)1300247783;
+        hash ^= (ulong)1300247783;
         hash += hash << 11; hash ^= hash >> 7;
         hash += self.connections.CalculateHash(__helper);
         hash += hash << 11; hash ^= hash >> 7;
@@ -138,7 +138,7 @@ public static partial class SerializationExtensions
     public static ulong CalculateHash(this ZergRush.Alive.SerializableConnection self, ZRHashHelper __helper) 
     {
         System.UInt64 hash = 345093625;
-        hash += (ulong)1980239909;
+        hash ^= (ulong)1980239909;
         hash += hash << 11; hash ^= hash >> 7;
         hash += (System.UInt64)self.entityId;
         hash += hash << 11; hash ^= hash >> 7;
@@ -149,7 +149,7 @@ public static partial class SerializationExtensions
     public static ulong CalculateHash(this System.Collections.Generic.List<ZergRush.Alive.SerializableConnection> self, ZRHashHelper __helper) 
     {
         System.UInt64 hash = 345093625;
-        hash += (ulong)910491146;
+        hash ^= (ulong)910491146;
         hash += hash << 11; hash ^= hash >> 7;
         var size = self.Count;
         for (int i = 0; i < size; i++)
@@ -250,7 +250,7 @@ public static partial class SerializationExtensions
     public static ulong CalculateHash(this System.Collections.Generic.List<int> self, ZRHashHelper __helper) 
     {
         System.UInt64 hash = 345093625;
-        hash += (ulong)910491146;
+        hash ^= (ulong)910491146;
         hash += hash << 11; hash ^= hash >> 7;
         var size = self.Count;
         for (int i = 0; i < size; i++)

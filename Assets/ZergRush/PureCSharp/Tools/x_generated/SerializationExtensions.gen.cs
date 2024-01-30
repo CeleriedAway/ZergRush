@@ -9,13 +9,6 @@ using Newtonsoft.Json;
 
 public static partial class SerializationExtensions
 {
-    public static void UpdateFrom(this System.Int32[] self, System.Int32[] other, ZRUpdateFromHelper __helper) 
-    {
-        for (int i = 0; i < self.Length; i++)
-        {
-            self[i] = other[i];
-        }
-    }
     public static System.Int32[] ReadSystem_Int32_Array(this ZRBinaryReader reader) 
     {
         var size = reader.ReadInt32();
@@ -37,10 +30,17 @@ public static partial class SerializationExtensions
             }
         }
     }
+    public static void UpdateFrom(this System.Int32[] self, System.Int32[] other, ZRUpdateFromHelper __helper) 
+    {
+        for (int i = 0; i < self.Length; i++)
+        {
+            self[i] = other[i];
+        }
+    }
     public static ulong CalculateHash(this System.Int32[] self, ZRHashHelper __helper) 
     {
         System.UInt64 hash = 345093625;
-        hash += (ulong)677530667;
+        hash ^= (ulong)677530667;
         hash += hash << 11; hash ^= hash >> 7;
         var size = self.Length;
         for (int i = 0; i < size; i++)

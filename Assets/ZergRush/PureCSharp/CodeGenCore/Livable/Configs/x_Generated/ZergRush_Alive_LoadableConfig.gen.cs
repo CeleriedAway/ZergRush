@@ -21,7 +21,7 @@ namespace ZergRush.Alive {
         public virtual ulong CalculateHash(ZRHashHelper __helper) 
         {
             System.UInt64 hash = 345093625;
-            hash += (ulong)1057538465;
+            hash ^= (ulong)1057538465;
             hash += hash << 11; hash ^= hash >> 7;
             return hash;
         }
