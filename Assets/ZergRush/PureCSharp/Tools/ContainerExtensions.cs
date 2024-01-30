@@ -179,6 +179,28 @@ namespace ZergRush
             return best;
         }
 
+        //double criterio check
+        public static T Best<T>(this IEnumerable<T> coll, Func<T, (float, float)> predicate)
+        {
+            var best = default(T);
+            var curr = (Single.MinValue, Single.MinValue);
+            foreach (var v in coll)
+            {
+                var r = predicate(v);
+                if (r.Item1 > curr.Item1)
+                {
+                    curr = r;
+                    best = v;
+                }
+                else if (Math.Abs(r.Item1 - curr.Item1) < 1e-6 && r.Item2 > curr.Item2)
+                {
+                    curr = r;
+                    best = v;
+                }
+            }
+            return best;
+        }
+        
         public static T FirstFilteredOrFirst<T>(this IEnumerable<T> enumerable, Func<T, bool> filter)
         {
             var firstOrDefault = enumerable.FirstOrDefault(filter);
