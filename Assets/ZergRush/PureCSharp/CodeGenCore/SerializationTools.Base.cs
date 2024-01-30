@@ -28,13 +28,28 @@ public static partial class SerializationTools
     
     
     public static void StableUpdateFrom<T>(this IList<T> self, IList<T> other, ZRUpdateFromHelper __helper) 
-        where T : IStableIdentifiable, IUpdatableFrom<T>
+        where T : class, IStableIdentifiable, IUpdatableFrom<T>
     {
         var i = 0;
         for (; i < other.Count; i++)
         {
             var currOtherItem = other[i];
-            var selfMatchingItemIndex = self.IndexOf(o => o.stableId == currOtherItem.stableId);
+            if (currOtherItem == null)
+            {
+                if (self.Count > i)
+                {
+                    if (self[i] == null)
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        self.Insert(i, null);
+                        continue;
+                    }
+                }
+            }
+            var selfMatchingItemIndex = self.IndexOf(o => o != null && o.stableId == currOtherItem.stableId);
             
             check:
             if (selfMatchingItemIndex == i)
