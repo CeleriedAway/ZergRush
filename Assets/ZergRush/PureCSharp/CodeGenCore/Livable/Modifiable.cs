@@ -20,8 +20,8 @@ namespace ZergRush.ReactiveCore
         protected TVal currVal;
         protected List<TModification> modifications = new List<TModification>();
         EventStream<TVal> changed = new EventStream<TVal>();
-
-        [GenInclude]
+        
+        [GenInclude, CodeGen.CanBeNull, JetBrains.Annotations.CanBeNull]
         public TVal baseValue
         {
             get { return baseVal; }
