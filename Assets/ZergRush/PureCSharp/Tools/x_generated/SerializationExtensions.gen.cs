@@ -66,9 +66,9 @@ public static partial class SerializationExtensions
         while (reader.Read())
         {
             if (reader.TokenType == JsonToken.EndArray) { break; }
+            Array.Resize(ref self, self.Length + 1);
             int val = default;
             val = (int)(Int64)reader.Value;
-            Array.Resize(ref self, self.Length + 1);
             self[self.Length - 1] = val;
         }
         return self;
