@@ -13,27 +13,27 @@ namespace ZergRush.CodeGen
             Console.WriteLine($"Order: {assemblies.Select(a => a.GetName().Name).PrintCollection()}");
             var typesEnumerable = assemblies.SelectMany(assembly => assembly.GetTypes());
 
-            List<string> pathPartPriority = new List<string>
-            {
-                "ZergRush",
-                "AGameServerShared",
-                "SharedCode"
-            };
-            pathPartPriority.Reverse();
+            // List<string> pathPartPriority = new List<string>
+            // {
+            //     "ZergRush",
+            //     "AGameServerShared",
+            //     "SharedCode"
+            // };
+            //pathPartPriority.Reverse();
             allTypesInAssemblies.Clear();
             allTypesInAssemblies.AddRange(typesEnumerable.ToList());
             var priorityList = allTypesInAssemblies.Select(t => {
                 var tf = t.GetAttribute<GenTargetFolder>(f => f.inheritable);
                 if (tf != null)
                 {
-                    var indexOf = pathPartPriority.IndexOf(p => tf.folder.Contains(p));
-                    return (t, indexOf == -1 ? 99 : indexOf);
+                    //var indexOf = pathPartPriority.IndexOf(p => tf.folder.Contains(p));
+                    return (t, tf.priority);// indexOf == -1 ? 99 : indexOf);
                 }
-                return (t, 100);
+                return (t, 0);
             }).ToList();
             priorityList.Sort((tp1, tp2) =>
             {
-                if (tp1.Item2 != tp2.Item2) return tp1.Item2.CompareTo(tp2.Item2);
+                if (tp1.Item2 != tp2.Item2) return tp2.Item2.CompareTo(tp1.Item2);
                 var t1 = tp1.t;
                 var t2 = tp2.t;
                 return (t1.Namespace, t1.Name).CompareTo((t2.Namespace, t2.Name));
@@ -92,7 +92,6 @@ namespace ZergRush.CodeGen
                     var type = task.type;
                     
                     if ((type.IsDataList() || type.IsLivableList()) && type.IsConstructedGenericType == false) continue;
-
                     if (type.HasAttribute<DoNotGen>()) continue;
 
                     var classSink = GenClassSink(task.type);

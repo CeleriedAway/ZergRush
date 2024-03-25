@@ -107,19 +107,17 @@ public class GenInLocalFolder : GenTargetFolder
         var path = Path.GetDirectoryName(sourceFilePath);
         return Path.Combine(path, $"{dir}");
     }
-
-    public GenInLocalFolder(string dir = "x_generated", bool inheritable = true, [CallerFilePath] string sourceFilePath = "") : base(
-        GetPath(dir, sourceFilePath), inheritable, 100)
+    
+    public GenInLocalFolder(int priority = 100, string dir = "x_generated", bool inheritable = true, [CallerFilePath] string sourceFilePath = "") : base(
+        GetPath(dir, sourceFilePath), inheritable, priority)
     {
-        //Debug.Log("~~~~~~~~~" + folder);
     }
 }
 
 public class GenZergRushFolder : GenInLocalFolder
 {
-    public GenZergRushFolder(string dir = "x_generated", [CallerFilePath] string sourceFilePath = "") : base(dir, false, sourceFilePath)
+    public GenZergRushFolder(string dir = "x_generated", [CallerFilePath] string sourceFilePath = "") : base(10000, dir, false, sourceFilePath)
     {
-        priority = 10000;
     }
 }
 
