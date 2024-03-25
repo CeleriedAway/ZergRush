@@ -252,10 +252,9 @@ namespace ZergRush.CodeGen
             }
         }
 
-
         static string TypeTableFileName(this Type t)
         {
-            return $"{GetContext(t).pathToSharp}types_cache_{t.Name}.txt";
+            return Path.Combine($"{GetContext(t).pathToSharp}", $"types_cache_{t.Name}.txt");
         }
 
         static void GeneratePoolSupportMethods(Type type)
