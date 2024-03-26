@@ -288,9 +288,12 @@ namespace ZergRush.ReactiveUI
                 var view = ((Transform)obj).GetComponent<TView>();
                 if (view != null)
                 {
-                    if (view.prefabRef != null && view.prefabRef == prefab)
+                    if (view.prefabRef != null)
                     {
-                        pool.AddViewToUse((TView)view.prefabRef, view);
+                        if ( view.prefabRef == prefab)
+                            pool.AddViewToUse((TView)view.prefabRef, view);
+                        else
+                            continue;
                     }
                     else if (options.Has(PresentOptions.UseChildWithSameTypeAsView) &&
                              view.GetType() == prefabRef.ExtractType())
