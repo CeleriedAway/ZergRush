@@ -230,11 +230,11 @@ namespace ZergRush.ReactiveUI
         }
         
         //need prevCursor, because Unity doesn't have a way to get current cursor
-        public void SetCursor(Texture2D newCursor, Texture2D prevCursor = null)
+        public void SetCursor(Texture2D newCursor, Texture2D prevCursor = null, Vector2Int hotspot = default, Vector2Int prevHotspot = default)
         {
-            Cursor.SetCursor(newCursor, Vector2.zero, CursorMode.Auto);
+            Cursor.SetCursor(newCursor, hotspot, CursorMode.Auto);
             connections += new AnonymousDisposable(() =>
-                Cursor.SetCursor(prevCursor, Vector2.zero, CursorMode.Auto));
+                Cursor.SetCursor(prevCursor, prevHotspot, CursorMode.Auto));
         }
 
         public void AddConnection(IDisposable connection)
