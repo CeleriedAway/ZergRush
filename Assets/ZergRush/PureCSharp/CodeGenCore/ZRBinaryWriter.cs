@@ -8,7 +8,7 @@ namespace ZergRush
 {
     public class ZRBinaryWriter : BinaryWriter
     {
-        ObjectIDGenerator generator = new ObjectIDGenerator();
+        ZRObjectIDGenerator generator = new ();
 
         protected ZRBinaryWriter()
         {

@@ -13,9 +13,18 @@ namespace ZergRush
             return helper.path;
         }
         
-        ObjectIDGenerator generatorSelf = new();
-        ObjectIDGenerator generatorOther = new();
+        ZRObjectIDGenerator generatorSelf = new();
+        ZRObjectIDGenerator generatorOther = new();
         Dictionary<long, long> projection = new();
+
+        // call before use if want to reuse allocated memory
+        public void Reuse()
+        {
+            generatorSelf.Clear();
+            generatorOther.Clear();
+            projection.Clear();
+            path.Clear();
+        }
 
         public void Push(string name)
         {
