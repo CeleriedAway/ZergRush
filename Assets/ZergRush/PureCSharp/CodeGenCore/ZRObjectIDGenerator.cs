@@ -139,7 +139,7 @@ namespace ZergRush
             }
             for (var i = 0; i < sizes.Length; i++)
             {
-                sizes[i] = 0;
+                m_ids[i] = 0;
             }
         }
     
