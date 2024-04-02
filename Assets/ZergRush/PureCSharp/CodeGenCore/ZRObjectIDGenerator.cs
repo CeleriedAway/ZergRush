@@ -137,7 +137,7 @@ namespace ZergRush
             {
                 m_objs[i] = null;
             }
-            for (var i = 0; i < sizes.Length; i++)
+            for (var i = 0; i < m_ids.Length; i++)
             {
                 m_ids[i] = 0;
             }
