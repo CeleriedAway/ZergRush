@@ -37,11 +37,12 @@ namespace ZergRush.CodeGen
             {
                 calcHash = $"{HelperName}.{nameof(ZRHashHelper.CalculateHash)}({name})";
             }
+            
             if (info.canBeNull && !info.type.IsValueType)
             {
                 return $"{name} != null ? {calcHash} : {RandomHash()}";
             }
-            if(Nullable.GetUnderlyingType(info.type) != null)
+            else if(Nullable.GetUnderlyingType(info.type) != null)
             {
                 return $"{name}.HasValue ? (ulong){name}.Value.GetHashCode() : {RandomHash()}";
             }
