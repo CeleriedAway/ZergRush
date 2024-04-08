@@ -86,7 +86,7 @@ class Programm
             var (allFilePaths, dlls, projs) = TypeReader.FindAllFilesInProject(projectPath, p);
             foreach (var dll in dlls)
             {
-                Console.WriteLine($"dll: {dll}");
+                //Console.WriteLine($"dll: {dll}");
                 if (dll.Contains("ZergRush") || dll.Contains("CodeGen")) continue;
                 allReferencePaths.Add(dll);
             }
@@ -136,6 +136,7 @@ class Programm
         }
         
         var compilation = CSharpCompilation.Create("assembly", pruned, references);
+        compilation = compilation.WithOptions(new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, allowUnsafe: true));
         AppDomain.CurrentDomain.AssemblyResolve += (sender, args) =>
         {
             var shortName = args.Name.Split(',')[0].Trim().ToLower();

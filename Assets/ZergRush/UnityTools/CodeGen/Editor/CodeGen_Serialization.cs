@@ -40,7 +40,7 @@ namespace ZergRush.CodeGen
                 access += ".Value";
                 t = Nullable.GetUnderlyingType(t);
             }
-            
+
             if (t == typeof(byte[]))
                 sink.content($"{stream}.WriteByteArray({access});");
             else if (t.IsConfig() && info.insideConfigStorage == false)
@@ -62,6 +62,7 @@ namespace ZergRush.CodeGen
                 {
                     sink.content($"{stream}.Write({access}.{CodeGen.PolymorphClassIdGetter});");
                 }
+
                 if (t.IsMultipleReference())
                 {
                     sink.content($"writer.WriteObjectWithRef({access});");
@@ -90,6 +91,7 @@ namespace ZergRush.CodeGen
                 sink.content($"{stream}.Write({info.access}[i] != null);");
                 sink.content($"if ({info.access}[i] != null)");
             }
+
             sink.content("{");
             sink.indent++;
             WriteToStreamStatement(sink,
@@ -110,9 +112,9 @@ namespace ZergRush.CodeGen
             sink.content($"foreach (var item in {path})");
             sink.content($"{{");
             sink.indent++;
-            
+
             WriteToStreamStatement(sink,
-                new DataInfo {type = keyType, baseAccess = $"item.Key", insideConfigStorage = configStorage}, stream);
+                new DataInfo { type = keyType, baseAccess = $"item.Key", insideConfigStorage = configStorage }, stream);
 
             if (!valType.IsValueType)
             {
@@ -123,7 +125,8 @@ namespace ZergRush.CodeGen
             sink.content("{");
             sink.indent++;
             WriteToStreamStatement(sink,
-                new DataInfo {type = valType, baseAccess = $"item.Value", insideConfigStorage = configStorage}, stream);
+                new DataInfo { type = valType, baseAccess = $"item.Value", insideConfigStorage = configStorage },
+                stream);
 
             sink.indent--;
             sink.content("}");
@@ -146,7 +149,7 @@ namespace ZergRush.CodeGen
 
             sink.content("{");
             sink.indent++;
-            WriteToStreamStatement(sink, new DataInfo {type = info.type, baseAccess = $"{info.access}[i]"}, stream);
+            WriteToStreamStatement(sink, new DataInfo { type = info.type, baseAccess = $"{info.access}[i]" }, stream);
             sink.indent--;
             sink.content("}");
             sink.indent--;
@@ -188,6 +191,7 @@ namespace ZergRush.CodeGen
                 {
                     sinkWriter.classBuilder.inheritance(nameof(IBinarySerializable));
                 }
+
                 type.ProcessMembers(GenTaskFlags.Serialize, true,
                     info => { GenWriteValueToStream(sinkWriter, info, writerName); });
             }
@@ -197,25 +201,26 @@ namespace ZergRush.CodeGen
         {
             return t.IsGenericType && t.Name.StartsWith("ValueTuple");
         }
+
         public static bool IsNullable(this Type t)
         {
             return Nullable.GetUnderlyingType(t) != null;
         }
-        
+
         public static bool IsNullableReferenceType(this Type t)
         {
             var underlyingType = Nullable.GetUnderlyingType(t);
             if (underlyingType != null && underlyingType.IsClass) return true;
             return false;
         }
-        
+
         public static bool IsNullableEnum(this Type t)
         {
             var underlyingType = Nullable.GetUnderlyingType(t);
             if (underlyingType != null && underlyingType.IsEnum) return true;
             return false;
         }
-        
+
         public static bool IsNullablePrimitive(this Type t)
         {
             var underlyingType = Nullable.GetUnderlyingType(t);
@@ -231,14 +236,17 @@ namespace ZergRush.CodeGen
 
             // info can be transformed because read from can do temp value wrapping for it
             Action<MethodBuilder, DataInfo> baseCall = (s, info1) =>
-                s.content($"{info1.access}.{ReadFuncName}({stream}{(pooled && t.HasPooledDeserializeMethod() ? $", pool" : "")});");
-            
+                s.content(
+                    $"{info1.access}.{ReadFuncName}({stream}{(pooled && t.HasPooledDeserializeMethod() ? $", pool" : "")});");
+
             if (t.IsMultipleReference())
             {
-                baseCall = (s, info1) => s.content( $"{stream}.ReadFromRef(ref {info1.access});");
+                baseCall = (s, info1) => s.content($"{stream}.ReadFromRef(ref {info1.access});");
             }
+
             if (t.IsArray || t.IsImmutableType() || (t.IsValueType && t.IsControllable() == false))
-                baseCall = (s, info1) => s.content($"{info1.access} = {stream}.{ReadNewInstanceOfImmutableType(t, pooled)};");
+                baseCall = (s, info1) =>
+                    s.content($"{info1.access} = {stream}.{ReadNewInstanceOfImmutableType(t, pooled)};");
 
 
             GeneralReadFrom(sink, info,
@@ -253,7 +261,8 @@ namespace ZergRush.CodeGen
                 directReader: $"{stream}.{ReadNewInstanceOfImmutableType(t, pooled)}",
                 needCreateVar: needVar,
                 getDataNodeFromRootWithRefId: readDataNodeFromId,
-                useTempVarThenAssign: info.isValueWrapper != ValueVrapperType.None && info.type.IsControllableStruct() ||
+                useTempVarThenAssign: info.isValueWrapper != ValueVrapperType.None &&
+                                      info.type.IsControllableStruct() ||
                                       (info.type.IsMultipleReference() && !needVar)
             );
         }
@@ -322,24 +331,24 @@ namespace ZergRush.CodeGen
             sink.content($"var key = default({keyType.RealName(true)});");
             GenReadValueFromStream(sink,
                 new DataInfo
-                    {type = keyType, baseAccess = $"key", sureIsNull = true, insideConfigStorage = configStorage},
+                    { type = keyType, baseAccess = $"key", sureIsNull = true, insideConfigStorage = configStorage },
                 stream, pooled);
-            
+
             if (!valType.IsValueType)
                 sink.content($"if (!{stream}.ReadBoolean()) {{ {path}.Add(key, null); continue; }}");
-                
+
             sink.content($"var val = default({valType.RealName(true)});");
             GenReadValueFromStream(sink,
                 new DataInfo
-                    {type = valType, baseAccess = $"val", sureIsNull = true, insideConfigStorage = configStorage},
+                    { type = valType, baseAccess = $"val", sureIsNull = true, insideConfigStorage = configStorage },
                 stream,
                 pooled);
-            
+
             // Currently dict is just a dict with custom argument
             // if (configStorage)
             //     sink.content($"{path}.Add(val);"); // ConfigStorageDict must use id as a key.
             // else
-                sink.content($"{path}.Add(key, val);");
+            sink.content($"{path}.Add(key, val);");
             sink.indent--;
             sink.content($"}}");
         }
@@ -355,7 +364,7 @@ namespace ZergRush.CodeGen
             sink.indent++;
             if (!type.IsValueType)
                 sink.content($"if (!{stream}.ReadBoolean()) {{ self[i] = null; continue; }}");
-            GenReadValueFromStream(sink, new DataInfo {type = type, baseAccess = $"{path}[i]", sureIsNull = true},
+            GenReadValueFromStream(sink, new DataInfo { type = type, baseAccess = $"{path}[i]", sureIsNull = true },
                 stream, pooled);
             sink.indent--;
             sink.content($"}}");
@@ -411,7 +420,7 @@ namespace ZergRush.CodeGen
                 {
                     sinkReader.classBuilder.inheritance(nameof(IBinaryDeserializable));
                 }
-                
+
                 bool immutableMode = type.IsStruct() && !type.IsControllable();
                 if (immutableMode)
                     sinkReader.content($"var self = new {type.RealName(true)}();");
@@ -454,11 +463,17 @@ namespace ZergRush.CodeGen
             var configType = t.FindTagInHierarchy<ConfigRootType>()?.type;
             if (configType == null)
             {
-                var requesters = typeRequestMap[t];
-                foreach (var requester in requesters)
+                if (typeRequestMap.TryGetValue(t, out var requesters))
                 {
-                    var requesterRootConfig = requester.ConfigRootType();
-                    if (requesterRootConfig != null) return requesterRootConfig;
+                    foreach (var requester in requesters)
+                    {
+                        var requesterRootConfig = requester.ConfigRootType();
+                        if (requesterRootConfig != null) return requesterRootConfig;
+                    }
+                }
+                else
+                {
+                    Error($"type {t} can't be found in requesters array");
                 }
             }
 
