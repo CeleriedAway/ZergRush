@@ -5,9 +5,17 @@ namespace ZergRush
 {
     public class ZRUpdateFromHelper
     {
-        ObjectIDGenerator generator = new ObjectIDGenerator();
+        ZRObjectIDGenerator generator = new ();
         Dictionary<long, object> alreadyUpdated = new Dictionary<long, object>();
         HashSet<object> registeredTargets = new HashSet<object>();
+
+        // call before use if want to reuse allocated memory
+        public void Reuse()
+        {
+            generator.Clear();
+            alreadyUpdated.Clear();
+            registeredTargets.Clear();
+        }
 
         public bool TryLoadAlreadyUpdated<T>(T source, ref T target)
         {

@@ -20,7 +20,8 @@ namespace ZergRush.ReactiveCore
         protected TVal currVal;
         protected List<TModification> modifications = new List<TModification>();
         EventStream<TVal> changed = new EventStream<TVal>();
-
+        
+        [GenInclude, CodeGen.CanBeNull, JetBrains.Annotations.CanBeNull]
         public TVal baseValue
         {
             get { return baseVal; }
@@ -122,6 +123,7 @@ namespace ZergRush.ReactiveCore
 
     public class LastValueModification<T> : Modifiable<T, T>
     {
+        public LastValueModification() : base(default(T)) { }
         public LastValueModification(T baseVal) : base(baseVal)
         {
         }

@@ -6,6 +6,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using ZergRush;
+using ZergRush.CodeGen;
 using ZergRush.ReactiveCore;
 using ZergRush.ReactiveUI;
 
@@ -58,6 +59,7 @@ namespace ZergRush.ReactiveUI
 
     }
 
+    [GenIgnore]
     public class UIChanges : IDisposable, IConnectionSink
     {
         public string debugName;
@@ -225,6 +227,14 @@ namespace ZergRush.ReactiveUI
             var prevState = cell.value;
             connections += new AnonymousDisposable(() => cell.value = prevState);
             cell.value = value;
+        }
+        
+        //need prevCursor, because Unity doesn't have a way to get current cursor
+        public void SetCursor(Texture2D newCursor, Texture2D prevCursor = null, Vector2Int hotspot = default, Vector2Int prevHotspot = default)
+        {
+            Cursor.SetCursor(newCursor, hotspot, CursorMode.Auto);
+            connections += new AnonymousDisposable(() =>
+                Cursor.SetCursor(prevCursor, prevHotspot, CursorMode.Auto));
         }
 
         public void AddConnection(IDisposable connection)

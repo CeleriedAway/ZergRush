@@ -20,13 +20,14 @@ namespace ZergRush.CodeGen
         {
             return type.Name == "Fix64";
         }
-        
+
         public static bool IsGuid(this Type type)
         {
             return type == typeof(Guid) || type == typeof(Guid?);
         }
 
-        public static void WriteJsonValueStatement(MethodBuilder sink, DataInfo info, bool inList, bool writeDataNodeAsId = false)
+        public static void WriteJsonValueStatement(MethodBuilder sink, DataInfo info, bool inList,
+            bool writeDataNodeAsId = false)
         {
             var t = info.type;
             bool isNullable = false;
@@ -35,9 +36,9 @@ namespace ZergRush.CodeGen
                 isNullable = true;
                 t = Nullable.GetUnderlyingType(t);
             }
-            
+
             if (t.IsConfig() == false) RequestGen(t, sink.classType, GenTaskFlags.JsonSerialization);
-            
+
 
             if (info.canBeNull)
             {
@@ -49,7 +50,7 @@ namespace ZergRush.CodeGen
                 sink.content($"else");
                 sink.openBrace();
             }
-            
+
             if (!inList) sink.content($"writer.WritePropertyName(\"{info.name}\");");
 
 
@@ -103,7 +104,7 @@ namespace ZergRush.CodeGen
             {
                 sink.content($"{info.access}.{JsonWriteFuncName}(writer);");
             }
-            
+
             if (info.canBeNull)
             {
                 sink.closeBrace();
@@ -114,18 +115,22 @@ namespace ZergRush.CodeGen
         {
             return t.IsChildOf<LoadableConfig>();
         }
-        
-        public static void ReadJsonValueStatement(MethodBuilder sink, DataInfo info, bool needCreateVar, bool readDataNodeFromId = false, bool useTempVar = false)
+
+        public static void ReadJsonValueStatement(MethodBuilder sink, DataInfo info, bool needCreateVar,
+            bool readDataNodeFromId = false, bool useTempVar = false)
         {
             var t = info.type;
             if (t.IsConfig() == false) RequestGen(t, sink.classType, GenTaskFlags.JsonSerialization);
 
             // info can be transformed because read from can do temp value wrapping for it
-            Action<MethodBuilder, DataInfo> baseCall = (s, info1) => s.content( $"{(info.type.IsArray ? info1.access + " = ": "")}{info1.access}.{JsonReadFuncName}(reader);");
+            Action<MethodBuilder, DataInfo> baseCall = (s, info1) =>
+                s.content(
+                    $"{(info.type.IsArray ? info1.access + " = " : "")}{info1.access}.{JsonReadFuncName}(reader);");
             if (t.IsMultipleReference())
             {
-                baseCall = (s, info1) => s.content( $"reader.ReadFromRef(ref {info1.access});");
+                baseCall = (s, info1) => s.content($"reader.ReadFromRef(ref {info1.access});");
             }
+
             if ((t.IsValueType && t.IsControllable() == false) || t == typeof(byte[]) || t.IsGuid())
             {
                 baseCall = (s, info1) => s.content($"{info1.access} = {DirectJsonImmutableTypeReader(t)};");
@@ -134,12 +139,12 @@ namespace ZergRush.CodeGen
             {
                 baseCall = (s, info1) => s.content($"{info1.access} = ({t.RealName()}) reader.Value;");
             }
-            
+
             if (t.Name == "Fix64")
             {
                 sink.classBuilder.usingSink("FixMath.NET");
             }
-            
+
             GeneralReadFrom(sink, info,
                 baseReadCall: baseCall,
                 isNullReader: $"reader.TokenType == JsonToken.Null",
@@ -147,15 +152,16 @@ namespace ZergRush.CodeGen
                 classIdReader: $"reader.ReadJsonClassId()",
                 configIdReader: DirectJsonImmutableTypeReader,
                 refInst: "",
-                refIdReader:"(int) (long) reader.Value",
+                refIdReader: "(int) (long) reader.Value",
                 directReader: $"{DirectJsonImmutableTypeReader(t)}",
                 needCreateVar: needCreateVar,
                 getDataNodeFromRootWithRefId: readDataNodeFromId,
-                useTempVarThenAssign: useTempVar || info.isValueWrapper != ValueVrapperType.None && (info.type.IsControllableStruct() || info.type.IsMultipleReference())
+                useTempVarThenAssign: useTempVar || info.isValueWrapper != ValueVrapperType.None &&
+                (info.type.IsControllableStruct() || info.type.IsMultipleReference())
             );
         }
 
-        
+
         public static string DirectJsonImmutableTypeReader(Type t)
         {
             var str = $"({t.RealName(true)})";
@@ -212,55 +218,79 @@ namespace ZergRush.CodeGen
             if (type.IsList() || type.IsArray)
             {
                 var listNeedAuxId = type.IsModifiableLivableList();
-                
+
                 var returnTypeForReadMethod = type.IsArray ? type : retType;
-                var sinkReader = MakeGenMethod(type, GenTaskFlags.JsonSerialization, funcPrefix + JsonReadFuncName, returnTypeForReadMethod, $"{readerClassName} {readerName}");
-                var sinkWriter = MakeGenMethod(type, GenTaskFlags.JsonSerialization, funcPrefix + JsonWriteFuncName, Void, $"{writerClassName} {writerName}");
-                
+                var sinkReader = MakeGenMethod(type, GenTaskFlags.JsonSerialization, funcPrefix + JsonReadFuncName,
+                    returnTypeForReadMethod, $"{readerClassName} {readerName}");
+                var sinkWriter = MakeGenMethod(type, GenTaskFlags.JsonSerialization, funcPrefix + JsonWriteFuncName,
+                    Void, $"{writerClassName} {writerName}");
+
                 var elemType = type.FirstGenericArg();
                 if (elemType.IsConfig() == false) RequestGen(elemType, type, GenTaskFlags.JsonSerialization);
                 var info = DataInfo.WithTypeAndName(elemType, accessPrefix);
                 string count = type.IsList() ? "Count" : "Length";
-                
+
                 // Writer
                 sinkWriter.content($"writer.WriteStartArray();");
                 if (listNeedAuxId)
                 {
                     sinkWriter.content($"writer.WriteValue({info.access}.Id);");
                 }
+
                 sinkWriter.content($"for (int i = 0; i < {info.access}.{count}; i++)");
                 sinkWriter.content($"{{");
                 sinkWriter.indent++;
-                WriteJsonValueStatement(sinkWriter, 
-                    new DataInfo{type = info.type, baseAccess = $"{info.access}[i]", insideConfigStorage = type.IsConfigStorage(), canBeNull = info.type.IsClass}, true);
+                WriteJsonValueStatement(sinkWriter,
+                    new DataInfo
+                    {
+                        type = info.type, baseAccess = $"{info.access}[i]",
+                        insideConfigStorage = type.IsConfigStorage(), canBeNull = info.type.IsClass
+                    }, true);
                 sinkWriter.indent--;
                 sinkWriter.content($"}}");
                 sinkWriter.content($"writer.WriteEndArray();");
-                
+
                 // Reader
                 JsonAssertReadStartStatement(sinkReader, $"reader.TokenType != JsonToken.StartArray");
                 if (type.IsDataList()) sinkReader.content($"self.{updatemod} = true;");
-                if (type.IsArray) sinkReader.content($"if(self == null || self.Length > 0) self = Array.Empty<{elemType.RealName(true)}>();");
+                if (type.IsArray)
+                    sinkReader.content(
+                        $"if(self == null || self.Length > 0) self = Array.Empty<{elemType.RealName(true)}>();");
                 if (listNeedAuxId)
                 {
                     sinkReader.content($"self.Id = (int)reader.ReadAsInt32();");
                 }
+
                 sinkReader.content($"while (reader.Read())");
                 sinkReader.content($"{{");
                 sinkReader.indent++;
                 sinkReader.content("if (reader.TokenType == JsonToken.EndArray) { break; }");
-                if (elemType.IsValueType == false)
-                    sinkReader.content("if (reader.TokenType == JsonToken.Null) { self.Add(null); continue; }");
-            
-                Action initArray = () =>
+
+                Action checkNull = () =>
                 {
-                    sinkReader.content($"Array.Resize(ref self, self.Length + 1);");
+                    if (elemType.IsValueType == false)
+                    {
+                        if (type.IsArray)
+                        {
+                            sinkReader.content("if (reader.TokenType == JsonToken.Null) { self[self.Length - 1] = null; continue; }");
+                        }
+                        else
+                        {
+                            sinkReader.content("if (reader.TokenType == JsonToken.Null) { self.Add(null); continue; }");
+                        }
+                    }
                 };
+
+                Action initArray = () => { sinkReader.content($"Array.Resize(ref self, self.Length + 1);"); };
                 if (elemType.IsDataNode())
                 {
                     if (type.IsArray)
                     {
                         initArray();
+                        if (elemType.IsValueType == false)
+                        {
+                            sinkReader.content("if (reader.TokenType == JsonToken.Null) { self[self.Length - 1] = null; continue; }");
+                        }
                     }
                     else
                     {
@@ -269,25 +299,47 @@ namespace ZergRush.CodeGen
                     }
 
                     string tempVarName = "__temp";
-                    ReadJsonValueStatement(sinkReader, 
-                        new DataInfo {type = elemType, carrierType = type, baseAccess = tempVarName, insideConfigStorage = type.IsConfigStorage(),
-                            sureIsNull = true}, true);
+                    ReadJsonValueStatement(sinkReader,
+                        new DataInfo
+                        {
+                            type = elemType, carrierType = type, baseAccess = tempVarName,
+                            insideConfigStorage = type.IsConfigStorage(),
+                            sureIsNull = true
+                        }, true);
                     sinkReader.content($"self[self.{count} - 1] = {tempVarName};");
                 }
                 else
                 {
-                    if (type.IsValueType)
-                    {
-                        sinkReader.content(type.IsArray ? $"self.Add(null);" : "self[self.Length - 1] = null;");
-                        sinkReader.content("if (reader.TokenType == JsonToken.Null) continue;");
-                    }
+                    // if (type.IsValueType)
+                    // {
+                    //     sinkReader.content(type.IsArray ? $"self.Add(null);" : "self[self.Length - 1] = null;");
+                    //     sinkReader.content("if (reader.TokenType == JsonToken.Null) continue;");
+                    // }
 
-                    ReadJsonValueStatement(sinkReader, new DataInfo{type = info.type, baseAccess = $"val", carrierType = type,
-                        insideConfigStorage = type.IsConfigStorage(), sureIsNull = true}, true);
-                    
                     if (type.IsArray)
                     {
                         initArray();
+                        if (elemType.IsValueType == false)
+                        {
+                            sinkReader.content("if (reader.TokenType == JsonToken.Null) { self[self.Length - 1] = null; continue; }");
+                        }
+                    }
+                    else
+                    {
+                        if (elemType.IsValueType == false)
+                        {
+                            sinkReader.content("if (reader.TokenType == JsonToken.Null) { self.Add(null); continue; }");
+                        }
+                    }
+
+                    ReadJsonValueStatement(sinkReader, new DataInfo
+                    {
+                        type = info.type, baseAccess = $"val", carrierType = type,
+                        insideConfigStorage = type.IsConfigStorage(), sureIsNull = true
+                    }, true);
+
+                    if (type.IsArray)
+                    {
                         sinkReader.content($"self[self.Length - 1] = val;");
                     }
                     else
@@ -295,53 +347,72 @@ namespace ZergRush.CodeGen
                         sinkReader.content($"{info.access}.Add(val);");
                     }
                 }
+
                 sinkReader.indent--;
                 sinkReader.content($"}}");
                 if (type.IsDataList()) sinkReader.content($"self.{updatemod} = false;");
-                
+
                 if (type.IsArray) sinkReader.content($"return self;");
                 else sinkReader.content("return true;");
             }
             else if (type.IsDictionary())
             {
-                var sinkReader = MakeGenMethod(type, GenTaskFlags.JsonSerialization, funcPrefix + JsonReadFuncName, retType, $"{readerClassName} {readerName}");
-                var sinkWriter = MakeGenMethod(type, GenTaskFlags.JsonSerialization, funcPrefix + JsonWriteFuncName, Void, $"{writerClassName} {writerName}");
+                var sinkReader = MakeGenMethod(type, GenTaskFlags.JsonSerialization, funcPrefix + JsonReadFuncName,
+                    retType, $"{readerClassName} {readerName}");
+                var sinkWriter = MakeGenMethod(type, GenTaskFlags.JsonSerialization, funcPrefix + JsonWriteFuncName,
+                    Void, $"{writerClassName} {writerName}");
                 var keyType = type.FirstGenericArg();
                 var valType = type.SecondGenericArg();
                 RequestGen(keyType, type, GenTaskFlags.JsonSerialization);
                 RequestGen(valType, type, GenTaskFlags.JsonSerialization);
-                
+
                 var infoKey = DataInfo.WithTypeAndName(keyType, "key");
                 var infoVal = DataInfo.WithTypeAndName(valType, "val");
-                
+
                 // Writer
-                
+
                 sinkWriter.content($"writer.WriteStartArray();");
                 sinkWriter.content($"foreach (var item in {accessPrefix})");
                 sinkWriter.openBrace();
-                    sinkWriter.content($"writer.WriteStartObject();");
-                    sinkWriter.content($"writer.WritePropertyName(\"key\");");
-                    WriteJsonValueStatement(sinkWriter, new DataInfo{type = keyType, baseAccess = $"item.Key", insideConfigStorage = type.IsConfigStorage()}, true);
-                    sinkWriter.content($"writer.WritePropertyName(\"value\");");
-                    WriteJsonValueStatement(sinkWriter, new DataInfo{type = valType, baseAccess = $"item.Value", insideConfigStorage = type.IsConfigStorage()}, true);
-                    sinkWriter.content($"writer.WriteEndObject();");
+                sinkWriter.content($"writer.WriteStartObject();");
+                sinkWriter.content($"writer.WritePropertyName(\"key\");");
+                WriteJsonValueStatement(sinkWriter,
+                    new DataInfo
+                        { type = keyType, baseAccess = $"item.Key", insideConfigStorage = type.IsConfigStorage() },
+                    true);
+                sinkWriter.content($"writer.WritePropertyName(\"value\");");
+                WriteJsonValueStatement(sinkWriter,
+                    new DataInfo
+                        { type = valType, baseAccess = $"item.Value", insideConfigStorage = type.IsConfigStorage() },
+                    true);
+                sinkWriter.content($"writer.WriteEndObject();");
                 sinkWriter.closeBrace();
                 sinkWriter.content($"writer.WriteEndArray();");
-                
+
                 // Reader
                 JsonAssertReadStartStatement(sinkReader, $"reader.TokenType != JsonToken.StartArray");
                 sinkReader.content($"while (reader.Read())");
                 sinkReader.openBrace();
-                    sinkReader.content("if (reader.TokenType == JsonToken.EndArray) { break; }");
-                    JsonAssertReadStartStatement(sinkReader, $"reader.TokenType != JsonToken.StartObject");
-                    sinkReader.content($"reader.Read();"); // key prop name
-                    sinkReader.content($"reader.Read();"); // key content
-                    ReadJsonValueStatement(sinkReader, new DataInfo{type = keyType, carrierType = type, baseAccess = $"key", insideConfigStorage = type.IsConfigStorage(), sureIsNull = true}, true);
-                    sinkReader.content($"reader.Read();"); // val prop name
-                    sinkReader.content($"reader.Read();"); // val content
-                    ReadJsonValueStatement(sinkReader, new DataInfo{type = valType, carrierType = type, baseAccess = $"val", insideConfigStorage = type.IsConfigStorage(), sureIsNull = true}, true);
-                    sinkReader.content($"reader.ReadSkipComments();"); // end keyval obj
-                    sinkReader.content($"{accessPrefix}.Add(key, val);");
+                sinkReader.content("if (reader.TokenType == JsonToken.EndArray) { break; }");
+                JsonAssertReadStartStatement(sinkReader, $"reader.TokenType != JsonToken.StartObject");
+                sinkReader.content($"reader.Read();"); // key prop name
+                sinkReader.content($"reader.Read();"); // key content
+                ReadJsonValueStatement(sinkReader,
+                    new DataInfo
+                    {
+                        type = keyType, carrierType = type, baseAccess = $"key",
+                        insideConfigStorage = type.IsConfigStorage(), sureIsNull = true
+                    }, true);
+                sinkReader.content($"reader.Read();"); // val prop name
+                sinkReader.content($"reader.Read();"); // val content
+                ReadJsonValueStatement(sinkReader,
+                    new DataInfo
+                    {
+                        type = valType, carrierType = type, baseAccess = $"val",
+                        insideConfigStorage = type.IsConfigStorage(), sureIsNull = true
+                    }, true);
+                sinkReader.content($"reader.ReadSkipComments();"); // end keyval obj
+                sinkReader.content($"{accessPrefix}.Add(key, val);");
                 sinkReader.closeBrace();
                 sinkReader.content("return true;");
             }
@@ -349,19 +420,23 @@ namespace ZergRush.CodeGen
             {
                 bool externalMode = !type.IsControllable() || type.IsStruct();
                 bool immutableMode = type.IsStruct() && !type.IsControllable();
-                
+
                 string readerFuncName = funcPrefix + JsonReadFuncName + (!externalMode ? "Field" : "") +
                                         (immutableMode ? type.UniqueName() : "");
-                var sinkReader = MakeGenMethod(type, GenTaskFlags.JsonSerialization, readerFuncName, immutableMode ? type : retType,
-                    $"{(immutableMode ? "this " : "")}{readerClassName} {readerName}{(!externalMode ? ", string __name" : "")}", immutableMode);
-                var sinkWriter = MakeGenMethod(type, GenTaskFlags.JsonSerialization, funcPrefix + JsonWriteFuncName + (!externalMode ? "Fields" : ""), Void, $"{writerClassName} {writerName}");
+                var sinkReader = MakeGenMethod(type, GenTaskFlags.JsonSerialization, readerFuncName,
+                    immutableMode ? type : retType,
+                    $"{(immutableMode ? "this " : "")}{readerClassName} {readerName}{(!externalMode ? ", string __name" : "")}",
+                    immutableMode);
+                var sinkWriter = MakeGenMethod(type, GenTaskFlags.JsonSerialization,
+                    funcPrefix + JsonWriteFuncName + (!externalMode ? "Fields" : ""), Void,
+                    $"{writerClassName} {writerName}");
 
                 if (sinkReader.needBaseValCall)
                 {
                     sinkReader.content($"if (base.{JsonReadFuncName}Field({readerName}, __name)) return true;");
                     sinkReader.needBaseValCall = false;
                 }
-                
+
                 if (immutableMode) sinkReader.content($"var self = new {type.RealName(true)}();");
 
                 if (externalMode)
@@ -374,23 +449,21 @@ namespace ZergRush.CodeGen
                     sinkReader.content($"reader.Read();");
                     sinkWriter.content($"writer.WriteStartObject();");
                 }
-                
-                type.ProcessMembers(GenTaskFlags.JsonSerialization, true, info =>
-                {
-                    WriteJsonValueStatement(sinkWriter, info, false);
-                });
-                
+
+                type.ProcessMembers(GenTaskFlags.JsonSerialization, true,
+                    info => { WriteJsonValueStatement(sinkWriter, info, false); });
+
                 if (type.IsControllable() && type.IsValueType == false)
                     sinkReader.classBuilder.inheritance("IJsonSerializable");
                 sinkReader.content($"switch(__name)");
                 sinkReader.openBrace();
-                    type.ProcessMembers(GenTaskFlags.JsonSerialization, true, info =>
-                    {
-                        sinkReader.content($"case \"{info.name}\":");
-                        ReadJsonValueStatement(sinkReader, info, false);
-                        sinkReader.content($"break;");
-                    });
-                    if (!immutableMode) sinkReader.content($"default: return false; break;");
+                type.ProcessMembers(GenTaskFlags.JsonSerialization, true, info =>
+                {
+                    sinkReader.content($"case \"{info.name}\":");
+                    ReadJsonValueStatement(sinkReader, info, false);
+                    sinkReader.content($"break;");
+                });
+                if (!immutableMode) sinkReader.content($"default: return false; break;");
                 sinkReader.closeBrace();
 
                 if (externalMode)
@@ -400,7 +473,7 @@ namespace ZergRush.CodeGen
                     sinkReader.closeBrace();
                     sinkWriter.content($"writer.WriteEndObject();");
                 }
-                
+
                 if (immutableMode) sinkReader.content("return self;");
                 if (!immutableMode) sinkReader.content($"return true;");
             }

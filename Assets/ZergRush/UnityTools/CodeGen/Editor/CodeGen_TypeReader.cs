@@ -351,8 +351,9 @@ namespace ZergRush.CodeGen
 
                 bool nullable = field.HasAttribute<CanBeNull>();
                 bool isStatic = field.HasAttribute<Immutable>();
+
                 if (nullable && field.FieldType.IsValueType)
-                    throw new Exception("CanBeNull tag on value type is invalid on field " + field);
+                    nullable = false;
 
                 members.Add(new DataInfo
                 {
@@ -386,7 +387,8 @@ namespace ZergRush.CodeGen
                 bool nullable = property.HasAttribute<CanBeNull>() || forceCanBeNull;
                 bool isStatic = property.HasAttribute<Immutable>();
                 if (nullable && property.PropertyType.IsValueType)
-                    throw new Exception("CanBeNull tag on value type is invalid on property " + property);
+                    nullable = false;
+                
                 members.Add(new DataInfo
                 {
                     type = property.PropertyType,

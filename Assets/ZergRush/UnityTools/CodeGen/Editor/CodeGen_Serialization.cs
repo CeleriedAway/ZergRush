@@ -363,8 +363,8 @@ namespace ZergRush.CodeGen
             sink.content($"{{");
             sink.indent++;
             if (!type.IsValueType)
-                sink.content($"if (!{stream}.ReadBoolean()) {{ self[i] = null; continue; }}");
-            GenReadValueFromStream(sink, new DataInfo { type = type, baseAccess = $"{path}[i]", sureIsNull = true },
+                sink.content($"if (!{stream}.ReadBoolean()) {{ {path}[i] = null; continue; }}");
+            GenReadValueFromStream(sink, new DataInfo {type = type, baseAccess = $"{path}[i]", sureIsNull = true},
                 stream, pooled);
             sink.indent--;
             sink.content($"}}");

@@ -127,13 +127,13 @@ namespace ZergRush
             }
         }
 
-        class WaitingDelayedAction : IUpdatable
+        class DelayedAction : IUpdatable
         {
             private float remainingTime;
             Action action;
             IDisposable connection;
 
-            public WaitingDelayedAction(float delay, Action action, bool realtime = false)
+            public DelayedAction(float delay, Action action, bool realtime = false)
             {
                 remainingTime = delay;
                 this.action = action;
@@ -171,21 +171,48 @@ namespace ZergRush
             }
         }
 
+        public static ICell<T> SampleValue<T>(Func<T> sample, IConnectionSink connectionSink)
+        {
+            var cell = new Cell<T>();
+            connectionSink.AddConnection(UnityExecutor.Instance.eachFrame.Subscribe(() => { cell.value = sample(); }));
+            return cell;
+        }
+        
+        public static void IfIsTrueForSeconds(ICell<bool> condition, float seconds, Action callback, IConnectionSink sink)
+        {
+            var time = 0f;
+            sink.AddConnection(UnityExecutor.Instance.eachFrame.Subscribe(() =>
+            {
+                if (condition.value)
+                {
+                    time += Time.deltaTime;
+                    if (time > seconds)
+                    {
+                        callback();
+                    }
+                }
+                else
+                {
+                    time = 0;
+                }
+            }));
+        }
+
         public static IEventStream EventOnceAfterDelay(float delay)
         {
             var e = new EventStream();
-            new WaitingDelayedAction(delay, () => e.Send());
+            new DelayedAction(delay, () => e.Send());
             return e.Once();
         }
 
         public static void ExecuteAfterDelay(float delay, Action action)
         {
-            new WaitingDelayedAction(delay, action);
+            new DelayedAction(delay, action);
         }
 
         public static void ExecuteAfterRealtimeDelay(float delay, Action action)
         {
-            new WaitingDelayedAction(delay, action, true);
+            new DelayedAction(delay, action, true);
         }
 
         public static void ExecuteNextUpdate(Action action)

@@ -82,10 +82,14 @@ namespace ZergRush.ReactiveUI
         public TView LoadView(int index, TData data)
         {
             var view = pool.Get(data);
-            view.indexInModel = index;
-            //Debug.Log($"loading view {view.GetInstanceID()} at index {index}");
+            
             var i = index - firstLoadedIndex;
             loadedViews.Insert(i, view);
+
+            if (view == null) return null;
+            
+            view.indexInModel = index;
+            //Debug.Log($"loading view {view.GetInstanceID()} at index {index}");
             //Debug.Log($"loading {view.GetHashCode()} at {index}");
             showAction?.Invoke(data, view);
             return view;
@@ -94,10 +98,12 @@ namespace ZergRush.ReactiveUI
         public void UnloadView(int dataIndex)
         {
             var view = loadedViews[dataIndex - firstLoadedIndex];
+            loadedViews.RemoveAt(dataIndex - firstLoadedIndex);
+            
+            if (view == null) return;
             //Debug.Log($"unload view {view.GetInstanceID()} at index {dataIndex}");
             pool.Recycle(view, unloadAction == null ? 0 : unloadAction(view));
             //Debug.Log($"unloading {view.GetHashCode()} at {dataIndex}");
-            loadedViews.RemoveAt(dataIndex - firstLoadedIndex);
         }
 
         public void ReloadAll(IEnumerable<TData> data)

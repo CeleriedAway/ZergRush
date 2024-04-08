@@ -1,2 +1,0 @@
-GameConfigBaseBase 1
-GameConfigExample 2

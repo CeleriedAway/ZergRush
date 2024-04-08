@@ -37,11 +37,12 @@ namespace ZergRush.CodeGen
             {
                 calcHash = $"{HelperName}.{nameof(ZRHashHelper.CalculateHash)}({name})";
             }
+            
             if (info.canBeNull && !info.type.IsValueType)
             {
                 return $"{name} != null ? {calcHash} : {RandomHash()}";
             }
-            if(Nullable.GetUnderlyingType(info.type) != null)
+            else if(Nullable.GetUnderlyingType(info.type) != null)
             {
                 return $"{name}.HasValue ? (ulong){name}.Value.GetHashCode() : {RandomHash()}";
             }
@@ -83,7 +84,7 @@ namespace ZergRush.CodeGen
                     }
                     if (sink.classType.IsAbstract == false)
                     {
-                        sink.content($"hash += ({HashTypeName}){Math.Abs((int)type.Name.CalculateHash())};");
+                        sink.content($"hash ^= ({HashTypeName}){Math.Abs((int)type.Name.CalculateHash())};");
                         sink.content(HashMixStatement("hash"));
                     }
                 },

@@ -9,8 +9,15 @@ namespace ZergRush
 {
     public class ZRHashHelper
     {
-        ObjectIDGenerator generator = new ObjectIDGenerator();
+        ZRObjectIDGenerator generator = new ();
         Dictionary<long, ulong> alreadyHashed = new();
+        
+        // call before use if want to reuse allocated memory
+        public void Reuse()
+        {
+            generator.Clear();
+            alreadyHashed.Clear();
+        }
         
         public ulong CalculateHash<T>(T source) where T : IHashable
         {

@@ -40,7 +40,7 @@ public static partial class SerializationExtensions
     public static ulong CalculateHash(this System.Int32[] self, ZRHashHelper __helper) 
     {
         System.UInt64 hash = 345093625;
-        hash += (ulong)677530667;
+        hash ^= (ulong)677530667;
         hash += hash << 11; hash ^= hash >> 7;
         var size = self.Length;
         for (int i = 0; i < size; i++)
@@ -66,9 +66,9 @@ public static partial class SerializationExtensions
         while (reader.Read())
         {
             if (reader.TokenType == JsonToken.EndArray) { break; }
+            Array.Resize(ref self, self.Length + 1);
             int val = default;
             val = (int)(Int64)reader.Value;
-            Array.Resize(ref self, self.Length + 1);
             self[self.Length - 1] = val;
         }
         return self;
