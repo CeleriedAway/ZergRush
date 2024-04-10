@@ -95,8 +95,11 @@ namespace ZergRush.ReactiveUI
 
         public ViewPool(Transform parent, PrefabRef<TView> prefab, PresentOptions options) : this(parent, prefab.ExtractPrefab(parent))
         {
-            if ((options & PresentOptions.__UseLoadedViews) != 0) Rui.FillPoolWithChildrenViews(this, parent, prefab, this.prefab, options);
+            if ((options & PresentOptions.__UseLoadedViews) != 0) 
+                Rui.FillPoolWithChildrenViews(this, parent, prefab, this.prefab, options);
         }
+        
+        
 
         public int Count => pool.Count;
 

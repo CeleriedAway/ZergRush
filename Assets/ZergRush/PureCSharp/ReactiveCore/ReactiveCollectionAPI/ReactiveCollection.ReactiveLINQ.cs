@@ -38,9 +38,9 @@ namespace ZergRush.ReactiveCore
         }
 
         public static ICell<T> FindReactive<T>(this IReactiveCollection<T> collection,
-            Func<T, bool> item)
+            Func<T, bool> item, T ifNotFound = default)
         {
-            return collection.AsCell().Map(c => c.Find(item));
+            return collection.AsCell().Map(c => c.Find(item, ifNotFound));
         }
 
         public static ICell<T2> FindCastReactive<T, T2>(this IReactiveCollection<T> collection) where T2 : class

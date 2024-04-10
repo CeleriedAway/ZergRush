@@ -67,6 +67,8 @@ public static class ParseTools
     public static int ParseIntStrict(this string str)
     {
         str = str.Replace('@', '-');
+        if (str.Length > 0)
+            str = str.Replace("%", "");
         if (string.IsNullOrEmpty(str) || !int.TryParse(str, out var i))
             throw new ZergRushException($"can't parse int from string\"{str}\"");
         return i;

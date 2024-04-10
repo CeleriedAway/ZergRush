@@ -78,30 +78,42 @@ namespace ZergRush.ReactiveUI
 
         public TView ExtractPrefab(Transform parent)
         {
-            TView view = null;
-            if (prefab != null) view = prefab as TView;
+            TView extractPrefab = null;
+            if (prefab != null) extractPrefab = prefab as TView;
             else if (type != null)
             {
                 var childCount = parent.childCount;
                 for (int i = 0; i < childCount; i++)
                 {
-                    view = parent.GetChild(i).GetComponent(type) as TView;
-                    if (view != null) break;
+                    var childView = parent.GetChild(i).GetComponent(type) as TView;
+                    if (childView != null)
+                    {
+                        if (childView.prefabRef != null)
+                        {
+                            extractPrefab = (TView)childView.prefabRef;
+                            break;
+                        }
+                        else if (extractPrefab == null)
+                        {
+                            extractPrefab = childView;
+                        }
+                    }
+                    if (extractPrefab != null) break;
                 }
             }
-            else if (name != null) view = parent.Find(name)?.GetComponent<TView>();
+            else if (name != null) extractPrefab = parent.Find(name)?.GetComponent<TView>();
             else
             {
                 // No prefab found
             }
 
-            if (view == null)
+            if (extractPrefab == null)
             {
                 var res = name ?? type?.Name;
-                if (res != null) view = Resources.Load<TView>(res);
+                if (res != null) extractPrefab = Resources.Load<TView>(res);
             }
 
-            return view;
+            return extractPrefab;
         }
 
         public static implicit operator PrefabRef<TView>(string name) => ByName(name);
