@@ -347,7 +347,6 @@ namespace ZergRush.CodeGen
                 ignore = ignore | (field.FieldType.HasAttribute<GenIgnore>()
                     ? field.FieldType.GetCustomAttribute<GenIgnore>().flags
                     : GenTaskFlags.None);
-//                ignore = ignore | (field.HasAttribute<IgnoreFormatAttribute>() ? GenTaskFlags.All : GenTaskFlags.None);
 
                 bool nullable = field.HasAttribute<CanBeNull>();
                 bool isStatic = field.HasAttribute<Immutable>();
@@ -434,6 +433,11 @@ namespace ZergRush.CodeGen
                     member.isValueWrapper = isCell ? ValueVrapperType.Cell : ValueVrapperType.LivableSlot;
                 }
 
+                if (member.realType.IsLivableSlot())
+                {
+                    member.insideLivableContainer = true;
+                }
+
                 if (member.type.IsNullable())
                 {
                     member.canBeNull = true;
@@ -501,6 +505,7 @@ namespace ZergRush.CodeGen
         public bool isPrivate;
         public bool cantBeAncestor;
         public bool insideConfigStorage;
+        public bool insideLivableContainer;
         public bool justData;
         public MemberInfo sharpMemberInfo;
         public Type realType; // For cases we use value wrapper transformation.
