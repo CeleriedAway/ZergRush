@@ -40,7 +40,6 @@ namespace ZergRush.CodeGen
             CompilationPipeline.assemblyCompilationFinished += (s, messages) =>
             {
                 hasErrors = messages.Any(m => m.type == CompilerMessageType.Error);
-                Debug.Log($"~~~~~~~~~~~~ {hasErrors}");
             };
         }
 
