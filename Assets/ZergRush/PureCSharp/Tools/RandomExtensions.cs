@@ -24,13 +24,13 @@ namespace ZergRush
         public static IEnumerable<T> RandomElements<T>(this IEnumerable<T> list, ZergRandom random, int count)
         {
             var l = list.ToList();
-            return RandomNonoverlappedIndices(l.Count, count, random).Select(i => l[i]);
+            return RandomNonoverlappedIndices(random, l.Count, count).Select(i => l[i]);
         }
         
         // trying to choose unique elements from list
         public static IEnumerable<T> RandomElements<T>(this List<T> list, ZergRandom random, int count)
         {
-            return RandomNonoverlappedIndices(list.Count, count, random).Select(i => list[i]);
+            return RandomNonoverlappedIndices(random, list.Count, count).Select(i => list[i]);
         }
         
         public static int MaskItem(this ZergRandom random, int mask)
@@ -72,7 +72,7 @@ namespace ZergRush
         [MustUseReturnValue]
         public static List<T> RandomOrder<T>(this IReadOnlyList<T> list, ZergRandom random)
         {
-            var indexes = RandomNonoverlappedIndices(list.Count, list.Count, random);
+            var indexes = RandomNonoverlappedIndices(random, list.Count, list.Count);
             var result = new List<T>(list.Count);
             for (int i = 0; i < list.Count; i++) { result.Add(default(T)); }
             for (var i = 0; i < indexes.Length; i++)
@@ -100,7 +100,7 @@ namespace ZergRush
             return list.TakeAt(random.Range(0, list.Count));
         }
 
-        public static List<T> RollSomeElements<T>(this IReadOnlyList<T> list, int count, ZergRandom random)
+        public static List<T> RollSomeElements<T>(this IReadOnlyList<T> list, ZergRandom random, int count)
         {
             var result = new List<T>(count);
             for (int i = 0; i < count; i++)
@@ -111,9 +111,9 @@ namespace ZergRush
         }
         
         // uniquenessCount == 1 means next element wont be same as element before
-        public static List<T> RollSomeElementsAndGuaranteeLastUniqueness<T>(this IReadOnlyList<T> list, int count, int uniquenessCount, ZergRandom random)
+        public static List<T> RollSomeElementsAndGuaranteeLastUniqueness<T>(this IReadOnlyList<T> list, ZergRandom random, int count, int uniquenessCount)
         {
-            var indexes = RandomNonoverlappedLastIndices(list.Count, count, uniquenessCount, random);
+            var indexes = RandomNonoverlappedLastIndices(random, list.Count, count, uniquenessCount);
             if (indexes.Length != count)
             {
                 throw new ZergRushException("internal error");
@@ -127,16 +127,15 @@ namespace ZergRush
             return result;
         }
 
-        public static T RandomWeightedElement<T>(this IEnumerable<T> elements, ZergRandom random,
-            Func<T, int> weightFunc, T def = default)
+        public static T RandomWeightedElement<T>(this IEnumerable<T> elements, ZergRandom random, Func<T, int> weightFunc, T def = default)
         {
-            return RandomWeightedElement(elements.ToList(), weightFunc, random, out _, def);
+            return RandomWeightedElement(elements.ToList(), random, weightFunc, out _, def);
         }
         public static T RandomWeightedElement<T>(this IList<T> elements, ZergRandom random, Func<T, int> weightFunc, T def = default)
         {
-            return RandomWeightedElement(elements, weightFunc, random, out _, def);
+            return RandomWeightedElement(elements, random, weightFunc, out _, def);
         }
-        public static T RandomWeightedElement<T>(this IList<T> elements, Func<T, float> weightFunc, ZergRandom random, out int index, T def = default)
+        public static T RandomWeightedElement<T>(this IList<T> elements, ZergRandom random, Func<T, float> weightFunc, out int index, T def = default)
         {
             if (elements.Count == 0)
             {
@@ -171,13 +170,9 @@ namespace ZergRush
             index = selectedInd;
             return elements[selectedInd];
         }
-
-        public static T RandomWeightedElement<T>(this IList<T> elements, Func<T, int> weightFunc, ZergRandom random, T def = default)
-        {
-            return RandomWeightedElement(elements, weightFunc, random, out _, def);
-        }
         
-        public static T RandomWeightedElement<T>(this IList<T> elements, Func<T, int> weightFunc, ZergRandom random, out int index, T def = default)
+        public static T RandomWeightedElement<T>(this IList<T> elements, ZergRandom random, Func<T, int> weightFunc,
+            out int index, T def = default)
         {
             if (elements.Count == 0)
             {
@@ -214,17 +209,15 @@ namespace ZergRush
         }
         
         // Func<int, T> gives you element form the end of the roll list
-        public static List<T> RollSomeElementsAndGuaranteeLastUniqueness<T>(this IReadOnlyList<T> list, int count, 
+        public static List<T> RollSomeElementsAndGuaranteeLastUniqueness<T>(this IReadOnlyList<T> list, ZergRandom random, int count, 
             /*candidate element, all rolled elements tail sampler, rolled count*/
-            Func<T, Func<int, T>, int, bool> uniquenessPredicate,
-            ZergRandom random)
+            Func<T, Func<int, T>, int, bool> uniquenessPredicate)
         {
-            var indexes = RandomIndices(list.Count, count,
-                (element, currIndexes, currCount) => 
-                    uniquenessPredicate(list[element], tailIndex =>
-                    {
-                        return list[currIndexes[currCount - tailIndex - 1]];
-                    }, currCount), random);
+            var indexes = RandomIndices(random, list.Count, count, (element, currIndexes, currCount) => 
+                uniquenessPredicate(list[element], tailIndex =>
+                {
+                    return list[currIndexes[currCount - tailIndex - 1]];
+                }, currCount));
             if (indexes.Length != count)
             {
                 throw new ZergRushException("internal error");
@@ -239,10 +232,10 @@ namespace ZergRush
         }
         
         
-        public static int[] RandomIndices(int max, int count, 
+        public static int[] RandomIndices(this ZergRandom random,
+            int max, int count,
             /*candidate index, all rolled indexes, rolled count*/
-            Func<int, int[], int, bool> uniquenessPredicate,
-            ZergRandom random)
+            Func<int, int[], int, bool> uniquenessPredicate)
         {
             int[] result = new int[count];
             for (int i = 0; i < count; ++i)
@@ -258,7 +251,8 @@ namespace ZergRush
             return result;
         }
         
-        public static int[] RandomNonoverlappedLastIndices(int max, int count, int lastIndexUniqueness, ZergRandom random)
+        public static int[] RandomNonoverlappedLastIndices(this ZergRandom random, int max, int count,
+            int lastIndexUniqueness)
         {
             if (max <= lastIndexUniqueness) throw new ZergRushException("max is less then uniqueness");
             int[] result = new int[count];
@@ -276,7 +270,7 @@ namespace ZergRush
             return result;
         }
         // max is exclusive index max, count is number of random indexes returned
-        public static int[] RandomNonoverlappedIndices(int max, int count, ZergRandom random)
+        public static int[] RandomNonoverlappedIndices(this ZergRandom random, int max, int count)
         {
             if (max < count)
             {

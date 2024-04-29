@@ -11,8 +11,20 @@ namespace ZergRush.ReactiveUI
     public enum PresentOptions
     {
         None = 0,
+        
+        // Child order in parent transform will be same as items in presenting model with this option enabled
+        // By default it is not true for optimization reasons.
+        // But when using unity layouts it can be required. So it will be set automatically in this cases
         PreserveSiblingOrder = 1,
+        
+        // Be careful when using those options when doing several presents in same transform 
+        // because it can lead to unexpected behavior when one pool will reuse other pool views
+        
+        // Views inside parent transform that have save reusable view child type
+        // will be used in view pool during present initialization
         UseChildWithSameTypeAsView = 4 | __UseLoadedViews,
+        // Views inside parent transform that have same name
+        // will be used in view pool during present initialization
         UseChildWithSameNameAsView = 8 | __UseLoadedViews,
         
         __UseLoadedViews = 2, // for internal use
@@ -197,10 +209,15 @@ namespace ZergRush.ReactiveUI
             PresentOptions options = PresentOptions.None
         ) where TView : ReusableView
         {
+            if (parent == null) 
+                throw new ZergRushException($"parent is null during presenting {data} with view:{typeof(TView)}");
+            
             var components = new TableConnectionsAndComponents<TView, TData>();
 
             if (options.Has(PresentOptions.__NeedLayout) && layout == null) layout = LinearLayout();
             components.layout = layout;
+            
+            if (parent.GetComponent<LayoutGroup>() != null) options |= PresentOptions.PreserveSiblingOrder;
 
             if (pool == null)
             {

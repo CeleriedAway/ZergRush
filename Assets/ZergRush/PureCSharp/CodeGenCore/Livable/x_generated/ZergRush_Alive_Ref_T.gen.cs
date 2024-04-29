@@ -58,7 +58,7 @@ namespace ZergRush.Alive {
         {
             base.CompareCheck(other,__helper,printer);
             var otherConcrete = (ZergRush.Alive.Ref<T>)other;
-            if (__id != otherConcrete.__id) CodegenImplTools.LogCompError(__helper, "__id", printer, otherConcrete.__id, __id);
+            if (__id != otherConcrete.__id) CodeGenImplTools.LogCompError(__helper, "__id", printer, otherConcrete.__id, __id);
         }
     }
 }

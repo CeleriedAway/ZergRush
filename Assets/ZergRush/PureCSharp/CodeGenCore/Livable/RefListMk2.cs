@@ -374,11 +374,11 @@ namespace ZergRush.Alive
 
         public void CompareCheck(RefListMk2<T> other, ZRCompareCheckHelper path, Action<string> printer)
         {
-            if (Count != other.Count) CodegenImplTools.LogCompError(path, "Count", printer, other.Count, Count);
+            if (Count != other.Count) CodeGenImplTools.LogCompError(path, "Count", printer, other.Count, Count);
             var count = Math.Min(Count, other.Count);
             for (int i = 0; i < count; i++)
             {
-                if (ids[i] != other.ids[i]) CodegenImplTools.LogCompError(path, $"id at index: {i.ToString()}", printer, ids[i], other.ids[i]);
+                if (ids[i] != other.ids[i]) CodeGenImplTools.LogCompError(path, $"id at index: {i.ToString()}", printer, ids[i], other.ids[i]);
             }
         }
         

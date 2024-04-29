@@ -61,7 +61,7 @@ namespace ZergRush.Alive {
         {
             base.CompareCheck(other,__helper,printer);
             var otherConcrete = (ZergRush.Alive.DataRoot)other;
-            if (__entityIdFactory != otherConcrete.__entityIdFactory) CodegenImplTools.LogCompError(__helper, "__entityIdFactory", printer, otherConcrete.__entityIdFactory, __entityIdFactory);
+            if (__entityIdFactory != otherConcrete.__entityIdFactory) CodeGenImplTools.LogCompError(__helper, "__entityIdFactory", printer, otherConcrete.__entityIdFactory, __entityIdFactory);
         }
         public override bool ReadFromJsonField(ZRJsonTextReader reader, string __name) 
         {

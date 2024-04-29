@@ -10,7 +10,7 @@ namespace ZergRush.Alive {
     {
         public void CompareCheck(ZergRush.Alive.__RefListRecord<T> other, ZRCompareCheckHelper __helper, Action<string> printer) 
         {
-            if (id != other.id) CodegenImplTools.LogCompError(__helper, "id", printer, other.id, id);
+            if (id != other.id) CodeGenImplTools.LogCompError(__helper, "id", printer, other.id, id);
         }
     }
 }

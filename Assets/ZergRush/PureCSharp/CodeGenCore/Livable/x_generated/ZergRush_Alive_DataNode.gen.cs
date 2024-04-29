@@ -52,7 +52,7 @@ namespace ZergRush.Alive {
         }
         public virtual void CompareCheck(ZergRush.Alive.DataNode other, ZRCompareCheckHelper __helper, Action<string> printer) 
         {
-            if (dead != other.dead) CodegenImplTools.LogCompError(__helper, "dead", printer, other.dead, dead);
+            if (dead != other.dead) CodeGenImplTools.LogCompError(__helper, "dead", printer, other.dead, dead);
             __helper.Push("staticConnections");
             staticConnections.CompareCheck(other.staticConnections, __helper, printer);
             __helper.Pop();

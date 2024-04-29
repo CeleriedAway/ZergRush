@@ -7,11 +7,11 @@ namespace ZergRush.CodeGen
     public partial class CodeGen
     {
         public static string CompareFuncName = "CompareCheck";
-        public static string CompErrorFunc = "SerializationTools.LogCompError";
-        public static string CompNullComp = "SerializationTools.CompareNull";
-        public static string CompNullbaleFunc = "SerializationTools.CompareNullable";
-        public static string CompRef = "SerializationTools.CompareRefs";
-        public static string CompClassId = "SerializationTools.CompareClassId";
+        public static string CompErrorFunc = "CodeGenImplTools.LogCompError";
+        public static string CompNullComp = "CodeGenImplTools.CompareNull";
+        public static string CompNullableFunc = "CodeGenImplTools.CompareNullable";
+        public static string CompRef = "CodeGenImplTools.CompareRefs";
+        public static string CompClassId = "CodeGenImplTools.CompareClassId";
         public static string PrinterArg = "Action<string> printer";
         public static string PrinterName = "printer";
         public static string CCHelper = nameof(ZRCompareCheckHelper);
@@ -28,7 +28,7 @@ namespace ZergRush.CodeGen
                 string accessSuffix = "";
                 if (info.canBeNull)
                 {
-                    var compNull = info.type.IsNullable() ? CompNullbaleFunc : CompNullComp;
+                    var compNull = info.type.IsNullable() ? CompNullableFunc : CompNullComp;
                     sink.content(
                         $"if ({compNull}({HelperName}, {info.pathName}, {PrinterName}, {info.access}, {otherValueReader})) {{");
                     sink.indent++;
@@ -123,7 +123,7 @@ namespace ZergRush.CodeGen
                     if (type.IsControllable())
                     {
                         GenClassSink(type)
-                            .inheritance($"ICompareChechable<{updateFromType.RealName(true)}>");
+                            .inheritance($"ICompareCheckable<{updateFromType.RealName(true)}>");
                     }
 
                     if (type != updateFromType)

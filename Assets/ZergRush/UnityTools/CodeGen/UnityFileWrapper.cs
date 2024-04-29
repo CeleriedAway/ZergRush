@@ -5,7 +5,7 @@ using UnityEngine;
 // Local wrapper on file manipulations to be crossplatform 
 namespace ZergRush
 {
-    public static class FileWrapper
+    public static class UnityFileWrapper
     {
         public static bool Exists(string filename)
         {
@@ -57,22 +57,7 @@ namespace ZergRush
         {
             get
             {
-                string absPath = Application.dataPath + "/../";
-                if (Application.isEditor)
-                {
-#if SERVER_ONLY
-                    absPath += "../"; // Go up from /Server folder to general project.
-#endif
-                    string editorPath = "Builds/";
-                    absPath += editorPath;
-                }
-                else
-                {
-                    if (Application.isConsolePlatform == false && Application.isMobilePlatform == false)
-                        absPath += "../";
-                    else
-                        throw new ZergRushException("Builds path defined only for pc.");
-                }
+                var absPath = Application.dataPath + "/../";
                 return absPath;
             }
         }

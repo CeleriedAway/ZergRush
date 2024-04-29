@@ -47,8 +47,8 @@ namespace ZergRush {
         }
         public virtual void CompareCheck(ZergRush.ZergRandom other, ZRCompareCheckHelper __helper, Action<string> printer) 
         {
-            if (inext != other.inext) CodegenImplTools.LogCompError(__helper, "inext", printer, other.inext, inext);
-            if (inextp != other.inextp) CodegenImplTools.LogCompError(__helper, "inextp", printer, other.inextp, inextp);
+            if (inext != other.inext) CodeGenImplTools.LogCompError(__helper, "inext", printer, other.inext, inext);
+            if (inextp != other.inextp) CodeGenImplTools.LogCompError(__helper, "inextp", printer, other.inextp, inextp);
             __helper.Push("SeedArray");
             SeedArray.CompareCheck(other.SeedArray, __helper, printer);
             __helper.Pop();

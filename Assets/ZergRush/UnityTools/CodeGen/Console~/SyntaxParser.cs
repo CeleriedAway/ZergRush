@@ -20,7 +20,7 @@ public class TreePruner : CSharpSyntaxRewriter
         "IBinaryDeserializable",
         "IBinarySerializable",
         "IHashable",
-        "ICompareChechable",
+        "ICompareCheckable",
         "IJsonSerializable",
         "IGameCommandModelRoot",
         "IGameCommandExecuter",
