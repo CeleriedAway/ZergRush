@@ -42,6 +42,8 @@ namespace ZergRush.ReactiveCore
             return cell.ListenUpdates(_ => action());
         }
 
+        /// You can make bindings with each value of cell with connections container
+        /// that will be disposed on next value change
         public static IDisposable AffectEachValue<T>(this ICell<T> val, Action<T, Connections> changes)
         {
             var changeCollection = new Connections();

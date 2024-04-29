@@ -28,7 +28,7 @@ namespace ZergRush.Samples
         GenTaskFlags.PolymorphicConstruction // Allows to save ancestor as base class values as fields or in containers
     )]
     // All generated code will be placed into "x_generated" folder
-    [GenInLocalFolder]
+    [GenInLocalFolder(1000)]
     public partial class CodeGenSamples : ISerializable
     {
         // All fields are automatically included
