@@ -8,7 +8,7 @@ using Newtonsoft.Json;
 #if !INCLUDE_ONLY_CODE_GENERATION
 namespace ZergRush.Samples {
 
-    public partial class CodeGenSamples : IUpdatableFrom<ZergRush.Samples.CodeGenSamples>, IHashable, ICompareCheckable<ZergRush.Samples.CodeGenSamples>, IJsonSerializable, IPolymorphable
+    public partial class CodeGenSamples : IUpdatableFrom<ZergRush.Samples.CodeGenSamples>, IBinaryDeserializable, IBinarySerializable, IHashable, ICompareCheckable<ZergRush.Samples.CodeGenSamples>, IJsonSerializable, IPolymorphable, ICloneInst
     {
         public enum Types : ushort
         {
@@ -182,14 +182,14 @@ namespace ZergRush.Samples {
             __helper.Push("externalClass");
             externalClass.CompareCheck(other.externalClass, __helper, printer);
             __helper.Pop();
-            if (intField != other.intField) SerializationTools.LogCompError(__helper, "intField", printer, other.intField, intField);
+            if (intField != other.intField) CodeGenImplTools.LogCompError(__helper, "intField", printer, other.intField, intField);
             __helper.Push("listsOfDataAreOk");
             listsOfDataAreOk.CompareCheck(other.listsOfDataAreOk, __helper, printer);
             __helper.Pop();
             __helper.Push("listsOfPrimitivesAreOk");
             listsOfPrimitivesAreOk.CompareCheck(other.listsOfPrimitivesAreOk, __helper, printer);
             __helper.Pop();
-            if (SerializationTools.CompareNull(__helper, "otherData", printer, otherData, other.otherData)) {
+            if (CodeGenImplTools.CompareNull(__helper, "otherData", printer, otherData, other.otherData)) {
                 __helper.Push("otherData");
                 otherData.CompareCheck(other.otherData, __helper, printer);
                 __helper.Pop();
@@ -203,9 +203,9 @@ namespace ZergRush.Samples {
             __helper.Push("reactiveValue");
             reactiveValue.value.CompareCheck(other.reactiveValue.value, __helper, printer);
             __helper.Pop();
-            if (stringFieldMustNotBeNull != other.stringFieldMustNotBeNull) SerializationTools.LogCompError(__helper, "stringFieldMustNotBeNull", printer, other.stringFieldMustNotBeNull, stringFieldMustNotBeNull);
-            if (stringFieldThatCanBeNull != other.stringFieldThatCanBeNull) SerializationTools.LogCompError(__helper, "stringFieldThatCanBeNull", printer, other.stringFieldThatCanBeNull, stringFieldThatCanBeNull);
-            if (stringProp != other.stringProp) SerializationTools.LogCompError(__helper, "stringProp", printer, other.stringProp, stringProp);
+            if (stringFieldMustNotBeNull != other.stringFieldMustNotBeNull) CodeGenImplTools.LogCompError(__helper, "stringFieldMustNotBeNull", printer, other.stringFieldMustNotBeNull, stringFieldMustNotBeNull);
+            if (stringFieldThatCanBeNull != other.stringFieldThatCanBeNull) CodeGenImplTools.LogCompError(__helper, "stringFieldThatCanBeNull", printer, other.stringFieldThatCanBeNull, stringFieldThatCanBeNull);
+            if (stringProp != other.stringProp) CodeGenImplTools.LogCompError(__helper, "stringProp", printer, other.stringProp, stringProp);
             __helper.Push("vector");
             vector.CompareCheck(other.vector, __helper, printer);
             __helper.Pop();

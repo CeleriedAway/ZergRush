@@ -84,13 +84,13 @@ namespace ZergRush.Samples
         {
             var data = new CodeGenSamples();
             // json serialize
-            string jsonData = data.SaveToJsonString();
+            string jsonData = data.WriteToJsonString();
             // binary serialize
-            byte[] binaryData = data.SaveToBinary();
+            byte[] binaryData = data.WriteToByteArray();
             // json deserialize
-            data = jsonData.LoadFromJsonString<CodeGenSamples>();
+            data = jsonData.ReadFromJson<CodeGenSamples>();
             // binary deserialize
-            var data2 = binaryData.LoadFromBinary<CodeGenSamples>();
+            var data2 = binaryData.Read<CodeGenSamples>();
             
             // deep copy data2 into data
             data.UpdateFrom(data2);

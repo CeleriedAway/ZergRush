@@ -8,7 +8,7 @@ using Newtonsoft.Json;
 #if !INCLUDE_ONLY_CODE_GENERATION
 namespace ZergRush.Samples {
 
-    public partial class OtherData : IUpdatableFrom<ZergRush.Samples.OtherData>, IBinaryDeserializable, IBinarySerializable, IHashable, ICompareChechable<ZergRush.Samples.OtherData>, IJsonSerializable
+    public partial class OtherData : IUpdatableFrom<ZergRush.Samples.OtherData>, IBinaryDeserializable, IBinarySerializable, IHashable, ICompareCheckable<ZergRush.Samples.OtherData>, IJsonSerializable
     {
         public virtual void UpdateFrom(ZergRush.Samples.OtherData other, ZRUpdateFromHelper __helper) 
         {
@@ -33,7 +33,7 @@ namespace ZergRush.Samples {
         }
         public virtual void CompareCheck(ZergRush.Samples.OtherData other, ZRCompareCheckHelper __helper, Action<string> printer) 
         {
-            if (someData != other.someData) SerializationTools.LogCompError(__helper, "someData", printer, other.someData, someData);
+            if (someData != other.someData) CodeGenImplTools.LogCompError(__helper, "someData", printer, other.someData, someData);
         }
         public virtual bool ReadFromJsonField(ZRJsonTextReader reader, string __name) 
         {

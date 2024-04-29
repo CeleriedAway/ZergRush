@@ -8,7 +8,7 @@ using Newtonsoft.Json;
 #if !INCLUDE_ONLY_CODE_GENERATION
 namespace ZergRush.Samples {
 
-    public partial class Ancestor : IUpdatableFrom<ZergRush.Samples.Ancestor>, IUpdatableFrom<ZergRush.Samples.CodeGenSamples>, IBinaryDeserializable, IBinarySerializable, IHashable, ICompareChechable<ZergRush.Samples.CodeGenSamples>, IJsonSerializable, IPolymorphable, ICloneInst
+    public partial class Ancestor : IUpdatableFrom<ZergRush.Samples.Ancestor>, IUpdatableFrom<ZergRush.Samples.CodeGenSamples>, IBinaryDeserializable, IBinarySerializable, IHashable, ICompareCheckable<ZergRush.Samples.CodeGenSamples>, IJsonSerializable, IPolymorphable, ICloneInst
     {
         public override void UpdateFrom(ZergRush.Samples.CodeGenSamples other, ZRUpdateFromHelper __helper) 
         {
@@ -48,7 +48,7 @@ namespace ZergRush.Samples {
         {
             base.CompareCheck(other,__helper,printer);
             var otherConcrete = (ZergRush.Samples.Ancestor)other;
-            if (fields != otherConcrete.fields) SerializationTools.LogCompError(__helper, "fields", printer, otherConcrete.fields, fields);
+            if (fields != otherConcrete.fields) CodeGenImplTools.LogCompError(__helper, "fields", printer, otherConcrete.fields, fields);
         }
         public override bool ReadFromJsonField(ZRJsonTextReader reader, string __name) 
         {
