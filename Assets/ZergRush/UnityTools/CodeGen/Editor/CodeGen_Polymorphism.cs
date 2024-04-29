@@ -197,7 +197,7 @@ namespace ZergRush.CodeGen
                 {
                     var poolCreatorFunc = nodeClass.Method(PolymorphInstanceFuncNamePooled(pooled), node,
                         MethodType.StaticFunction, node,
-                        $"{enumName} {SerializationTools.ClassIdName}{node.OptPoolSecondArgDecl(pooled)}", "", "");
+                        $"{enumName} {CodegenImplTools.ClassIdName}{node.OptPoolSecondArgDecl(pooled)}", "", "");
                     poolCreatorFunc.content($"return {node.NewPolymorphicFromClassIdExpression(pooled)};");
                 };
                 if (node.NeedsClassicPolymorphConstruction()) gen(false);
@@ -211,7 +211,7 @@ namespace ZergRush.CodeGen
         {
             return
                 $"({type.RealName(true)}){type.RealName(true)}.{PolymorphInstanceFuncNamePooled(pooled)}(({PolymorphClassIdTypeName}) " +
-                $"{SerializationTools.ClassIdName}{type.OptPoolSecondArg(pooled)})";
+                $"{CodegenImplTools.ClassIdName}{type.OptPoolSecondArg(pooled)})";
         }
 
         static bool IsValidType(this Type t)

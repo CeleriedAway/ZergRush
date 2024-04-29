@@ -155,11 +155,11 @@ namespace ZergRush.Alive
 
         public void CompareCheck(__OldRefList<T> other, Stack<string> path, Action<string> printer)
         {
-            if (Count != other.Count) SerializationTools.LogCompError(path, "Count", printer, other.Count, Count);
+            if (Count != other.Count) CodegenImplTools.LogCompError(path, "Count", printer, other.Count, Count);
             var count = Math.Min(Count, other.Count);
             for (int i = 0; i < count; i++)
             {
-                if (vals[i].id != other.vals[i].id) SerializationTools.LogCompError(path, $"id at index: {i.ToString()}", printer, vals[i].id, other.vals[i].id);
+                if (vals[i].id != other.vals[i].id) CodegenImplTools.LogCompError(path, $"id at index: {i.ToString()}", printer, vals[i].id, other.vals[i].id);
             }
         }
         

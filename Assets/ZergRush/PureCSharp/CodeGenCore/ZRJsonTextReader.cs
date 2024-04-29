@@ -87,7 +87,7 @@ namespace ZergRush
         static bool ReadIsRef(JsonTextReader reader)
         {
             reader.Read();
-            if (reader.TokenType == JsonToken.PropertyName && (string) reader.Value == SerializationTools.ClassIdName)
+            if (reader.TokenType == JsonToken.PropertyName && (string) reader.Value == CodegenImplTools.ClassIdName)
             {
                 reader.Read();
                 reader.Read();

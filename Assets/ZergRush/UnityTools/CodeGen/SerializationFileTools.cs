@@ -9,7 +9,7 @@ using ZergRush;
 
 public static partial class SerializationFileTools
 {
-    public static void CheckSerialization<T>(T c) where T : class, IJsonSerializable, ICompareChechable<T>, new()
+    public static void CheckSerialization<T>(T c) where T : class, IJsonSerializable, ICompareCheckable<T>, new()
     {
         var str = new StringWriter();
         var writer = new ZRJsonTextWriter(str);
@@ -18,7 +18,6 @@ public static partial class SerializationFileTools
 
         var reader = new ZRJsonTextReader(new StringReader(result));
         var c2 = reader.ReadAsJsonRoot<T>();
-
         c.CompareCheck(c2);
     }
     

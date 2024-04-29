@@ -8,7 +8,7 @@ using Newtonsoft.Json;
 #if !INCLUDE_ONLY_CODE_GENERATION
 namespace ZergRush.Alive {
 
-    public partial class RefListFlawless<T> : IUpdatableFrom<ZergRush.Alive.RefListFlawless<T>>, IBinaryDeserializable, IBinarySerializable, IHashable, ICompareChechable<ZergRush.Alive.RefListFlawless<T>>, IJsonSerializable
+    public partial class RefListFlawless<T> : IUpdatableFrom<ZergRush.Alive.RefListFlawless<T>>, IBinaryDeserializable, IBinarySerializable, IHashable, ICompareCheckable<ZergRush.Alive.RefListFlawless<T>>, IJsonSerializable
     {
         public void UpdateFrom(ZergRush.Alive.RefListFlawless<T> other, ZRUpdateFromHelper __helper) 
         {

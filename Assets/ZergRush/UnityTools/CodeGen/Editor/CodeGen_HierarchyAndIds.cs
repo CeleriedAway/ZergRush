@@ -171,7 +171,7 @@ namespace ZergRush.CodeGen
                         var enumTypeRef = type.PolymorphicRootTypeEnumName();
                         if (string.IsNullOrEmpty(type.Namespace) == false)
                             enumTypeRef = type.Namespace + "." + enumTypeRef;
-                        sig = CodeGenTools.MergeSig($"{enumTypeRef} {SerializationTools.ClassIdName}", sig);
+                        sig = CodeGenTools.MergeSig($"{enumTypeRef} {CodegenImplTools.ClassIdName}", sig);
                         var call = methodInfo.GetParameters().Select(p => p.Name).PrintCollection();
                         // ctor mwthod found
                         var constructFull = GenClassSink(rootType).Method($"CreatePolymorphic{type.UniqueName(false)}", 

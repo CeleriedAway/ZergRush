@@ -8,7 +8,7 @@ using Newtonsoft.Json;
 #if !INCLUDE_ONLY_CODE_GENERATION
 namespace ZergRush.Alive {
 
-    public partial class DataRoot : IUpdatableFrom<ZergRush.Alive.DataRoot>, IUpdatableFrom<ZergRush.Alive.DataNode>, IBinaryDeserializable, IBinarySerializable, IHashable, ICompareChechable<ZergRush.Alive.DataNode>, IJsonSerializable
+    public partial class DataRoot : IUpdatableFrom<ZergRush.Alive.DataRoot>, IUpdatableFrom<ZergRush.Alive.DataNode>, IBinaryDeserializable, IBinarySerializable, IHashable, ICompareCheckable<ZergRush.Alive.DataNode>, IJsonSerializable
     {
         public override void UpdateFrom(ZergRush.Alive.DataNode other, ZRUpdateFromHelper __helper) 
         {
@@ -61,7 +61,7 @@ namespace ZergRush.Alive {
         {
             base.CompareCheck(other,__helper,printer);
             var otherConcrete = (ZergRush.Alive.DataRoot)other;
-            if (__entityIdFactory != otherConcrete.__entityIdFactory) SerializationTools.LogCompError(__helper, "__entityIdFactory", printer, otherConcrete.__entityIdFactory, __entityIdFactory);
+            if (__entityIdFactory != otherConcrete.__entityIdFactory) CodegenImplTools.LogCompError(__helper, "__entityIdFactory", printer, otherConcrete.__entityIdFactory, __entityIdFactory);
         }
         public override bool ReadFromJsonField(ZRJsonTextReader reader, string __name) 
         {

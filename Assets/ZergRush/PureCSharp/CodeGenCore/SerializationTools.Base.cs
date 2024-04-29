@@ -12,21 +12,23 @@ public interface IStableIdentifiable
     public int stableId { get; }
 }
 
-public static partial class SerializationTools
+public static partial class GenExtensions
 {
-    public static string ClassIdName = "__classId";
-    
     public static ulong CalculateHash(this IHashable t)
     {
         return t.CalculateHash(new ZRHashHelper());
     }
-    
-    public static void CompareCheck<T>(this T t, T other) where T : ICompareChechable<T>
+}
+
+public static class CodegenImplTools
+{
+    public static string ClassIdName = "__classId";
+
+    public static void LogCompError<T>(Stack<string> path, string name, Action<string> print, T self, T other)
     {
-        t.CompareCheck(other, new ZRCompareCheckHelper(), LogSink.errLog);
+        print($"{path.Reverse().PrintCollection("/")}/{name} is different, self: {self} other: {other}");
     }
-    
-    
+
     public static void StableUpdateFrom<T>(this IList<T> self, IList<T> other, ZRUpdateFromHelper __helper) 
         where T : class, IStableIdentifiable, IUpdatableFrom<T>
     {
@@ -112,12 +114,7 @@ public static partial class SerializationTools
             self.RemoveAt(self.Count - 1);
         }
     }
-    
-    public static void UpdateFrom<T>(this T t, T other) where T : IUpdatableFrom<T>
-    {
-        t.UpdateFrom(other, new ZRUpdateFromHelper());
-    }
-    
+
     public static void SkipObj(this JsonTextReader reader)
     {
         if (reader.TokenType == JsonToken.StartObject)
@@ -141,63 +138,7 @@ public static partial class SerializationTools
             }
         }
     }
-        
-    public static T DeserializeSource<T>(byte[] data, T instance = null) where T : class, IBinaryDeserializable, new()
-    {
-        instance = DeserializeFromBytes(data, instance);
-        return instance;
-    }
 
-    public static T DeserializeFromBytes<T>(byte[] bytes, T instance = null) where T : class, IBinaryDeserializable, new()
-    {
-        if (instance == null) instance = new T();
-        using (var reader = new ZRBinaryReader(new MemoryStream(bytes)))
-        {
-            instance.Deserialize(reader);
-        }
-
-        return instance;
-    }
-
-    public static byte[] SerializeToBytes(this IBinarySerializable val)
-    {
-        using (MemoryStream memStream = new MemoryStream())
-        {
-            using (var writer = new ZRBinaryWriter(memStream))
-            {
-                val.Serialize(writer);
-            }
-
-            return memStream.ToArray();
-        }
-    }
-
-    public static string EncodeToString(this IBinarySerializable val)
-    {
-        byte[] encodedBytes = val.SerializeToBytes();
-        string encodedString = Convert.ToBase64String(encodedBytes);
-        return encodedString;
-    }
-
-    public static T DecodeFromString<T>(string encodedString) where T : class, IBinaryDeserializable, new()
-    {
-        byte[] bytesEncoded = Convert.FromBase64String(encodedString);
-        T val = DeserializeFromBytes<T>(bytesEncoded);
-        return val;
-    }
-
-    public static byte[] SaveToBinary<T>(this T data) where T : IBinarySerializable
-    {
-        using var stream = new MemoryStream();
-        var writer = new ZRBinaryWriter(stream);
-        data.Serialize(writer);
-        return stream.ToArray();
-    }
-    public static void LogCompError<T>(Stack<string> path, string name, Action<string> print, T self, T other)
-    {
-        print($"{path.Reverse().PrintCollection("/")}/{name} is different, self: {self} other: {other}");
-    }
-    
     public static void UpdateFrom(this byte[] data, byte[] other, ZRUpdateFromHelper __helper)
     {
         Array.Copy(other, data, other.Length);
@@ -211,7 +152,7 @@ public static partial class SerializationTools
             if (b != bytesOTher[i]) LogCompError(path, i.ToString(), printer, b, bytesOTher[i]);
         }
     }
-    
+
     public static void CompareCheck(this Guid guid, Guid guid2, Stack<string> path, Action<string> printer)
     {
         if (guid.CompareTo(guid2) != 0)
@@ -220,7 +161,7 @@ public static partial class SerializationTools
         }
     }
 
-    public static bool CompareNullable<T>(Stack<string> path, string name, Action<string> printer, T? val, T? val2)
+    public static bool CompareNullable<T>(Stack<string> path, string name, Action<string> printer, T val, T val2)
     {
         if (val == null && val2 == null)
         {
@@ -236,7 +177,7 @@ public static partial class SerializationTools
         printer($"{path.Reverse().PrintCollection("/")}/{name} is different, self: {pr(val)} other: {pr(val2)}");
         return false;
     }
-    // Return if needs to check further
+
     public static bool CompareNull<T>(Stack<string> path, string name, Action<string> printer, T val, T val2)
         where T : class
     {
@@ -279,39 +220,6 @@ public static partial class SerializationTools
         return true;
     }
 
-    public static byte[] ReadFromFile(string filePath)
-    {
-        if (!File.Exists(filePath))
-            return null;
-        using (BinaryReader reader = new BinaryReader(File.Open(filePath, FileMode.Open)))
-        {
-            byte[] bytes = reader.ReadByteArray();
-            return bytes;
-        }
-    }
-
-    public static T ReadSerializable<T>(this ZRBinaryReader r) where T : IBinaryDeserializable, new()
-    {
-        var val = new T();
-        val.Deserialize(r);
-        return val;
-    }
-
-    public static void Write(this ZRBinaryWriter r, IBinarySerializable data)
-    {
-        data.Serialize(r);
-    }
-
-    public static string ToBase64(this byte[] bytes)
-    {
-        return Convert.ToBase64String(bytes);
-    }
-
-    public static byte[] FromBase64(this string str)
-    {
-        return Convert.FromBase64String(str);
-    }
-
     static Dictionary<Type, Func<BinaryReader, object>> readers = new Dictionary<Type, Func<BinaryReader, object>>()
     {
         { typeof(byte), reader => reader.ReadByte() },
@@ -345,7 +253,7 @@ public static partial class SerializationTools
             writer.Write((ulong)val);
         }
     }
-    
+
     public static ulong CalculateHash(this Guid val, ZRHashHelper _)
     {
         return (ulong) val.ToString().CalculateHash();
@@ -355,7 +263,7 @@ public static partial class SerializationTools
     {
         writer.WriteByteArray(val.ToByteArray());
     }
-    
+
     public static Guid ReadGuid(this BinaryReader reader)
     {
         return new Guid(reader.ReadByteArray());
@@ -372,92 +280,6 @@ public static partial class SerializationTools
         int size = bytes.Length;
         stream.Write(size);
         stream.Write(bytes);
-    }
-
-    public static uint CalculateHash(this byte[] array, ZRHashHelper _)
-    {
-        uint hash = 0;
-        for (int i = 0; i < array.Length; i++)
-        {
-            hash += array[i];
-            hash += hash << 10;
-            hash ^= hash >> 6;
-        }
-        return hash;
-    }
-
-    public static void ReadFromStream<T>(this List<T> data, ZRBinaryReader stream) where T : IBinaryDeserializable, new()
-    {
-        var size = stream.ReadInt32();
-        data.Capacity = size;
-        for (int q = 0; q < size; q++)
-        {
-            data.Add(stream.ReadSerializable<T>());
-        }
-    }
-
-    public static void WriteToStream<T>(this List<T> data, ZRBinaryWriter stream) where T : IBinarySerializable, new()
-    {
-        ushort size = (ushort)data.Count;
-        stream.Write(size);
-        data.Capacity = size;
-        for (int q = 0; q < size; q++)
-        {
-            stream.Write(data[q]);
-        }
-    }
-
-    public static void ReadSkipComments(this JsonTextReader reader)
-    {
-        while (reader.Read() && reader.TokenType == JsonToken.Comment)
-        {
-        }
-    }
-
-    public static void WriteJson(this IJsonSerializable obj, ZRJsonTextWriter writer)
-    {
-        if (obj == null)
-        {
-            writer.WriteNull();
-            return;
-        }
-
-        writer.WriteStartObject();
-        var polymorph = obj as IPolymorphable;
-        if (polymorph != null)
-        {
-            writer.WritePropertyName(ClassIdName);
-            writer.WriteValue(polymorph.GetClassId());
-        }
-
-        obj.WriteJsonFields(writer);
-        writer.WriteEndObject();
-    }
-
-    public static T ReadAsJsonRoot<T>(this ZRJsonTextReader reader, T obj = null)
-        where T : class, IJsonSerializable, new()
-    {
-        if (obj == null) obj = new T();
-        reader.Read();
-        obj.ReadFromJson(reader);
-        return obj;
-    }
-
-    public static void ReadFromJson<T>(this List<T> self, ZRJsonTextReader reader, Func<ushort, T> constructor)
-        where T : class, IJsonSerializable
-    {
-        if (reader.TokenType != JsonToken.StartArray) throw new JsonSerializationException("Bad Json Format");
-        while (reader.Read())
-        {
-            if (reader.TokenType == JsonToken.EndArray)
-            {
-                break;
-            }
-
-            var val = constructor(reader.ReadJsonClassId());
-            val.ReadFromJson(reader);
-            self.Add(val);
-        }
     }
 
     public static void WriteJson<T>(this List<T> self, ZRJsonTextWriter writer) where T : IJsonSerializable
@@ -524,6 +346,187 @@ public static partial class SerializationTools
         }
 
         register.Add(id, config);
+    }
+}
+
+public static partial class SerializationTools
+{
+    public static void CompareCheck<T>(this T t, T other) where T : ICompareCheckable<T>
+    {
+        t.CompareCheck(other, new ZRCompareCheckHelper(), LogSink.errLog);
+    }
+
+    public static void UpdateFrom<T>(this T t, T other) where T : IUpdatableFrom<T>
+    {
+        t.UpdateFrom(other, new ZRUpdateFromHelper());
+    }
+
+    public static T DeserializeSource<T>(byte[] data, T instance = null) where T : class, IBinaryDeserializable, new()
+    {
+        instance = DeserializeFromBytes(data, instance);
+        return instance;
+    }
+
+    public static T DeserializeFromBytes<T>(byte[] bytes, T instance = null) where T : class, IBinaryDeserializable, new()
+    {
+        if (instance == null) instance = new T();
+        using (var reader = new ZRBinaryReader(new MemoryStream(bytes)))
+        {
+            instance.Deserialize(reader);
+        }
+
+        return instance;
+    }
+
+    public static byte[] WriteToByteArray<T>(this ref T data) where T : struct, IBinarySerializable
+    {
+        using var memStream = new MemoryStream();
+        using var writer = new ZRBinaryWriter(memStream);
+        data.Serialize(writer);
+        return memStream.ToArray();
+    }
+    
+    public static byte[] WriteToByteArray(this IBinarySerializable data)
+    {
+        using var memStream = new MemoryStream();
+        using var writer = new ZRBinaryWriter(memStream);
+        data.Serialize(writer);
+        return memStream.ToArray();
+    }
+
+    public static string WriteToBase64(this IBinarySerializable val)
+    {
+        byte[] encodedBytes = val.WriteToByteArray();
+        string encodedString = Convert.ToBase64String(encodedBytes);
+        return encodedString;
+    }
+
+    public static T ReadFromBase64<T>(string encodedString) where T : class, IBinaryDeserializable, new()
+    {
+        byte[] bytesEncoded = Convert.FromBase64String(encodedString);
+        T val = DeserializeFromBytes<T>(bytesEncoded);
+        return val;
+    }
+
+    // Return if needs to check further
+
+    public static byte[] ReadFromFile(string filePath)
+    {
+        if (!File.Exists(filePath))
+            return null;
+        using (BinaryReader reader = new BinaryReader(File.Open(filePath, FileMode.Open)))
+        {
+            byte[] bytes = reader.ReadByteArray();
+            return bytes;
+        }
+    }
+
+    public static T ReadSerializable<T>(this ZRBinaryReader r) where T : IBinaryDeserializable, new()
+    {
+        var val = new T();
+        val.Deserialize(r);
+        return val;
+    }
+
+    public static void Write(this ZRBinaryWriter r, IBinarySerializable data)
+    {
+        data.Serialize(r);
+    }
+
+    public static string ToBase64(this byte[] bytes)
+    {
+        return Convert.ToBase64String(bytes);
+    }
+
+    public static byte[] FromBase64(this string str)
+    {
+        return Convert.FromBase64String(str);
+    }
+
+    public static uint CalculateHash(this byte[] array, ZRHashHelper _)
+    {
+        uint hash = 0;
+        for (int i = 0; i < array.Length; i++)
+        {
+            hash += array[i];
+            hash += hash << 10;
+            hash ^= hash >> 6;
+        }
+        return hash;
+    }
+
+    public static void ReadFromStream<T>(this List<T> data, ZRBinaryReader stream) where T : IBinaryDeserializable, new()
+    {
+        var size = stream.ReadInt32();
+        data.Capacity = size;
+        for (int q = 0; q < size; q++)
+        {
+            data.Add(stream.ReadSerializable<T>());
+        }
+    }
+
+    public static void WriteToStream<T>(this List<T> data, ZRBinaryWriter stream) where T : IBinarySerializable, new()
+    {
+        ushort size = (ushort)data.Count;
+        stream.Write(size);
+        data.Capacity = size;
+        for (int q = 0; q < size; q++)
+        {
+            stream.Write(data[q]);
+        }
+    }
+
+    public static void ReadSkipComments(this JsonTextReader reader)
+    {
+        while (reader.Read() && reader.TokenType == JsonToken.Comment)
+        {
+        }
+    }
+
+    public static void WriteJson(this IJsonSerializable obj, ZRJsonTextWriter writer)
+    {
+        if (obj == null)
+        {
+            writer.WriteNull();
+            return;
+        }
+
+        writer.WriteStartObject();
+        var polymorph = obj as IPolymorphable;
+        if (polymorph != null)
+        {
+            writer.WritePropertyName(CodegenImplTools.ClassIdName);
+            writer.WriteValue(polymorph.GetClassId());
+        }
+
+        obj.WriteJsonFields(writer);
+        writer.WriteEndObject();
+    }
+
+    public static T ReadAsJsonRoot<T>(this ZRJsonTextReader reader, T obj = null)
+        where T : class, IJsonSerializable, new()
+    {
+        if (obj == null) obj = new T();
+        reader.Read();
+        obj.ReadFromJson(reader);
+        return obj;
+    }
+
+    public static void ReadFromJson<T>(this List<T> self, ZRJsonTextReader reader, Func<ushort, T> constructor)
+        where T : class, IJsonSerializable
+    {
+        if (reader.TokenType != JsonToken.StartArray) throw new JsonSerializationException("Bad Json Format");
+        while (reader.Read())
+        {
+            if (reader.TokenType == JsonToken.EndArray)
+            {
+                break;
+            }
+
+            var val = constructor(reader.ReadJsonClassId());
+            val.ReadFromJson(reader);
+            self.Add(val);
+        }
     }
 
     public static string SaveToJsonString<T>(this T data, bool formatting = true) where T : IJsonSerializable
