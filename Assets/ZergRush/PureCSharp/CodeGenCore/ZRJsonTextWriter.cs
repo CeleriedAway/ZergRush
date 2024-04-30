@@ -26,7 +26,7 @@ namespace ZergRush
             var polymorph = obj as IPolymorphable;
             if (polymorph != null)
             {
-                writer.WritePropertyName(SerializationTools.ClassIdName);
+                writer.WritePropertyName(CodeGenImplTools.ClassIdName);
                 writer.WriteValue(polymorph.GetClassId());
             }
 

@@ -64,7 +64,7 @@ namespace ZergRush.ReactiveCore
         public IDisposable OnChanged(Action action)
         {
             if (up == null) up = new EventStream<T>();
-            return this.up.Subscribe(_ => action());
+            return up.Subscribe(_ => action());
         }
 
         public override string ToString()
@@ -74,7 +74,12 @@ namespace ZergRush.ReactiveCore
 
         public void SetValue(T v)
         {
-            this.value = v;
+            value = v;
+        }
+
+        public void ForceInvokeUpdatesWithCurrentValue()
+        {
+            updates?.Send(val);
         }
 
         public int getConnectionCount => up == null ? 0 : up.getConnectionCount;

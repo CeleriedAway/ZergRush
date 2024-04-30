@@ -231,6 +231,17 @@ public class SimpleList<T> : IList<T>, IReadOnlyList<T>
             data[index] = value;
         }
     }
+    
+    public SimpleList<T> Copy()
+    {
+        var list = new SimpleList<T>();
+        list.data = new T[data.Length];
+        list.currentCount = currentCount;
+        Array.Copy(data, list.data, data.Length);
+        return list;
+    }
+    
+    public SimpleList<T> ToList() => Copy();
 
     public struct Enumerator : IEnumerator<T>, IDisposable, IEnumerator
     {
@@ -265,5 +276,6 @@ public class SimpleList<T> : IList<T>, IReadOnlyList<T>
             this.index = 0;
             this.current = default(T);
         }
+
     }
 }

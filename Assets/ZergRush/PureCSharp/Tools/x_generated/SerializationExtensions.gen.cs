@@ -52,11 +52,11 @@ public static partial class SerializationExtensions
     }
     public static void CompareCheck(this System.Int32[] self, System.Int32[] other, ZRCompareCheckHelper __helper, Action<string> printer) 
     {
-        if (self.Length != other.Length) SerializationTools.LogCompError(__helper, "Length", printer, other.Length, self.Length);
+        if (self.Length != other.Length) CodeGenImplTools.LogCompError(__helper, "Length", printer, other.Length, self.Length);
         var count = Math.Min(self.Length, other.Length);
         for (int i = 0; i < count; i++)
         {
-            if (self[i] != other[i]) SerializationTools.LogCompError(__helper, i.ToString(), printer, other[i], self[i]);
+            if (self[i] != other[i]) CodeGenImplTools.LogCompError(__helper, i.ToString(), printer, other[i], self[i]);
         }
     }
     public static System.Int32[] ReadFromJson(this System.Int32[] self, ZRJsonTextReader reader) 

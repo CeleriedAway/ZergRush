@@ -8,7 +8,7 @@ using Newtonsoft.Json;
 #if !INCLUDE_ONLY_CODE_GENERATION
 namespace ZergRush {
 
-    public partial class ZergRandom : IUpdatableFrom<ZergRush.ZergRandom>, IBinaryDeserializable, IBinarySerializable, IHashable, ICompareChechable<ZergRush.ZergRandom>, IJsonSerializable
+    public partial class ZergRandom : IUpdatableFrom<ZergRush.ZergRandom>, IBinaryDeserializable, IBinarySerializable, IHashable, ICompareCheckable<ZergRush.ZergRandom>, IJsonSerializable
     {
         public virtual void UpdateFrom(ZergRush.ZergRandom other, ZRUpdateFromHelper __helper) 
         {
@@ -47,8 +47,8 @@ namespace ZergRush {
         }
         public virtual void CompareCheck(ZergRush.ZergRandom other, ZRCompareCheckHelper __helper, Action<string> printer) 
         {
-            if (inext != other.inext) SerializationTools.LogCompError(__helper, "inext", printer, other.inext, inext);
-            if (inextp != other.inextp) SerializationTools.LogCompError(__helper, "inextp", printer, other.inextp, inextp);
+            if (inext != other.inext) CodeGenImplTools.LogCompError(__helper, "inext", printer, other.inext, inext);
+            if (inextp != other.inextp) CodeGenImplTools.LogCompError(__helper, "inextp", printer, other.inextp, inextp);
             __helper.Push("SeedArray");
             SeedArray.CompareCheck(other.SeedArray, __helper, printer);
             __helper.Pop();

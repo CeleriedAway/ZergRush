@@ -19,7 +19,7 @@ namespace ZergRush.Alive
      *  But when your entity leaves DataRoot hierarchy element in this list will be nullified automatically
      */
     [GenZergRushFolder, GenTask(GenTaskFlags.Serialization | GenTaskFlags.JsonSerialization), GenTaskCustomImpl(GenTaskFlags.CompareChech | GenTaskFlags.UpdateFrom | GenTaskFlags.Hash)]
-    public sealed partial class RefListMk2<T> : IReactiveCollection<T>, IList<T>, ICompareChechable<RefListMk2<T>>, INeedUpdateFromPostProcess where T : class, IDataNode, IReferencableFromDataRoot
+    public sealed partial class RefListMk2<T> : IReactiveCollection<T>, IList<T>, ICompareCheckable<RefListMk2<T>>, INeedUpdateFromPostProcess where T : class, IDataNode, IReferencableFromDataRoot
     {
         [GenIgnore]
         List<T> data;
@@ -374,11 +374,11 @@ namespace ZergRush.Alive
 
         public void CompareCheck(RefListMk2<T> other, ZRCompareCheckHelper path, Action<string> printer)
         {
-            if (Count != other.Count) SerializationTools.LogCompError(path, "Count", printer, other.Count, Count);
+            if (Count != other.Count) CodeGenImplTools.LogCompError(path, "Count", printer, other.Count, Count);
             var count = Math.Min(Count, other.Count);
             for (int i = 0; i < count; i++)
             {
-                if (ids[i] != other.ids[i]) SerializationTools.LogCompError(path, $"id at index: {i.ToString()}", printer, ids[i], other.ids[i]);
+                if (ids[i] != other.ids[i]) CodeGenImplTools.LogCompError(path, $"id at index: {i.ToString()}", printer, ids[i], other.ids[i]);
             }
         }
         
