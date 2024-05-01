@@ -19,6 +19,40 @@ public static class CodeGenImplTools
         where T : class, IStableIdentifiable, IUpdatableFrom<T>
     {
         var i = 0;
+        
+        bool isLivable = typeof(T).IsSubclassOf(typeof(Livable));
+        bool isLivableContainer = self is ILivableContainer;
+        Func<T, T, ZRUpdateFromHelper, T> updateFunc = isLivable ? 
+            (isLivableContainer ? UpdateLivableInContainer : UpdateLivableNotInContainer) : 
+            UpdateNormal;
+
+        static T UpdateLivableInContainer(T selfItem, T currOtherItem, ZRUpdateFromHelper __helper)
+        {
+            var __self = selfItem as Livable;
+            if (selfItem is not IsMultiRef || !__helper.TryLoadAlreadyUpdatedLivable(currOtherItem as Livable, ref __self, true))
+            {
+                selfItem.UpdateFrom(currOtherItem, __helper);
+            }
+            return __self as T;
+        }
+        static T UpdateLivableNotInContainer(T selfItem, T currOtherItem, ZRUpdateFromHelper __helper)
+        {
+            var __self = selfItem as Livable;
+            if (selfItem is not IsMultiRef || !__helper.TryLoadAlreadyUpdatedLivable(currOtherItem as Livable, ref __self, false))
+            {
+                selfItem.UpdateFrom(currOtherItem, __helper);
+            }
+            return __self as T;
+        }
+        static T UpdateNormal(T selfItem, T currOtherItem, ZRUpdateFromHelper __helper)
+        {
+            if (selfItem is not IsMultiRef || !__helper.TryLoadAlreadyUpdated(currOtherItem, ref selfItem))
+            {
+                selfItem.UpdateFrom(currOtherItem, __helper);
+            }
+            return selfItem;
+        }
+        
         for (; i < other.Count; i++)
         {
             var currOtherItem = other[i];
@@ -43,12 +77,7 @@ public static class CodeGenImplTools
             if (selfMatchingItemIndex == i)
             {
                 // self is here, just update
-                var selfItem = self[i];
-                if (selfItem is not IsMultiRef || !__helper.TryLoadAlreadyUpdated(currOtherItem, ref selfItem))
-                {
-                    selfItem.UpdateFrom(currOtherItem, __helper);
-                }
-                self[i] = selfItem;
+                self[i] = updateFunc(self[i], currOtherItem, __helper);
             }
             else if (selfMatchingItemIndex > i)
             {
@@ -64,10 +93,7 @@ public static class CodeGenImplTools
                 }
                 // move item to right position
                 var selfItem = self.TakeAt(selfMatchingItemIndex);
-                if (selfItem is not IsMultiRef || !__helper.TryLoadAlreadyUpdated(currOtherItem, ref selfItem))
-                {
-                    selfItem.UpdateFrom(currOtherItem, __helper);
-                }
+                selfItem = updateFunc(self[i], currOtherItem, __helper);
                 self.Insert(i, selfItem);
             }
             else if (selfMatchingItemIndex == -1)
@@ -80,10 +106,7 @@ public static class CodeGenImplTools
                 }
                 else
                 {
-                    if (selfItem is not IsMultiRef || !__helper.TryLoadAlreadyUpdated(currOtherItem, ref selfItem))
-                    {
-                        selfItem.UpdateFrom(currOtherItem, __helper);
-                    }
+                    selfItem = updateFunc(selfItem, currOtherItem, __helper);
                     self.Insert(i, selfItem);
                 }
             }

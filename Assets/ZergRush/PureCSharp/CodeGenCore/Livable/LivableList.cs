@@ -6,8 +6,11 @@ using ZergRush.ReactiveCore;
 
 namespace ZergRush.Alive
 {
+    // tag interface for some impl details
+    public interface ILivableContainer {}
+    
     [DebuggerDisplay("{this.ToString()}")]
-    public partial class LivableList<T> : DataList<T>, IAddCopyList<T> where T : Livable
+    public partial class LivableList<T> : DataList<T>, IAddCopyList<T>, ILivableContainer where T : Livable
     {
         [GenIgnore] bool alive;
 
@@ -60,7 +63,7 @@ namespace ZergRush.Alive
                 return;
             }
 
-            bool updated = refData is IsMultiRef ? __helper.TryLoadAlreadyUpdated(refData, ref item) : false;
+            bool updated = refData is IsMultiRef ? __helper.TryLoadAlreadyUpdatedLivable(refData, ref item, true) : false;
             
             items.Insert(index, item);
             SetupItemHierarchy(item);
