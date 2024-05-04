@@ -164,14 +164,14 @@ public static class CodeGenExtensions
         }
     }
     
-    public static void CheckJsonSerialization<T>(T c) where T : class, IJsonSerializable, ICompareCheckable<T>, new()
+    public static void CheckJsonSerialization<T>(this T c) where T : class, IJsonSerializable, ICompareCheckable<T>, new()
     {
         var str = c.WriteToJsonString();
         var c2 = c.ReadFromJson(str);
         c.CompareCheck(c2);
     }
     
-    public static void CheckBinarySerialization<T>(T c) where T : class, IBinarySerializable, 
+    public static void CheckBinarySerialization<T>(this T c) where T : class, IBinarySerializable, 
         IBinaryDeserializable, ICompareCheckable<T>, new()
     {
         var str = new MemoryStream();

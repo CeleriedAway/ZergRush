@@ -167,7 +167,15 @@ namespace ZergRush.CodeGen
                 var baseCall = $"{info1.access}.{UpdateFuncName}({other}, {HelperName}{t.OptPoolIfUpdatebleWithPoolSecondArg(pooled)});";
                 if (info1.type.IsMultipleReference())
                 {
-                    baseCall = $"if (!{HelperName}.TryLoadAlreadyUpdated({other}, ref {info1.access})) {baseCall}";
+                    if (info1.type.IsDataNode())
+                    {
+                        baseCall = $"if (!{HelperName}.TryLoadAlreadyUpdatedLivable({other}, ref {info1.access}," +
+                                   $" {(info.insideLivableContainer ? "true" : "false")})) {baseCall}";
+                    }
+                    else
+                    {
+                        baseCall = $"if (!{HelperName}.TryLoadAlreadyUpdated({other}, ref {info1.access})) {baseCall}";
+                    }
                 }
                 
                 return baseCall;
@@ -266,8 +274,12 @@ namespace ZergRush.CodeGen
             sink.content($"for (; i < crossCount; ++i)");
             sink.content($"{{");
             sink.indent++;
-                GenUpdateValueFromInstance(sink, new DataInfo {type = elementType,
-                        baseAccess = $"{accessPrefix}[i]", canBeNull = !elementType.IsValueType}, refInst,
+                GenUpdateValueFromInstance(sink, new DataInfo {
+                        type = elementType,
+                        baseAccess = $"{accessPrefix}[i]",
+                        canBeNull = !elementType.IsValueType,
+                        insideLivableContainer = useAddCopyFunc
+                    }, refInst,
                     pooled,
                     needTempVarThenAssign: elementType.IsValueType);
                 sink.indent--;
@@ -285,7 +297,8 @@ namespace ZergRush.CodeGen
                 }
                 else
                 {
-                    GenUpdateValueFromInstance(sink, new DataInfo {type = elementType, baseAccess = $"inst", canBeNull = true, sureIsNull = true},
+                    GenUpdateValueFromInstance(sink, new DataInfo {type = elementType,
+                            baseAccess = $"inst", canBeNull = true, sureIsNull = true, insideLivableContainer = useAddCopyFunc},
                         refInst, needCreateVar: true,
                         pooled: pooled);
                     sink.content($"self.Add(inst);");
