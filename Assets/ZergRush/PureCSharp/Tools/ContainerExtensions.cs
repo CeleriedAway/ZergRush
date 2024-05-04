@@ -19,7 +19,7 @@ namespace ZergRush
 
         public static bool Valid(this string str)
         {
-            return !String.IsNullOrEmpty(str);
+            return !String.IsNullOrWhiteSpace(str);
         }
 
         public static ulong CalculateHash(this string array)
