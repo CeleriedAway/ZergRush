@@ -154,18 +154,18 @@ namespace ZergRush.CodeGen
         }
 
         public static void GenUpdateValueFromInstance(MethodBuilder sink, DataInfo info, string other, bool pooled,
-            bool needCreateVar = false, bool needTempVarThenAssign = false, bool readDataNodeFromRootWithId = false)
+            bool needCreateVar = false, bool needTempVarThenAssign = false, bool readDataNodeFromRootWithId = false, bool supportMultiRef = true)
         {
             var t = info.type;
             // info can be transformed because read from can do temp value wrapping for it
-            if (info.type.IsMultipleReference() && !needCreateVar)
+            if (supportMultiRef && info.type.IsMultipleReference() && !needCreateVar)
             {
                 needTempVarThenAssign = true;
             }
             Func<DataInfo, string> defaultContent = info1 =>
             {
                 var baseCall = $"{info1.access}.{UpdateFuncName}({other}, {HelperName}{t.OptPoolIfUpdatebleWithPoolSecondArg(pooled)});";
-                if (info1.type.IsMultipleReference())
+                if (supportMultiRef && info1.type.IsMultipleReference())
                 {
                     if (info1.type.IsDataNode())
                     {
