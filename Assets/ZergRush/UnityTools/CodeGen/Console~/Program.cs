@@ -57,8 +57,10 @@ class Programm
             "UnityEngine",
         };
 
-        var projects = Directory.GetFiles(path).Where(f => f.EndsWith(".csproj") && !exclude.Any(e => f.Contains(e)));
-        foreach(var project in projects)
+        var projects = Directory.GetFiles(path).Where(f => f.EndsWith(".csproj") && !exclude.Any(e => f.Contains(e))).ToList();
+        projects.RemoveAll(f => f.Contains("HotReload", StringComparison.InvariantCultureIgnoreCase));
+
+        foreach (var project in projects)
         {
             Console.WriteLine(project);
         }
@@ -92,6 +94,7 @@ class Programm
             }
             foreach (var pp in projs)
             {
+
                 allProjectReference.Add(pp);
             }
             return allFilePaths;
