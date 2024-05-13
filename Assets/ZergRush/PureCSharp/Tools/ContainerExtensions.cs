@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -519,6 +520,21 @@ namespace ZergRush
         public static IEnumerable<T2> FilterCast<T, T2>(this IEnumerable<T> list)
         {
             return list.Where(e => e is T2).Cast<T2>();
+        }
+        
+        public static IEnumerable<T> FilterCast<T>(this IEnumerable<object> list) where T : class
+        {
+            return list.Where(e => e is T).Cast<T>();
+        }
+        
+        public static T2 FindCast<T2>(this IEnumerable<object> list) where T2 : class
+        {
+            return list.Find(e => e is T2) as T2;
+        }
+        
+        public static T2 FindCast<T2>(this IEnumerable<object> list, Func<T2, bool> predicate) where T2 : class
+        {
+            return list.Find(e => e is T2 t2 && predicate(t2)) as T2;
         }
 
         public static T2 FindCast<T, T2>(this IEnumerable<T> list) where T2 : class
