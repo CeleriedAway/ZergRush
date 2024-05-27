@@ -7,9 +7,9 @@
   "documentationUrl": "https://github.com/CeleriedAway/ZergRush",
   "licensesUrl": "https://github.com/CeleriedAway/ZergRush",
   "dependencies": {
-    "jillejr.newtonsoft.json-for-unity": "13.0.102"
- },
- "keywords": [
+    "com.unity.nuget.newtonsoft-json": "3.2.1"
+  },
+  "keywords": [
     "reactive",
     "code generation",
     "tools"

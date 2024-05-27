@@ -81,7 +81,9 @@ class Programm
         var allReferencePaths = new HashSet<string>();
         var allProjectReference = new HashSet<string>();
 
-        var defines = TypeReader.ProjectDefines(Path.Combine(projectPath, PROJECT_NAMES[0] + ".csproj")).ToArray();
+        var projectDefines = TypeReader.ProjectDefines(Path.Combine(projectPath, PROJECT_NAMES[0] + ".csproj"));
+        projectDefines.Add("CONSOLE_GEN");
+        var defines = projectDefines.ToArray();
         
         var files = projectName.SelectMany(p =>
         {
