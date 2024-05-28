@@ -775,7 +775,7 @@ namespace ZergRush.ReactiveUI
                         viewStorage.LoadView(e.position, e.newItem);
                         break;
                     case ReactiveCollectionEventType.Remove:
-                        viewStorage.UnloadView(e.position);
+                        viewStorage.PierceIndexIfLoaded(e.position);
                         break;
                     case ReactiveCollectionEventType.Set:
                         viewStorage.UnloadView(e.position);
