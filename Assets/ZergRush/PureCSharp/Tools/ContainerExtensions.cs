@@ -22,6 +22,21 @@ namespace ZergRush
         {
             return !String.IsNullOrWhiteSpace(str);
         }
+        
+        public static int HashMix(int hash1, int hash2)
+        {
+            hash1 += hash2;
+            hash1 += hash1 << 11;
+            hash1 ^= hash1 >> 7;
+            return hash1;
+        }
+        public static ulong HashMix(ulong hash1, ulong hash2)
+        {
+            hash1 += hash2;
+            hash1 += hash1 << 11;
+            hash1 ^= hash1 >> 7;
+            return hash1;
+        }
 
         public static ulong CalculateHash(this string array)
         {

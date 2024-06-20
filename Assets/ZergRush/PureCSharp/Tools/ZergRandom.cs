@@ -7,7 +7,7 @@ namespace ZergRush
     [GenTask(GenTaskFlags.SimpleDataPack), GenTaskCustomImpl(GenTaskFlags.DefaultConstructor), GenZergRushFolder()]
     public partial class ZergRandom
     {
-        public static ZergRandom global = new ZergRandom();
+        public static ZergRandom global = FromEnvTicks();
         
         int[] SeedArray = new int[56];
         int inext;

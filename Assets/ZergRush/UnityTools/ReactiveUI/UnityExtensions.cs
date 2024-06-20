@@ -109,6 +109,22 @@ public static partial class UnityExtensions
         return button.ClickStream().Subscribe(reaction);
     }
 
+    public static IEventStream<int> ChangeStream(this TMP_Dropdown dropdown)
+    {
+        if (dropdown == null)
+        {
+            Debug.LogError("dropdown is null!!!");
+            return new AbandonedStream<int>();
+        }
+
+        return new AnonymousEventStream<int>((Action<int> reaction) =>
+        {
+            var ua = new UnityAction<int>(reaction);
+            dropdown.onValueChanged.AddListener(ua);
+            return new UnityActionDisposable<int> { action = ua, e = dropdown.onValueChanged };
+        });
+    }
+
     public static IEventStream PressedStream(this Button button)
     {
         if (button == null)

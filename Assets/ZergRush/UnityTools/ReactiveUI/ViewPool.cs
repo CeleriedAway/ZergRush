@@ -204,6 +204,7 @@ namespace ZergRush.ReactiveUI
         {
             if (view == null) return;
             
+            view.parentIsLayout = parentIsLayout;
             view.OnRecycle();
             view.DisconnectAll();
             view.currentMoveAnimation.DisconnectSafe();            

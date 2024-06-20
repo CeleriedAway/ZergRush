@@ -97,8 +97,9 @@ namespace ZergRush.ReactiveUI
 
         public void UnloadView(int dataIndex)
         {
-            var view = loadedViews[dataIndex - firstLoadedIndex];
-            loadedViews.RemoveAt(dataIndex - firstLoadedIndex);
+            var loadedIndex = dataIndex - firstLoadedIndex;
+            var view = loadedViews[loadedIndex];
+            loadedViews.RemoveAt(loadedIndex);
             
             if (view == null) return;
             //Debug.Log($"unload view {view.GetInstanceID()} at index {dataIndex}");
@@ -149,10 +150,18 @@ namespace ZergRush.ReactiveUI
 
         public void PierceIndexIfLoaded(int index)
         {
-            if (index < firstLoadedIndex) firstLoadedIndex--;
+            if (index < firstLoadedIndex)
+            {
+                firstLoadedIndex--;
+            }
             else if (index <= lastLoadedIndex)
             {
                 UnloadView(index);
+            }
+            var loadedIndex = Mathf.Max(0, index - firstLoadedIndex);
+            for (var i = loadedIndex; i < loadedViews.Count; i++)
+            {
+                loadedViews[i].indexInModel--;
             }
         }
 
