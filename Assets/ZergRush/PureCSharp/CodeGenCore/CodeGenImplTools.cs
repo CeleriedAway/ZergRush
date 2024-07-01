@@ -9,6 +9,11 @@ using ZergRush.Alive;
 public static class CodeGenImplTools
 {
     public static string ClassIdName = "__classId";
+    
+    public static void LogCompError(Stack<string> path, string name, Action<string> print, float self, float other)
+    {
+        print($"{path.Reverse().PrintCollection("/")}/{name} is different, self: {self, 18:0.000000000} other: {other, 18:0.000000000}");
+    }
 
     public static void LogCompError<T>(Stack<string> path, string name, Action<string> print, T self, T other)
     {
