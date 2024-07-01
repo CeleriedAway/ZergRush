@@ -101,12 +101,35 @@ public static partial class UnityExtensions
         });
     }
 
+    public static IEventStream<string> SubmitStream(this TMP_InputField inputField)
+    {
+        if (inputField == null)
+        {
+            Debug.LogError("TMP_InputField is null!!!");
+            return new AbandonedStream<string>();
+        }
+
+        return new AnonymousEventStream<string>((Action<string> reaction) =>
+        {
+            var ua = new UnityAction<string>(reaction);
+            inputField.onSubmit.AddListener(ua);
+            return new UnityActionDisposable<string> { action = ua, e = inputField.onSubmit };
+        });
+    }
+    
     public static IDisposable Subscribe(this Button button, Action reaction)
     {
         if (button == null)
             return new EmptyDisposable();
 
         return button.ClickStream().Subscribe(reaction);
+    }
+
+    public static IDisposable Subscribe(this TMP_InputField inputField, Action<string> reaction)
+    {
+        if (inputField == null)
+            return new EmptyDisposable();
+        return inputField.SubmitStream().Subscribe(reaction);
     }
 
     public static IEventStream<int> ChangeStream(this TMP_Dropdown dropdown)
