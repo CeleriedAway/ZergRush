@@ -18,7 +18,7 @@ namespace ZergRush.CodeGen
 
         public static void CompareCheckValue(MethodBuilder sink, DataInfo info, string otherValueReader)
         {
-            if (info.type.IsAlmostPrimitive() || info.type.IsEnum || info.type.IsString())
+            if (info.type.IsAlmostPrimitive() || info.type.IsEnum || info.type.IsString() || info.immutableData)
             {
                 sink.content(
                     $"if ({info.access} != {otherValueReader}) {CompErrorFunc}({HelperName}, {info.pathName}, {PrinterName}, {otherValueReader}, {info.access});");

@@ -95,6 +95,9 @@ public static class ParseTools
     public static int ParseInt(this string str, int def = 0)
     {
         if (string.IsNullOrEmpty(str)) return def;
+        str = str.Replace('@', '-');
+        if (str.Length > 0)
+            str = str.Replace("%", "");
         return int.TryParse(str, out var i) ? i : def;
     }
 
