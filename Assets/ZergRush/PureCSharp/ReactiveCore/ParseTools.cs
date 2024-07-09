@@ -345,9 +345,9 @@ public static class ParseTools
         return (str, String.Empty);
     }
 
-    static (string, string) SplitAtIndexSkipped(this string str, int i)
+    static (string, string) SplitAtIndexSkipped(this string str, int i, int count = 1)
     {
-        if (i >= 0 && i < str.Length) return (str.Substring(0, i), str.Substring(i + 1));
+        if (i >= 0 && i < str.Length) return (str.Substring(0, i), str.Substring(i + count));
         return (str, String.Empty);
     }
 
@@ -355,6 +355,12 @@ public static class ParseTools
     {
         var i = str.IndexOf(delim);
         return SplitAtIndexSkipped(str, i);
+    }
+    
+    public static (string, string) SplitFirst(this string str, string delim)
+    {
+        var i = str.IndexOf(delim);
+        return SplitAtIndexSkipped(str, i, delim.Length);
     }
 
     public static (string, string) SplitLast(this string str, char delim)
