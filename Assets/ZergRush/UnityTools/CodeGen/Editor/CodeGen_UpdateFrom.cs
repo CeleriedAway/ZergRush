@@ -239,6 +239,8 @@ namespace ZergRush.CodeGen
                 return $"ReadString()";
             if (t == typeof(byte[]))
                 return "ReadByteArray()";
+            if (t.IsFix64())
+                return "ReadFix64()";
             return $"Read{t.UniqueName()}({(pooled && t.HasPooledDeserializeMethod() ? $"pool" : "")})";
         }
 

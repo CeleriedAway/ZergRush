@@ -57,7 +57,7 @@ namespace ZergRush.CodeGen
             if (t.IsFix64())
             {
                 sink.content($"writer.WriteValue({info.access}.RawValue);");
-                sink.content($"writer.WriteFixedPreview({info.access}, \"{info.access}\");");
+                //sink.content($"writer.WriteFixedPreview({info.access}, \"{info.access}\");");
                 return;
             }
             else if (t == typeof(Guid))

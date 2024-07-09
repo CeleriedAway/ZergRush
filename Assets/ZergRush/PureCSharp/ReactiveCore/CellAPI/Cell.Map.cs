@@ -47,6 +47,10 @@ namespace ZergRush.ReactiveCore
         {
             return cell.Select(val => val as T2);
         }
+        public static ICell<T> Cast<T>(this ICell<object> cell) where T : class
+        {
+            return cell.Select(val => val as T);
+        }
         
         [DebuggerDisplay("{value}")]
         sealed class MappedCell<T, T2> : ICell<T2>

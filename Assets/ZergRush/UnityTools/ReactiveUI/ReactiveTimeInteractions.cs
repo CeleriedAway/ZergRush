@@ -45,6 +45,7 @@ namespace ZergRush
             public float scale;
             public float time;
             public float speed = 1;
+            public float phaseShift = 0;
 
             public float offset = 0;
 
@@ -61,7 +62,7 @@ namespace ZergRush
             public void Update(float dt)
             {
                 time += dt * speed;
-                value = offset + Mathf.Abs(Mathf.Sin(time)) * scale;
+                value = offset + Mathf.Sin(time + phaseShift) * scale;
             }
         }
 
@@ -315,10 +316,10 @@ namespace ZergRush
             return cell;
         }
 
-        public static CellOfSin SignalSin(this IEventStream reset, float scale, float speed, float resetVal,
+        public static CellOfSin SignalSin(this IEventStream reset, float scale, float speed, float resetVal, float phaseShiftRadians,
             IConnectionSink connectionSink)
         {
-            CellOfSin cell = new CellOfSin {scale = scale, speed = speed};
+            CellOfSin cell = new CellOfSin {scale = scale, speed = speed, phaseShift = phaseShiftRadians};
             connectionSink.AddConnection(UnityExecutor.Instance.AddUpdatable(cell));
             if (reset != null) connectionSink.AddConnection(reset.Subscribe(() => cell.Reset(resetVal)));
             return cell;

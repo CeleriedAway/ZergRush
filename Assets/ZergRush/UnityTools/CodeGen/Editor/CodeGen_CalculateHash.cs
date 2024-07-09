@@ -21,6 +21,8 @@ namespace ZergRush.CodeGen
             var t = info.type;
             var name = info.access;
             if (t.IsArray) {}
+
+            if (t.IsFix64()) return $"({HashType}){name}.RawValue";
             else if (t == typeof(bool)) return $"{name} ? 1u : 0u";
             else if (t.IsPrimitive || t.IsEnum) return $"({HashType}){name}";
 
