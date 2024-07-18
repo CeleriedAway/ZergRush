@@ -477,6 +477,14 @@ namespace ZergRush
             return filter;
         }
 
+        public static ICell<float> GaussFilterCorrection(this ICell<float> value, IEventStream sampler, int samples,
+            IConnectionSink connectionSink, bool prefill = false)
+        {
+            var filter = prefill ? new GaussFilteredFloatCorrection(samples, value.value) : new GaussFilteredFloatCorrection(samples);
+            connectionSink.AddConnection(sampler.Subscribe(() => { filter.PushValue(value.value); }));
+            return filter;
+        }
+        
         public static ICell<Vector3> GaussFilter(this ICell<Vector3> value,
             IEventStream sampler, int samples, IConnectionSink connectionSink, bool prefill = false)
         {
@@ -484,7 +492,7 @@ namespace ZergRush
             connectionSink.AddConnection(sampler.Subscribe(() => { filter.PushValue(value.value); }));
             return filter;
         }
-
+        
         //TODO- Make valid in the first tick
         public static ICell<float> Derivative(this ICell<float> value, float sampleInterval,
             IConnectionSink connectionSink)
@@ -664,4 +672,31 @@ namespace ZergRush
         {
         }
     }
+    
+    public class GaussFilteredFloatCorrection : ReactiveTimeInteractions.GaussFilterBufferBase<float>
+    {
+        public float PushValue(float value)
+        {
+            valueBuffer.Push(value);
+            var c = valueBuffer.Count;
+            var weights = ReactiveTimeInteractions.GaussFilterWeightsCache.GetWeights(c);
+            float result = 0;
+            for (int i = 0; i < c; i++)
+            {
+                var gauss = weights[i];
+                result += gauss * valueBuffer.Sample(i);
+            }
+            this.value = result;
+            return result * 0.01666667F / Time.deltaTime;
+        }
+
+        public GaussFilteredFloatCorrection(int samples) : base(samples)
+        {
+        }
+
+        public GaussFilteredFloatCorrection(int samples, float prefillValue) : base(samples, prefillValue)
+        {
+        }
+    }
+    
 }
