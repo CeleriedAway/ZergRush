@@ -152,19 +152,28 @@ namespace ZergRush
             float sum = 0;
             for (int i = 0; i < elements.Count; i++)
             {
-                sum += weightFunc(elements[i]);
+                sum += Math.Max(weightFunc(elements[i]) , 0);
             }
+
+            if (sum == 0)
+            {
+                index = -1;
+                return def;
+            }
+            
             // Find next random ind.
-            float rand = random.Range(1f, sum);
+            float rand = random.Range(0f, sum);
             int selectedInd = -1;
             for (int i = 0; i < elements.Count; i++)
             {
-                rand -= weightFunc(elements[i]);
-                if (rand <= 0)
+                var weight = Math.Max(weightFunc(elements[i]), 0);
+                
+                if (rand < weight)
                 {
                     selectedInd = i;
                     break;
                 }
+                rand -= weight;
             }
             if (selectedInd == -1) throw new ZergRushException("wtf");
             index = selectedInd;
@@ -189,19 +198,29 @@ namespace ZergRush
             int sum = 0;
             for (int i = 0; i < elements.Count; i++)
             {
-                sum += weightFunc(elements[i]);
+                sum += Math.Max(weightFunc(elements[i]) , 0);
             }
             // Find next random ind.
-            int rand = random.RangeInclude(1, sum);
+
+            if (sum == 0)
+            {
+                index = -1;
+                return def;
+            }
+            
+            int rand = random.Range(0, sum);
             int selectedInd = -1;
             for (int i = 0; i < elements.Count; i++)
             {
-                rand -= weightFunc(elements[i]);
-                if (rand <= 0)
+                var weight = Math.Max(weightFunc(elements[i]), 0);
+
+                if (rand < weight)
                 {
                     selectedInd = i;
                     break;
                 }
+                
+                rand -= weight;
             }
             if (selectedInd == -1) throw new ZergRushException("wtf");
             index = selectedInd;
