@@ -460,6 +460,17 @@ namespace ZergRush
             }
             return def;
         }
+        
+        public static T TakeItem<T>(this IList<T> list, T item)
+        {
+            var index = list.IndexOf(item);
+            if (index == -1)
+            {
+                throw new ZergRushException($"Item {item} not found in list");
+            }
+            list.RemoveAt(index);
+            return item;
+        }
 
         public static T TakeAt<T>(this IList<T> list, int index)
         {
