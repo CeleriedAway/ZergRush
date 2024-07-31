@@ -191,6 +191,20 @@ public static class ParseTools
         if (val == 0) return defaultValue; 
         return (TEnum) Enum.ToObject(typeof(TEnum), val);
     }
+    
+    public static object ParseEnumFlags(this string str, Type enumType, int defaultValue = 0) 
+    {
+        int val = 0;
+        if (str.IsNullOrEmpty() == false)
+            foreach (var s in str.Split(' ', ','))
+            {
+                if (s.IsNullOrWhitespace()) continue;
+                val = val | Convert.ToInt32(s.ParseEnum(enumType));
+            }
+
+        if (val == 0) return defaultValue; 
+        return Enum.ToObject(enumType, val);
+    }
 
     public static List<TEnum> ParseEnumListStrict<TEnum>(this string str, params char[] separator) where TEnum : struct
     {
@@ -224,6 +238,16 @@ public static class ParseTools
     {
         TEnum val;
         if (Enum.TryParse(str.TextToCamelCase(), true, out val) == false)
+        {
+            return def;
+        }
+
+        return val;
+    }
+    
+    public static object ParseEnum(this string str, Type enumType, object def = default)
+    {
+        if (Enum.TryParse(enumType,str.TextToCamelCase(), true, out var val) == false)
         {
             return def;
         }
