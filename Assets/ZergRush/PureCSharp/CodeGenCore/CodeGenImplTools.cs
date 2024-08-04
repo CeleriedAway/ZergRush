@@ -6,7 +6,7 @@ using Newtonsoft.Json;
 using ZergRush;
 using ZergRush.Alive;
 
-public static class CodeGenImplTools
+public unsafe static class CodeGenImplTools
 {
     public static string ClassIdName = "__classId";
     
@@ -20,16 +20,17 @@ public static class CodeGenImplTools
         print($"{path.Reverse().PrintCollection("/")}/{name} is different, self: {self} other: {other}");
     }
 
-    public static void StableUpdateFrom<T>(this IList<T> self, IList<T> other, ZRUpdateFromHelper __helper) 
+    public static unsafe void StableUpdateFrom<T>(this IList<T> self, IList<T> other, ZRUpdateFromHelper __helper) 
         where T : class, IStableIdentifiable, IUpdatableFrom<T>
     {
         var i = 0;
         
         bool isLivable = typeof(T).IsSubclassOf(typeof(Livable));
         bool isLivableContainer = self is ILivableContainer;
-        Func<T, T, ZRUpdateFromHelper, T> updateFunc = isLivable ? 
-            (isLivableContainer ? UpdateLivableInContainer : UpdateLivableNotInContainer) : 
-            UpdateNormal;
+        
+        delegate*<T, T,ZRUpdateFromHelper, T> updateFunc = isLivable ? 
+            (isLivableContainer ? &UpdateLivableInContainer : &UpdateLivableNotInContainer) : 
+            &UpdateNormal;
 
         static T UpdateLivableInContainer(T selfItem, T currOtherItem, ZRUpdateFromHelper __helper)
         {
@@ -76,8 +77,19 @@ public static class CodeGenImplTools
                     }
                 }
             }
-            var selfMatchingItemIndex = self.IndexOf(o => o != null && o.stableId == currOtherItem.stableId);
-            
+
+            int selfMatchingItemIndex = -1;
+            var selfCount = self.Count;
+            for (int j = 0; j < selfCount; j++)
+            {
+                var stableIdentifiable = self[j];
+                if (stableIdentifiable != null && stableIdentifiable.stableId == currOtherItem.stableId)
+                {
+                    selfMatchingItemIndex = j;
+                    break;
+                }
+            }
+
             check:
             if (selfMatchingItemIndex == i)
             {
