@@ -160,7 +160,8 @@ class Programm
         }
         catch (Exception e)
         {
-            Console.WriteLine(e.InnerException.ToString());
+            Console.WriteLine(e.InnerException);
+            Console.WriteLine(e.InnerException.StackTrace);
         }
     }
 

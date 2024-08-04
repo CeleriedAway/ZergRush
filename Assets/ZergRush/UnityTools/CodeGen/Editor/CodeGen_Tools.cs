@@ -304,7 +304,7 @@ namespace ZergRush.CodeGen
 			}
 			if (t.IsArray)
 			{
-				return name.Substring(0, name.Length - 2) + "_Array";
+				return t.GetElementType().UniqueName(withNamespace) + "_Array";
 			}
 
 			if (t.IsGenericType)

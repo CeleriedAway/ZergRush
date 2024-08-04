@@ -98,6 +98,12 @@ public static class CodeGenTools
 
         if (t == typeof(bool)) return "bool";
 
+        if (t.IsGenericType && t.GetGenericTypeDefinition() == typeof (ValueTuple<>))
+        {
+            var tupleTypes = t.GetGenericArguments();
+            var tupleName = $"({tupleTypes.Select(a => a.RealName(withNamespace)).PrintCollection()})";
+            return tupleName;
+        }
 
         if (Nullable.GetUnderlyingType(t) != null)
         {
@@ -113,8 +119,8 @@ public static class CodeGenTools
 
         if (t.IsArray)
         {
-            //name = name.Substring(0, name.Length - 2);
-            //name += "[]";
+            name = t.GetElementType().RealName(withNamespace);
+            name += "[]";
         }
 
         if (t.IsGenericType)
