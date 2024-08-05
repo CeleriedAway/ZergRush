@@ -282,7 +282,7 @@ public unsafe static class CodeGenImplTools
 
     public static ulong CalculateHash(this Guid val, ZRHashHelper _)
     {
-        return (ulong) val.ToString().CalculateHash();
+        return (ulong) val.GetHashCode();
     }
 
     public static void Write(this BinaryWriter writer, Guid val)
