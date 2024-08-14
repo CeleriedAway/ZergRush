@@ -127,5 +127,10 @@ namespace ZergRush.ReactiveUI
             if (prefab != null) return prefab.GetHashCode();
             return 0;
         }
+
+        public override string ToString()
+        {
+            return $"{nameof(type)}: {type}, {nameof(name)}: {name}, {nameof(prefab)}: {prefab}";
+        }
     }
 }
