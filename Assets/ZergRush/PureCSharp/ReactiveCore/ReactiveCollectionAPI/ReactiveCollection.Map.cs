@@ -12,6 +12,36 @@ namespace ZergRush.ReactiveCore
         {
             return new MappedCollection<T, TMapped>(collection, mapFunc);
         }
+        
+        public static ICell<int> SumReactive(this IReactiveCollection<int> collection)
+        {
+            return collection.AsCell().Map(c => c.Sum());
+        }
+        
+        public static ICell<float> SumReactive(this IReactiveCollection<float> collection)
+        {
+            return collection.AsCell().Map(c => c.Sum());
+        }
+        
+        public static ICell<int> SumReactive<T>(this IReactiveCollection<T> collection, Func<T, int> mapFunc)
+        {
+            return collection.Map(mapFunc).SumReactive();
+        }
+        
+        public static ICell<float> SumReactive<T>(this IReactiveCollection<T> collection, Func<T, float> mapFunc)
+        {
+            return collection.Map(mapFunc).AsCell().Map(c => c.Sum());
+        }
+        
+        public static ICell<int> SumReactive<T>(this IReactiveCollection<T> collection, Func<T, ICell<int>> mapFunc)
+        {
+            return collection.Map(mapFunc).Join().SumReactive();
+        }
+        
+        public static ICell<float> SumReactive<T>(this IReactiveCollection<T> collection, Func<T, ICell<float>> mapFunc)
+        {
+            return collection.Map(mapFunc).Join().AsCell().Map(c => c.Sum());
+        }
 
         [DebuggerDisplay("{this.ToString()}")]
         public class MappedCollection<T, TMapped> : AbstractCollectionTransform<TMapped>
