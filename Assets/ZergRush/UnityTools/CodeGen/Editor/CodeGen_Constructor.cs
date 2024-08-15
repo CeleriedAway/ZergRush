@@ -219,7 +219,11 @@ namespace ZergRush.CodeGen
             }
             else if (t.HasDefaultConstructor())
             {
-                var arg = constructorArg != null ? (constructorArg is string ? $"\"{constructorArg}\"" : constructorArg) : "";
+                var arg = constructorArg != null ? (constructorArg is string ? $"\"{constructorArg}\"" :  constructorArg) : "";
+                
+                if (arg is bool b)
+                    arg = b ? "true" : "false";
+                
                 return $"new {t.RealName(true)}({arg})";
             } 
             else if (t.IsGenericParameter)
