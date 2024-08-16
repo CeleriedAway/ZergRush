@@ -130,7 +130,7 @@ public class SimpleList<T> : IList<T>, IReadOnlyList<T>
     public void RemoveAt(int index)
     {
         if ((uint) index >= (uint) currentCount)
-            throw new ZergRushException();
+            throw new ZergRushException("remove index out of range index:" + index + " count:" + currentCount);
         --currentCount;
         if (index < currentCount)
             Array.Copy((Array) data, index + 1, (Array) data, index, currentCount - index);
@@ -166,16 +166,16 @@ public class SimpleList<T> : IList<T>, IReadOnlyList<T>
     public int IndexOf(T item, int index)
     {
         if (index > currentCount)
-            throw new ZergRushException(index.ToString());
+            throw new ZergRushException("index out of range index:" + index + " count:" + currentCount);
         return Array.IndexOf<T>(data, item, index, currentCount - index);
     }
 
     public int IndexOf(T item, int index, int count)
     {
         if (index > currentCount)
-            throw new ZergRushException(index.ToString());
+            throw new ZergRushException("index out of range index:" + index + " count:" + currentCount);
         if (count < 0 || index > currentCount - count)
-            throw new ZergRushException(count.ToString());
+            throw new ZergRushException("count out of range index:" + index + " count:" + currentCount);
         return Array.IndexOf<T>(data, item, index, count);
     }
 
@@ -200,7 +200,7 @@ public class SimpleList<T> : IList<T>, IReadOnlyList<T>
     public void Insert(int index, T item)
     {
         if ((uint) index > (uint) currentCount)
-            throw new ZergRushException(index.ToString());
+            throw new ZergRushException("insert index out of range index:" + index + " count:" + currentCount);
         if (currentCount == data.Length)
             this.EnsureCapacity(currentCount + 1);
         if (index < currentCount)
@@ -212,7 +212,7 @@ public class SimpleList<T> : IList<T>, IReadOnlyList<T>
     public ref T AtRef(int index)
     {
         if ((uint) index >= (uint) currentCount)
-            throw new ZergRushException();
+            throw new ZergRushException("get index out of range index:" + index + " count:" + currentCount);
         return ref data[index];
     }
 
@@ -221,13 +221,13 @@ public class SimpleList<T> : IList<T>, IReadOnlyList<T>
         get
         {
             if ((uint) index >= (uint) currentCount)
-                throw new ZergRushException();
+                throw new ZergRushException("get index out of range index:" + index + " count:" + currentCount);
             return data[index];
         }
         set
         {
             if ((uint) index >= (uint) currentCount)
-                throw new ZergRushException();
+                throw new ZergRushException("set index out of range index:" + index + " count:" + currentCount);
             data[index] = value;
         }
     }
