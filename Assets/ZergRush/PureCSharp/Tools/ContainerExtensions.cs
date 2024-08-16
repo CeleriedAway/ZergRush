@@ -356,7 +356,7 @@ namespace ZergRush
 
         public static bool AddIfNotNull<T>(this IList<T> list, T item)
         {
-            if (item != null) return false;
+            if (item == null) return false;
             list.Add(item);
             return true;
         }
