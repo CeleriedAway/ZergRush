@@ -135,6 +135,7 @@ namespace ZergRush.ReactiveCore
                 var disWrap = new SingleDisposable();
                 disWrap.Disposable = coll.update.Subscribe(e =>
                 {
+                    if (disWrap.IsDisposed) return;
                     int innerStartIndex = FinalStartIndex(collectionConnections.IndexOf(disWrap));
                     switch (e.type)
                     {
