@@ -38,10 +38,10 @@ namespace ZergRush.ReactiveCore
 
         void RemoveListener(Action<T> action)
         {
-            if (iterating)
-            {
-                callbacks = callbacks.ToList();
-            }
+            // if (iterating)
+            // {
+            //     callbacks = callbacks.ToList();
+            // }
             callbacks.Remove(action);
         }
 
