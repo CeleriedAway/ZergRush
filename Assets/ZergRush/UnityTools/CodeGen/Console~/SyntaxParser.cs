@@ -116,7 +116,7 @@ public class TreePruner : CSharpSyntaxRewriter
     public override SyntaxNode? VisitMethodDeclaration(MethodDeclarationSyntax node)
     {
         var throwExcStat = BuildException();
-
+        
         if (node.Body != null)
         {
             var newBody = SF.Block(throwExcStat);
@@ -136,14 +136,51 @@ public class TreePruner : CSharpSyntaxRewriter
     {
         var throwExcStat = BuildException();
 
+        if (node.Initializer != null 
+            && node.ParameterList.Parameters.Count != 0 
+            && (node.Initializer.IsKind(SyntaxKind.ThisConstructorInitializer) || node.Initializer.IsKind(SyntaxKind.BaseConstructorInitializer)) 
+            && node.Initializer.ArgumentList.Arguments.Count == 0)
+        {
+            // Remove the initializer (this())
+            node = node.WithInitializer(null)
+                .WithLeadingTrivia(node.GetLeadingTrivia()); // Preserve leading trivia (e.g., comments or whitespace)
+        }
+
         if (node.Body != null)
-            return base.VisitConstructorDeclaration(node.ReplaceNode(node.Body, SF.Block(throwExcStat)));
-        if (node.ExpressionBody == null) return base.VisitConstructorDeclaration(node);
-        node = node.RemoveNode(node.ExpressionBody, SyntaxRemoveOptions.KeepNoTrivia)!
-            .WithSemicolonToken(SyntaxFactory.MissingToken(SyntaxKind.SemicolonToken)
-                .WithLeadingTrivia(node.SemicolonToken.LeadingTrivia)
-                .WithTrailingTrivia(node.SemicolonToken.TrailingTrivia));
-        return base.VisitConstructorDeclaration(node.WithBody(SF.Block(throwExcStat)).WithTrailingTrivia(SF.ElasticCarriageReturnLineFeed));
+        {
+            return base.VisitConstructorDeclaration(node.ReplaceNode(node.Body, SyntaxFactory.Block(throwExcStat)));
+        }
+
+        if (node.ExpressionBody != null)
+        {
+            node = node.WithExpressionBody(null)
+                .WithSemicolonToken(SyntaxFactory.MissingToken(SyntaxKind.SemicolonToken)
+                    .WithLeadingTrivia(node.SemicolonToken.LeadingTrivia)
+                    .WithTrailingTrivia(node.SemicolonToken.TrailingTrivia))
+                .WithBody(SyntaxFactory.Block(throwExcStat))
+                .WithTrailingTrivia(SyntaxFactory.ElasticCarriageReturnLineFeed);
+        }
+
+        return base.VisitConstructorDeclaration(node);
+    }
+
+    public bool IsConstructor(MethodDeclarationSyntax methodNode)
+    {
+        // Get the containing class of the method
+        var classNode = methodNode.Parent as ClassDeclarationSyntax;
+        if (classNode == null)
+        {
+            return false; // Method is not inside a class
+        }
+
+        // Check if the method name matches the class name
+        bool isSameNameAsClass = methodNode.Identifier.Text == classNode.Identifier.Text;
+
+        // Check if the method has no return type
+        bool hasNoReturnType = methodNode.ReturnType is PredefinedTypeSyntax predefinedType &&
+                               predefinedType.Keyword.IsKind(SyntaxKind.VoidKeyword);
+
+        return isSameNameAsClass && hasNoReturnType;
     }
 }
 
