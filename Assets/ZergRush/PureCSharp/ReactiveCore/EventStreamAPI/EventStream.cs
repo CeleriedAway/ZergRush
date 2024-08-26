@@ -38,10 +38,10 @@ namespace ZergRush.ReactiveCore
 
         void RemoveListener(Action<T> action)
         {
-            // if (iterating)
-            // {
-            //     callbacks = callbacks.ToList();
-            // }
+            if (iterating)
+            {
+                callbacks = callbacks.ToList();
+            }
             callbacks.Remove(action);
         }
 
@@ -86,7 +86,24 @@ namespace ZergRush.ReactiveCore
             iterateCallbacks:
             for (int i = 0; i < callbacksLocal.Count; i++)
             {
-                callbacksLocal[i](t);
+                var action = callbacksLocal[i];
+                if (callbacksLocal != callbacks)
+                {
+                    // if callbacks was modified we check and do not call callbacks that was removed
+                    // because it causes a problem during excessive Join usage
+                    bool found = false;
+                    for (var i1 = 0; i1 < callbacks.Count; i1++)
+                    {
+                        if (callbacks[i1] == action)
+                        {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) continue;
+                }
+                
+                action(t);
             }
 
             if (nextValue != null)
