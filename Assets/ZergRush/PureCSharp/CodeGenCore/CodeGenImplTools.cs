@@ -289,10 +289,21 @@ public unsafe static class CodeGenImplTools
     {
         writer.WriteByteArray(val.ToByteArray());
     }
+    
 
     public static Guid ReadGuid(this BinaryReader reader)
     {
         return new Guid(reader.ReadByteArray());
+    }
+    
+    public static DateTime ReadDateTime(this BinaryReader reader)
+    {
+        return new DateTime(reader.ReadInt64());
+    }
+    
+    public static void Write(this BinaryWriter writer, DateTime val)
+    {
+        writer.Write(val.Ticks);
     }
 
     public static byte[] ReadByteArray(this BinaryReader stream)
@@ -300,7 +311,7 @@ public unsafe static class CodeGenImplTools
         int size = stream.ReadInt32();
         return stream.ReadBytes(size);
     }
-
+    
     public static void WriteByteArray(this BinaryWriter stream, byte[] bytes)
     {
         int size = bytes.Length;
