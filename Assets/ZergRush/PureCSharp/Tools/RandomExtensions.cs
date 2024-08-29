@@ -83,6 +83,28 @@ namespace ZergRush
             return result;
         }
         
+        public static void RandomWeightedOrder<T>(this IReadOnlyList<T> list, ZergRandom random, Func<T, int> weightFunc, List<T> result)
+        {
+            var pool = list.ToList();
+            while (pool.Count > 0)
+            {
+                var value = RandomWeightedElement(pool, random, weightFunc, out var ind);
+                result.Add(value);
+                pool.RemoveAt(ind);
+            }
+        }
+        public static void RandomWeightedOrderWithIndex<T>(this IReadOnlyList<T> list, ZergRandom random,
+            Func<T, int> weightFunc, List<(T, int)> result)
+        {
+            var pool = list.ToList();
+            while (pool.Count > 0)
+            {
+                var value = RandomWeightedElement(pool, random, weightFunc, out var ind);
+                result.Add((value, ind));
+                pool.RemoveAt(ind);
+            }
+        }
+        
         public static T RandomElement<T>(this IEnumerable<T> list, ZergRandom random, T def = default)
         {
             return list.ToList().RandomElement(random, def);
