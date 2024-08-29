@@ -74,6 +74,8 @@ namespace ZergRush
             }
             else
             {
+                //think about if if it is necessary to do actually
+                //if (t == null) t = new T();
                 currentObjects[refId] = t;
                 t.Deserialize(this);
             }
