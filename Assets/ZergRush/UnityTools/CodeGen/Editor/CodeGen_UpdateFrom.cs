@@ -32,6 +32,7 @@ namespace ZergRush.CodeGen
                 {
                     type = originalInfo.type,
                     baseAccess = tempVar,
+                    sureIsNull = info.sureIsNull
                 };
             }
             

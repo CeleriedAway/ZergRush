@@ -288,7 +288,7 @@ namespace ZergRush.CodeGen
             sink.content($"for (int i = 0; i < size; i++)");
             sink.content($"{{");
             sink.indent++;
-            if (type.IsDataNode())
+            if (listType.IsLivableList())
             {
                 sink.content($"self.Add(null);");
                 sink.content($"if (!{stream}.ReadBoolean()) continue;");
@@ -296,8 +296,7 @@ namespace ZergRush.CodeGen
                     new DataInfo
                     {
                         type = type, carrierType = listType, baseAccess = $"self[self.{count} - 1]",
-                        insideConfigStorage = listType.IsConfigStorage(),
-                        sureIsNull = true
+                        insideConfigStorage = listType.IsConfigStorage(), sureIsNull = true
                     }, stream, pooled, false);
             }
             else
