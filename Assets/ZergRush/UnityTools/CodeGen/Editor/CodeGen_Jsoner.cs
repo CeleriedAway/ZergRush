@@ -25,6 +25,10 @@ namespace ZergRush.CodeGen
         {
             return type == typeof(Guid) || type == typeof(Guid?);
         }
+        public static bool IsDateTime(this Type type)
+        {
+            return type == typeof(DateTime);
+        }
 
         public static void WriteJsonValueStatement(MethodBuilder sink, DataInfo info, bool inList,
             bool writeDataNodeAsId = false)
@@ -59,6 +63,10 @@ namespace ZergRush.CodeGen
                 sink.content($"writer.WriteValue({info.access}.RawValue);");
                 //sink.content($"writer.WriteFixedPreview({info.access}, \"{info.access}\");");
                 return;
+            }
+            else if (t == typeof(DateTime))
+            {
+                sink.content($"writer.WriteValue({info.access}.Ticks);");
             }
             else if (t == typeof(Guid))
             {
@@ -172,6 +180,8 @@ namespace ZergRush.CodeGen
 
             if (t.IsGuid())
                 return $"Guid.Parse((string)reader.Value)";
+            if (t == typeof(DateTime))
+                return $"new DateTime((Int64)reader.Value)";
             if (t.IsEnum)
                 return $"((string)reader.Value).ParseEnum<{t.RealName(true)}>()";
             if (t.Name == "Fix64")

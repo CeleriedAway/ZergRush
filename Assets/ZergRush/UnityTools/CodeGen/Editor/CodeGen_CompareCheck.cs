@@ -151,7 +151,7 @@ namespace ZergRush.CodeGen
 
             static bool IsAlmostPrimitive(this Type t)
             {
-                return t.IsPrimitive || t.IsFix64() || t.IsNullablePrimitive() || t.IsNullableEnum() || t.IsGuid();
+                return t.IsPrimitive || t.IsFix64() || t.IsNullablePrimitive() || t.IsNullableEnum() || t.IsGuid() || t.IsDateTime();
             }
         }
     }

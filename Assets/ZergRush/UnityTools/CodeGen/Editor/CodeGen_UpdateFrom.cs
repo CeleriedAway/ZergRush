@@ -32,6 +32,7 @@ namespace ZergRush.CodeGen
                 {
                     type = originalInfo.type,
                     baseAccess = tempVar,
+                    sureIsNull = info.sureIsNull
                 };
             }
             
@@ -231,10 +232,10 @@ namespace ZergRush.CodeGen
         {
             if (t.IsEnum)
                 return $"ReadEnum<{t.RealName(true)}>()";
-            if (t.IsPrimitive || t == typeof(Guid))
-                return $"Read{t.Name}()";
             if (t.IsNullable())
                 return ReadNewInstanceOfImmutableType(Nullable.GetUnderlyingType(t), pooled);
+            if (t.IsPrimitive || t == typeof(Guid) || t.IsDateTime())
+                return $"Read{t.Name}()";
             if (t == typeof(string))
                 return $"ReadString()";
             if (t == typeof(byte[]))

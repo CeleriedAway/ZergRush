@@ -137,7 +137,7 @@ namespace ZergRush.CodeGen
         {
             if (t == typeof(object)) return;
             if (t == Void || t.IsPrimitive || t.IsNullable() || t.IsEnum || t.IsGenericParameter || t == typeof(string) ||
-                t == typeof(byte[]) || t == typeof(Guid)) return;
+                t == typeof(byte[]) || t == typeof(Guid) || t == typeof(DateTime)) return;
 
             if (t.IsArray && t.GetArrayRank() > 1)
             {
