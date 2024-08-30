@@ -100,7 +100,7 @@ namespace ZergRush
             while (pool.Count > 0)
             {
                 var value = RandomWeightedElement(pool, random, weightFunc, out var ind);
-                result.Add((value, ind));
+                result.Add((value, list.IndexOf(value)));
                 pool.RemoveAt(ind);
             }
         }
