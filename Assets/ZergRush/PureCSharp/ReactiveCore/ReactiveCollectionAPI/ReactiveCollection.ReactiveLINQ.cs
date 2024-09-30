@@ -64,11 +64,6 @@ namespace ZergRush.ReactiveCore
             return collection.AsCell().Map(c => c.LastElement(ifNoElements));
         }
 
-        public static IReactiveCollection<T> Reverse<T>(this IReactiveCollection<T> original)
-        {
-            return original.AsCell().Map(list => list.GetReversed()).ToReactiveCollection();
-        }
-
         public static void ReverseInPlace<T>(this ReactiveCollection<T> col)
         {
             for (var index = 0; index < col.Count / 2; index++)

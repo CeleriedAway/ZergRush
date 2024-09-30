@@ -85,6 +85,12 @@ public static class ParseTools
         if (string.IsNullOrEmpty(str)) throw new ZergRushException($"can't parse part to percent from string\"{str}\"");
         return (int) Math.Round(float.Parse(str, CultureInfo.InvariantCulture) * 100);
     }
+    
+    public static double ParseDouble(this string str, double def = 0)
+    {
+        if (string.IsNullOrEmpty(str)) return def;
+        return double.TryParse(str, NumberStyles.Any, CultureInfo.InvariantCulture, out var i) ? i : def;
+    }
 
     public static float ParseFloat(this string str, float def = 0)
     {
