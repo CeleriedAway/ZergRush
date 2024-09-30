@@ -35,9 +35,9 @@ public unsafe static class CodeGenImplTools
         static T UpdateLivableInContainer(T selfItem, T currOtherItem, ZRUpdateFromHelper __helper)
         {
             var __self = selfItem as Livable;
-            if (selfItem is not IsMultiRef || !__helper.TryLoadAlreadyUpdatedLivable(currOtherItem as Livable, ref __self, true))
+            if (__self is not IsMultiRef || !__helper.TryLoadAlreadyUpdatedLivable(currOtherItem as Livable, ref __self, true))
             {
-                selfItem.UpdateFrom(currOtherItem, __helper);
+                (__self as T)!.UpdateFrom(currOtherItem, __helper);
             }
             return __self as T;
         }
@@ -46,7 +46,7 @@ public unsafe static class CodeGenImplTools
             var __self = selfItem as Livable;
             if (selfItem is not IsMultiRef || !__helper.TryLoadAlreadyUpdatedLivable(currOtherItem as Livable, ref __self, false))
             {
-                selfItem.UpdateFrom(currOtherItem, __helper);
+                (__self as T)!.UpdateFrom(currOtherItem, __helper);
             }
             return __self as T;
         }

@@ -176,8 +176,8 @@ public static class CodeGenExtensions
     {
         var str = new MemoryStream();
         c.Write(str);
-        str.Seek(0, SeekOrigin.Begin);
-        var c2 = str.Read<T>();
+        T c2 = new T();
+        c2.Read(str.GetBuffer());
         c.CompareCheck(c2);
     }
     
