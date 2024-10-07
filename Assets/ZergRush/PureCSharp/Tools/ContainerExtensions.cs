@@ -37,8 +37,8 @@ namespace ZergRush
             hash1 ^= hash1 >> 7;
             return hash1;
         }
-
-        public static ulong CalculateHash(this string array)
+        
+        public static ulong CalculateHash(this ReadOnlySpan<char> array)
         {
             if (array == null) return 1234567;
             ulong hash = 0;
@@ -50,6 +50,21 @@ namespace ZergRush
             }
 
             return hash;
+        }
+
+        public static ulong CalculateHash(this string array)
+        {
+            ReadOnlySpan<char> span = array;
+            return CalculateHash(span);
+            // if (array == null) return 1234567;
+            // ulong hash = 0;
+            // for (int i = 0; i < array.Length; i++)
+            // {
+            //     hash += array[i];
+            //     hash += hash << 10;
+            //     hash ^= hash >> 7;
+            // }
+            // return hash;
         }
 
         public static TV TryGetOrNew<TK, TV>(this Dictionary<TK, TV> dict, TK key)
