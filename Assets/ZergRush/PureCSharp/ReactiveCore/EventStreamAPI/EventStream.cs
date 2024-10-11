@@ -110,7 +110,7 @@ namespace ZergRush.ReactiveCore
                 }
                 catch (Exception e)
                 {
-                    LogSink.errLog.Invoke($"Error in event-stream callback; value:{t}; exception:{e}");
+                    LogSink.errLog.Invoke($"Error in event-stream callback; value:{t}; exception:{e.ToError()}");
                 }
             }
 

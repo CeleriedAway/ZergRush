@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -229,12 +229,16 @@ namespace ZergRush.ReactiveUI
             layout.directionSign = settings.direction == LayoutDirection.Horizontal ? 1 : -1;
             layout.addConnection = data.update.Subscribe(e =>
             {
+                if (layout.requireRefillFromPos.HasValue && layout.requireRefillFromPos < e.position)
+                {
+                    return;
+                }
                 layout.requireRefillFromPos = e.position;
             });
             layout.RefillFromPos(0);
             return layout;
         }
-        
+
         void LazyRefill()
         {
             if (requireRefillFromPos.HasValue)
