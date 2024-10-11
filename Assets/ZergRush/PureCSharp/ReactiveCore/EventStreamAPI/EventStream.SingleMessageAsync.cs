@@ -1,3 +1,4 @@
+using System;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
@@ -7,28 +8,28 @@ namespace ZergRush.ReactiveCore
     {
         static YieldAwaitable frame => Task.Yield();
 
-        public static async Task<T> SingleMessageAsync<T>(this IEventStream<T> stream)
+        public static Task<T> SingleMessageAsync<T>(this IEventStream<T> stream)
         {
-            T result = default(T);
-            bool finished = false;
-            var waiting = stream.Subscribe(res =>
+            var result = new TaskCompletionSource<T>();
+            IDisposable waiting = null;
+            waiting = stream.Subscribe(res =>
             {
-                result = res;
-                finished = true;
+                result.SetResult(res);
+                waiting.Dispose();
             });
-            while (!finished)
-                await frame;
-            waiting.Dispose();
-            return result;
+            return result.Task;
         }
 
         public static async Task SingleMessageAsync(this IEventStream stream)
         {
-            bool finished = false;
-            var waiting = stream.Subscribe(() => { finished = true; });
-            while (!finished)
-                await frame;
-            waiting.Dispose();
+            var result = new TaskCompletionSource<int>();
+            IDisposable waiting = null;
+            waiting = stream.Subscribe(() =>
+            {
+                result.SetResult(0);
+                waiting.Dispose();
+            });
+            await result.Task;
         }
     }
 }
