@@ -388,7 +388,7 @@ namespace ZergRush.ReactiveUI
                 item.layout.size.value + settings.mainSize;
 
             var grouped = new ReactiveCollection<GroupItem<TGroup, TData, TView>>();
-            var groupLayout = LinearVariableSizeLayout.Create(grouped, LayoutBoundingsFactory, settings);
+            var groupLayout = LinearVariableSizeLayout<GroupItem<TGroup, TData, TView>>.Create(grouped, LayoutBoundingsFactory, settings);
             var groupComponents = new TableConnectionsAndComponents<TViewGroup, GroupItem<TGroup, TData, TView>>()
             {
                 layout = groupLayout,
@@ -414,7 +414,7 @@ namespace ZergRush.ReactiveUI
 
             void UpdateLayoutsFromPos(int index)
             {
-                groupLayout.RefillFromPos(index, grouped, LayoutBoundingsFactory);
+                groupLayout.RefillFromPos(index);
                 for (var i = index; i < grouped.Count; i++)
                 {
                     var groupView = grouped[i];
@@ -486,7 +486,7 @@ namespace ZergRush.ReactiveUI
                         groupView.layout.RefreshSize();
                     }
 
-                    groupLayout.Refill(grouped, LayoutBoundingsFactory);
+                    groupLayout.Refill();
                     for (var i = 0; i < grouped.Count; i++)
                     {
                         var groupView = grouped[i];
@@ -670,7 +670,7 @@ namespace ZergRush.ReactiveUI
             Func<TData, float> viewSizeFactory,
             LinearLayoutSettings settings)
         {
-            return LinearVariableSizeLayout.Create(data, viewSizeFactory, settings);
+            return LinearVariableSizeLayout<TData>.Create(data, viewSizeFactory, settings);
         }
 
         public static void AdjustScrollRectContentAnchors(ScrollRect scroll, bool horizontal)
