@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
@@ -520,8 +520,13 @@ public static partial class UnityExtensions
     // Return true if object is stopped
     public static bool StopObject(this Rigidbody rb, float breakForcePower, float velocityLimit)
     {
+#if UNITY_6000_0_OR_NEWER
+        if (rb.linearVelocity.magnitude < velocityLimit) return true;
+        rb.AddForce(-rb.linearVelocity.normalized * breakForcePower);
+#else
         if (rb.velocity.magnitude < velocityLimit) return true;
         rb.AddForce(-rb.velocity.normalized * breakForcePower);
+#endif
         return false;
     }
 
@@ -592,7 +597,11 @@ public static partial class UnityExtensions
 
     public static void SetVelocityMagnitude(this Rigidbody rb, float mg)
     {
+#if UNITY_6000_0_OR_NEWER
+        var velocity = rb.linearVelocity;
+#else
         var velocity = rb.velocity;
+#endif
         if (velocity == Vector3.zero) velocity = rb.transform.forward * 0.0001f;
         rb.AddForce(velocity.normalized * (mg - velocity.magnitude), ForceMode.VelocityChange);
     }
