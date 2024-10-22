@@ -181,6 +181,12 @@ namespace ZergRush.ReactiveUI
             {
                 LoadView(index, data);
             }
+
+            __IncrementIndicesStartedWith(index);
+        }
+
+        public void __IncrementIndicesStartedWith(int index)
+        {
             var loadedIndex = Mathf.Max(0, index - firstLoadedIndex) + 1;
             for (var i = loadedIndex; i < loadedViews.Count; i++)
             {

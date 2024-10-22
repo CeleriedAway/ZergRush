@@ -773,6 +773,7 @@ namespace ZergRush.ReactiveUI
                         break;
                     case ReactiveCollectionEventType.Insert:
                         viewStorage.LoadView(e.position, e.newItem);
+                        viewStorage.__IncrementIndicesStartedWith(e.position);
                         break;
                     case ReactiveCollectionEventType.Remove:
                         viewStorage.PierceIndexIfLoaded(e.position);
