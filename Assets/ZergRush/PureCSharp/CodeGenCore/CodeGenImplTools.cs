@@ -296,6 +296,11 @@ public unsafe static class CodeGenImplTools
         return new Guid(reader.ReadByteArray());
     }
     
+    public static ulong CalculateHash(this DateTime time)
+    {
+        return (ulong)time.ToBinary();
+    }
+    
     public static DateTime ReadDateTime(this BinaryReader reader)
     {
         return new DateTime(reader.ReadInt64());
