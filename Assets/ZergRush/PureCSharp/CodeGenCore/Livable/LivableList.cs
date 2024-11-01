@@ -8,9 +8,10 @@ namespace ZergRush.Alive
 {
     // tag interface for some impl details
     public interface ILivableContainer {}
+    public interface __ISwappable { void SwapItem(int i, int j); }
     
     [DebuggerDisplay("{this.ToString()}")]
-    public partial class LivableList<T> : DataList<T>, IAddCopyList<T>, ILivableContainer where T : Livable
+    public partial class LivableList<T> : DataList<T>, IAddCopyList<T>, __ISwappable, ILivableContainer where T : Livable
     {
         [GenIgnore] bool alive;
 
@@ -103,6 +104,11 @@ namespace ZergRush.Alive
             }
 
             items.Clear();
+        }
+        
+        public void SwapItem(int i, int j)
+        {
+            (items[i], items[j]) = (items[j], items[i]);
         }
 
 
