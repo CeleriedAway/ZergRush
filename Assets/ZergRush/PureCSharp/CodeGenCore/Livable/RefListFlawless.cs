@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 using ZergRush.CodeGen;
 using ZergRush.ReactiveCore;
 
@@ -73,8 +74,7 @@ namespace ZergRush.Alive
             {
                 if (root.RecallMayBe(item.Id) != item)
                 {
-                    throw new ZergRushException(
-                        $"this item {item} with id {item.Id} is not contained in any Data/LivableList or Data/LivableSlot");
+                    LogSink.errLog($"this item {item} with id {item.Id} is not contained in any Data/LivableList or Data/LivableSlot");
                 }
             }
             if (item.Id == 0)
