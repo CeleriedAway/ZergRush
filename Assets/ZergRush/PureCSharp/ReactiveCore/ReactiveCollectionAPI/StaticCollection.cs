@@ -50,6 +50,13 @@ namespace ZergRush.ReactiveCore
         {
             return new StaticCollection<T> { list = coll.ToList() };
         }
+        
+        public static ReactiveCollection<T> ToReactiveCollection<T>(this IEnumerable<T> coll)
+        {
+            var r = new ReactiveCollection<T>();
+            r.Reset(coll);
+            return r;
+        }
 
         public static List<T> ToList<T>(this ReactiveCollection<T> coll)
         {
