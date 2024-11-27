@@ -27,7 +27,7 @@ namespace ZergRush.CodeGen
             else if (t.IsPrimitive || t.IsEnum) return $"({HashType}){name}";
 
             string calcHash = $"{name}.CalculateHash({HelperName})";
-            if (t == typeof(string))
+            if (t == typeof(string) || t == typeof(DateTime))
             {
                 calcHash = $"({HashTypeName}){name}.CalculateHash()";
             }
