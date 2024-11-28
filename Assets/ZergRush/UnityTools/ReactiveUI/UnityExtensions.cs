@@ -467,7 +467,11 @@ public static partial class UnityExtensions
 
     public static IDisposable SetInteractable(this Button button, ICell<bool> val)
     {
-        return val.Bind(b => button.interactable = b);
+        return val.Bind(b =>
+        {
+            if (button) 
+                button.interactable = b;
+        });
     }
 
     public static void SetVisible(this Image image, bool val)
