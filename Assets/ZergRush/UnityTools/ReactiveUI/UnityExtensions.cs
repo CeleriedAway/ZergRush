@@ -67,7 +67,7 @@ public static partial class UnityExtensions
         }
     }
 
-    public static ICell<bool> IsPressedCell(this Toggle toggle)
+    public static ICell<bool> IsOnCell(this Toggle toggle)
     {
         if (toggle == null)
         {

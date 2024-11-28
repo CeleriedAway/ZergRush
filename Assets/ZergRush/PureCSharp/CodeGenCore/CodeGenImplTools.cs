@@ -28,20 +28,32 @@ public unsafe static class CodeGenImplTools
         bool isLivable = typeof(T).IsSubclassOf(typeof(Livable));
         bool isLivableContainer = self is ILivableContainer;
         
-        delegate*<T, T,ZRUpdateFromHelper, T> updateFunc = isLivable ? 
+        delegate*<T, T, IList<T>,ZRUpdateFromHelper, T> updateFunc = isLivable ? 
             (isLivableContainer ? &UpdateLivableInContainer : &UpdateLivableNotInContainer) : 
             &UpdateNormal;
 
-        static T UpdateLivableInContainer(T selfItem, T currOtherItem, ZRUpdateFromHelper __helper)
+        static T UpdateLivableInContainer(T selfItem, T currOtherItem, IList<T> selfList, ZRUpdateFromHelper __helper)
         {
             var __self = selfItem as Livable;
             if (__self is not IsMultiRef || !__helper.TryLoadAlreadyUpdatedLivable(currOtherItem as Livable, ref __self, true))
             {
                 (__self as T)!.UpdateFrom(currOtherItem, __helper);
             }
+            if (Object.ReferenceEquals(selfItem,__self) == false && __self.isAlive)
+            {
+                int idx = selfList.IndexOf(__self as T);
+                int idx1 = selfList.IndexOf(selfItem);
+                if (idx != -1 && idx1 != -1)
+                {
+                    ((__ISwappable)selfList).SwapItem(idx, idx1);
+                }
+                else{
+                    throw new ZergRushException("WTF, we expect item in the same container in this case");
+                }
+            }
             return __self as T;
         }
-        static T UpdateLivableNotInContainer(T selfItem, T currOtherItem, ZRUpdateFromHelper __helper)
+        static T UpdateLivableNotInContainer(T selfItem, T currOtherItem, IList<T> selfList, ZRUpdateFromHelper __helper)
         {
             var __self = selfItem as Livable;
             if (selfItem is not IsMultiRef || !__helper.TryLoadAlreadyUpdatedLivable(currOtherItem as Livable, ref __self, false))
@@ -50,7 +62,7 @@ public unsafe static class CodeGenImplTools
             }
             return __self as T;
         }
-        static T UpdateNormal(T selfItem, T currOtherItem, ZRUpdateFromHelper __helper)
+        static T UpdateNormal(T selfItem, T currOtherItem, IList<T> selfList, ZRUpdateFromHelper __helper)
         {
             if (selfItem is not IsMultiRef || !__helper.TryLoadAlreadyUpdated(currOtherItem, ref selfItem))
             {
@@ -80,7 +92,7 @@ public unsafe static class CodeGenImplTools
 
             int selfMatchingItemIndex = -1;
             var selfCount = self.Count;
-            for (int j = 0; j < selfCount; j++)
+            for (int j = i; j < selfCount; j++)
             {
                 var stableIdentifiable = self[j];
                 if (stableIdentifiable != null && stableIdentifiable.stableId == currOtherItem.stableId)
@@ -94,7 +106,7 @@ public unsafe static class CodeGenImplTools
             if (selfMatchingItemIndex == i)
             {
                 // self is here, just update
-                self[i] = updateFunc(self[i], currOtherItem, __helper);
+                self[i] = updateFunc(self[i], currOtherItem, self, __helper);
             }
             else if (selfMatchingItemIndex > i)
             {
@@ -110,7 +122,7 @@ public unsafe static class CodeGenImplTools
                 }
                 // move item to right position
                 var selfItem = self.TakeAt(selfMatchingItemIndex);
-                selfItem = updateFunc(self[i], currOtherItem, __helper);
+                selfItem = updateFunc(self[i], currOtherItem, self, __helper);
                 self.Insert(i, selfItem);
             }
             else if (selfMatchingItemIndex == -1)
@@ -123,7 +135,7 @@ public unsafe static class CodeGenImplTools
                 }
                 else
                 {
-                    selfItem = updateFunc(selfItem, currOtherItem, __helper);
+                    selfItem = updateFunc(selfItem, currOtherItem,self, __helper);
                     self.Insert(i, selfItem);
                 }
             }
@@ -294,6 +306,11 @@ public unsafe static class CodeGenImplTools
     public static Guid ReadGuid(this BinaryReader reader)
     {
         return new Guid(reader.ReadByteArray());
+    }
+    
+    public static ulong CalculateHash(this DateTime time)
+    {
+        return (ulong)time.ToBinary();
     }
     
     public static DateTime ReadDateTime(this BinaryReader reader)

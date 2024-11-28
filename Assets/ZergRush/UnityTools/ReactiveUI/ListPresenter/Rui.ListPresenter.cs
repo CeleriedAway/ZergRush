@@ -137,6 +137,7 @@ namespace ZergRush.ReactiveUI
 
         void UpdateViewFromData(TView view, TData data)
         {
+            if (view == null) return;
             try
             {
                 view.UpdateFrom(data);

@@ -140,6 +140,11 @@ namespace ZergRush.Alive
 
         public void DisconnectAll(DataRoot root)
         {
+            if (root == null)
+            {
+                LogSink.errLog?.Invoke("StaticConnections root is null");
+                return;
+            }
             foreach (var connection in connections)
             {
                 var obj = root.RecallMayBe<IStaticallyModifiable>(connection.ownerId);

@@ -38,6 +38,7 @@ namespace ZergRush
             return hash1;
         }
         
+        #if !CONSOLE_GEN
         public static ulong CalculateHash(this ReadOnlySpan<char> array)
         {
             if (array == null) return 1234567;
@@ -51,11 +52,16 @@ namespace ZergRush
 
             return hash;
         }
+        #endif
 
         public static ulong CalculateHash(this string array)
         {
+            #if !CONSOLE_GEN
             ReadOnlySpan<char> span = array;
             return CalculateHash(span);
+            #else
+            return 0;
+            #endif
             // if (array == null) return 1234567;
             // ulong hash = 0;
             // for (int i = 0; i < array.Length; i++)
