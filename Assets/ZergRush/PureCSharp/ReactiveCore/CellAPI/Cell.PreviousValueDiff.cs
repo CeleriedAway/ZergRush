@@ -29,7 +29,7 @@ namespace ZergRush.ReactiveCore
         }
 
         /// Useful when you need previous value of a cell, it comes as a second item in the tuple.
-        public static IEventStream<(T, T)> BufferPreviousValue<T>(this ICell<T> cell)
+        public static IEventStream<(T newValue, T oldValue)> BufferPreviousValue<T>(this ICell<T> cell)
         {
             // Implicit lambda boxing used as a prev val storage here
             var prevVal = cell.value;
