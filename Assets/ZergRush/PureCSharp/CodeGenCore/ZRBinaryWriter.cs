@@ -18,6 +18,12 @@ namespace ZergRush
         {
         }
 
+        public void Reuse()
+        {
+            generator.Clear();
+            this.Seek(0, SeekOrigin.Begin);
+        }
+
         public void WriteObjectWithRef(IBinarySerializable obj)
         {
             var writer = this;
