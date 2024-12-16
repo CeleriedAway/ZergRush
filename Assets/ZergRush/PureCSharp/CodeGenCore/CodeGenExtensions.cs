@@ -45,7 +45,7 @@ public static class CodeGenExtensions
         return instance;
     }
     
-    public static T Read<T>(this T instance, byte[] bytes) where T : class, IBinaryDeserializable
+    public static T Read<T>(this T instance, byte[] bytes) where T : IBinaryDeserializable
     {
         using var reader = new ZRBinaryReader(new MemoryStream(bytes));
         instance.Deserialize(reader);
@@ -68,6 +68,14 @@ public static class CodeGenExtensions
         using var writer = new ZRBinaryWriter(stream);
         data.Serialize(writer);
     }
+
+    public static T ReadFromSpan<T>(this ReadOnlySpan<byte> span) where T : IBinaryDeserializable, new()
+    {
+        var instance = new T();
+        using var reader = new ZRBinaryReader(span);
+        instance.Deserialize(reader);
+        return instance;
+    }
     
     public static byte[] WriteToByteArray<T>(this ref T data) where T : struct, IBinarySerializable
     {
@@ -77,7 +85,7 @@ public static class CodeGenExtensions
         return memStream.ToArray();
     }
 
-    public static byte[] WriteToByteArray(this IBinarySerializable data)
+    public static byte[] WriteToByteArray<T>(this T data) where T : class, IBinarySerializable
     {
         using var memStream = new MemoryStream();
         using var writer = new ZRBinaryWriter(memStream);

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Runtime.Serialization;
 using JetBrains.Annotations;
@@ -60,6 +61,11 @@ namespace ZergRush
         }
         public ZRBinaryReader(byte[] str) : base(new MemoryStream(str))
         {
+        }
+        
+        public unsafe ZRBinaryReader(ReadOnlySpan<byte> str) : base(new UnmanagedMemoryStream((byte *)str.GetPinnableReference(), str.Length))
+        {
+            
         }
 
         public void ReadFromRef<T>(ref T t) where T : IBinaryDeserializable
