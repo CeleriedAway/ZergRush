@@ -77,7 +77,7 @@ public static class CodeGenExtensions
         return instance;
     }
     
-    public static byte[] WriteToByteArray<T>(this ref T data) where T : struct, IBinarySerializable
+    public static byte[] WriteToByteArrayS<T>(this ref T data) where T : struct, IBinarySerializable
     {
         using var memStream = new MemoryStream();
         using var writer = new ZRBinaryWriter(memStream);
@@ -85,7 +85,7 @@ public static class CodeGenExtensions
         return memStream.ToArray();
     }
 
-    public static byte[] WriteToByteArray<T>(this T data) where T : class, IBinarySerializable
+    public static byte[] WriteToByteArray(this IBinarySerializable data)
     {
         using var memStream = new MemoryStream();
         using var writer = new ZRBinaryWriter(memStream);
