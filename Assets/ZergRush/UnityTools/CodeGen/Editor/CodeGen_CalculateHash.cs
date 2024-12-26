@@ -13,14 +13,16 @@ namespace ZergRush.CodeGen
 
         public static uint RandomHash()
         {
-            return (uint) 345093625; // rand.Next();
+            return (uint)345093625; // rand.Next();
         }
 
         public static string HashExpr(DataInfo info)
         {
             var t = info.type;
             var name = info.access;
-            if (t.IsArray) {}
+            if (t.IsArray)
+            {
+            }
 
             if (t.IsFix64()) return $"({HashType}){name}.RawValue";
             else if (t == typeof(bool)) return $"{name} ? 1u : 0u";
@@ -39,12 +41,12 @@ namespace ZergRush.CodeGen
             {
                 calcHash = $"{HelperName}.{nameof(ZRHashHelper.CalculateHash)}({name})";
             }
-            
+
             if (info.canBeNull && !info.type.IsValueType)
             {
                 return $"{name} != null ? {calcHash} : {RandomHash()}";
             }
-            else if(Nullable.GetUnderlyingType(info.type) != null)
+            else if (Nullable.GetUnderlyingType(info.type) != null)
             {
                 return $"{name}.HasValue ? (ulong){name}.Value.GetHashCode() : {RandomHash()}";
             }
@@ -53,7 +55,7 @@ namespace ZergRush.CodeGen
                 return calcHash;
             }
         }
-        
+
         static string ClearDot(string prefix)
         {
             return prefix.EndsWith(".") ? prefix.Remove(prefix.Length - 1) : prefix;
@@ -74,7 +76,8 @@ namespace ZergRush.CodeGen
                 interfaceType = typeof(IHashable),
                 needMembersGenRequest = true,
                 funcArgs = $"{HashHelperName} {HelperName}",
-                start = (sink, hasBaseCall) => {
+                start = (sink, hasBaseCall) =>
+                {
                     if (hasBaseCall)
                     {
                         sink.content($"{HashType} hash = baseVal;");
@@ -84,13 +87,28 @@ namespace ZergRush.CodeGen
                         var start = RandomHash();
                         sink.content($"{HashType} hash = {start};");
                     }
+
                     if (sink.classType.IsAbstract == false)
                     {
-                        sink.content($"hash ^= ({HashTypeName}){Math.Abs((int)type.Name.CalculateHash())};");
+                        ulong CalculateHash(string array)
+                        {
+                            if (array == null) return 1234567;
+                            ulong hash = 0;
+                            for (int i = 0; i < array.Length; i++)
+                            {
+                                hash += array[i];
+                                hash += hash << 10;
+                                hash ^= hash >> 7;
+                            }
+                            return hash;
+                        }
+
+                        sink.content($"hash ^= ({HashTypeName}){Math.Abs((int)CalculateHash(type.Name))};");
                         sink.content(HashMixStatement("hash"));
                     }
                 },
-                elemProcess = (sink, info) => {
+                elemProcess = (sink, info) =>
+                {
                     sink.content($"hash += {HashExpr(info)};");
                     sink.content(HashMixStatement("hash"));
                 },
@@ -104,8 +122,10 @@ namespace ZergRush.CodeGen
             public GenTaskFlags flag;
 
             public string funcName;
+
             // method, has base call
             public Action<MethodBuilder, bool> start;
+
             // method, elem type, elem name, 
             public Action<MethodBuilder, DataInfo> elemProcess;
             public bool needDictKeyTraverse;
@@ -116,28 +136,31 @@ namespace ZergRush.CodeGen
             public Type funcReturnType;
             public bool needMembersGenRequest;
         }
-        
-        public static void TraversGenList(TraversStrategy strategy, MethodBuilder sink, Type elemType, string prefix, bool isArray)
+
+        public static void TraversGenList(TraversStrategy strategy, MethodBuilder sink, Type elemType, string prefix,
+            bool isArray)
         {
             strategy.start?.Invoke(sink, false);
             sink.content($"var size = {prefix}.{(isArray ? "Length" : "Count")};");
             sink.content($"for (int i = 0; i < size; i++)");
             sink.content($"{{");
             sink.indent++;
-            strategy.elemProcess(sink, new DataInfo{type = elemType, baseAccess = $"{prefix}[i]", canBeNull = true});
+            strategy.elemProcess(sink, new DataInfo { type = elemType, baseAccess = $"{prefix}[i]", canBeNull = true });
             sink.indent--;
             sink.content($"}}");
             strategy.finish?.Invoke(sink);
         }
-        
-        public static void TraverseGenDict(TraversStrategy strategy, MethodBuilder sink, Type keyType, Type valType, string path)
+
+        public static void TraverseGenDict(TraversStrategy strategy, MethodBuilder sink, Type keyType, Type valType,
+            string path)
         {
             strategy.start?.Invoke(sink, false);
             sink.content($"foreach (var item in {path})");
             sink.content($"{{");
             sink.indent++;
-            if (strategy.needDictKeyTraverse) strategy.elemProcess(sink, new DataInfo{type = keyType, baseAccess = "item.Key", canBeNull = true});
-            strategy.elemProcess(sink, new DataInfo{type = valType, baseAccess = "item.Value"});
+            if (strategy.needDictKeyTraverse)
+                strategy.elemProcess(sink, new DataInfo { type = keyType, baseAccess = "item.Key", canBeNull = true });
+            strategy.elemProcess(sink, new DataInfo { type = valType, baseAccess = "item.Value" });
             sink.indent--;
             sink.content($"}}");
             strategy.finish?.Invoke(sink);
@@ -145,8 +168,9 @@ namespace ZergRush.CodeGen
 
         public static void TraverseGenCustomType(TraversStrategy strategy, Type type, string funcPrefix)
         {
-            var sink = MakeGenMethod(type, strategy.flag, funcPrefix + strategy.funcName, strategy.funcReturnType ?? Void, strategy.funcArgs ?? "");
-            
+            var sink = MakeGenMethod(type, strategy.flag, funcPrefix + strategy.funcName,
+                strategy.funcReturnType ?? Void, strategy.funcArgs ?? "");
+
             if (type.IsList() || type.IsArray)
             {
                 var elemType = type.FirstGenericArg();
@@ -167,7 +191,7 @@ namespace ZergRush.CodeGen
                 {
                     sink.classBuilder.inheritance(strategy.interfaceType.Name);
                 }
-                
+
                 strategy.start?.Invoke(sink, type.NeedBaseCallForFlag(strategy.flag));
                 type.ProcessMembers(strategy.flag, strategy.needMembersGenRequest, member =>
                 {
