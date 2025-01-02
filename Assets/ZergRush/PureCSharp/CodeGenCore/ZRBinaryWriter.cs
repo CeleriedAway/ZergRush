@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Runtime.Serialization;
 using JetBrains.Annotations;
@@ -16,6 +17,12 @@ namespace ZergRush
 
         public ZRBinaryWriter([NotNull] Stream output) : base(output)
         {
+        }
+
+        public void Reuse()
+        {
+            generator.Clear();
+            this.Seek(0, SeekOrigin.Begin);
         }
 
         public void WriteObjectWithRef(IBinarySerializable obj)
@@ -54,6 +61,12 @@ namespace ZergRush
         }
         public ZRBinaryReader(byte[] str) : base(new MemoryStream(str))
         {
+        }
+        
+        //TODO optimize this, pinnablerefeernce cast did not worked
+        public unsafe ZRBinaryReader(ReadOnlySpan<byte> str) : base(new MemoryStream(str.ToArray()))
+        {
+            
         }
 
         public void ReadFromRef<T>(ref T t) where T : IBinaryDeserializable
