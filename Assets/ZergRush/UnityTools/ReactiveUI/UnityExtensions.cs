@@ -813,6 +813,17 @@ public static partial class UnityExtensions
         return Vector3.Distance(pos, pos2);
     }
 
+    public static IEnumerable<Transform> FindRecursiveChilds(this Transform t, string name)
+    {
+        for (int i = 0; i < t.childCount; i++)
+        {
+            var child = t.GetChild(i);
+            if (child.name == name)
+                yield return child;
+            foreach (var c in FindRecursiveChilds(child, name))
+                yield return c;
+        }
+    }
 
     public static Transform FindRecursive(this Transform tr, string name)
     {

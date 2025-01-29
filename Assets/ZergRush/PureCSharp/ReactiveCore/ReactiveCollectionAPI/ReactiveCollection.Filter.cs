@@ -14,6 +14,12 @@ namespace ZergRush.ReactiveCore
             return collectione.Filter(t => t is T2).Map(t => t as T2);
         }
         
+        public static IReactiveCollection<T> FilterCastReactive<T>(this IReactiveCollection<object> collectione) 
+            where T : class
+        {
+            return collectione.Filter(t => t is T).Map(t => t as T);
+        }
+        
         public static IReactiveCollection<T> Filter<T>(this IReactiveCollection<T> collection,
             Func<T, bool> predicate)
         {
