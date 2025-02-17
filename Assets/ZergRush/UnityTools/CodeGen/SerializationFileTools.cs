@@ -14,7 +14,7 @@ public static partial class SerializationFileTools
         return wrap ? UnityFileWrapper.Open(path, mode) : File.Open(path, mode);
     }
 
-    public static void WriteToBinaryFile<T>(this T data, string path, bool unityWrapPath = true)
+    public static void WriteToBinaryFileUnityPath<T>(this T data, string path, bool unityWrapPath = true)
         where T : IBinarySerializable
     {
         using var file = OpenFileWrap(path, FileMode.Create, unityWrapPath);
@@ -24,7 +24,7 @@ public static partial class SerializationFileTools
         file.Close();
     }
 
-    public static T ReadFromBinaryFile<T>(this string path, T instance = default, bool unityWrapPath = true)
+    public static T ReadFromBinaryFileUnityPath<T>(this string path, T instance = default, bool unityWrapPath = true)
         where T : IBinaryDeserializable, new()
     {
         using var file = OpenFileWrap(path, FileMode.Open, unityWrapPath);
@@ -34,7 +34,7 @@ public static partial class SerializationFileTools
         return instance;
     }
 
-    public static void WriteToJsonFile<T>(this T data, string path, bool formatting = true, bool unityWrapPath = true)
+    public static void WriteToJsonFileUnityPath<T>(this T data, string path, bool formatting = true, bool unityWrapPath = true)
         where T : IJsonSerializable
     {
         using var file = unityWrapPath ? UnityFileWrapper.CreateText(path) : File.CreateText(path);
@@ -45,7 +45,7 @@ public static partial class SerializationFileTools
         file.Close();
     }
 
-    public static T ReadFromJsonFile<T>(this string filePath, T instance = default, bool unityWrapPath = true)
+    public static T ReadFromJsonFileUnityPath<T>(this string filePath, T instance = default, bool unityWrapPath = true)
         where T : IJsonSerializable, new()
     {
         using var file = unityWrapPath ? UnityFileWrapper.OpenText(filePath) : File.OpenText(filePath);
@@ -54,12 +54,12 @@ public static partial class SerializationFileTools
         return instance;
     }
 
-    public static bool TryReadFromBinaryFile<T>(this string filePath, T inst, bool printError = false, bool unityWrapPath = true)
+    public static bool TryReadFromBinaryFileUnityPath<T>(this string filePath, T inst, bool printError = false, bool unityWrapPath = true)
         where T : IBinaryDeserializable, new()
     {
         try
         {
-            ReadFromBinaryFile(filePath, inst, unityWrapPath);
+            ReadFromBinaryFileUnityPath(filePath, inst, unityWrapPath);
             return true;
         }
         catch (Exception e)
@@ -72,19 +72,19 @@ public static partial class SerializationFileTools
         }
     }
 
-    public static bool TryReadFromBinaryFile<T>(this string filePath, out T result, bool unityWrapPath = true)
+    public static bool TryReadFromBinaryFileUnityPath<T>(this string filePath, out T result, bool unityWrapPath = true)
         where T : IBinaryDeserializable, new()
     {
         result = new T();
-        return TryReadFromBinaryFile(filePath, result, unityWrapPath);
+        return TryReadFromBinaryFileUnityPath(filePath, result, unityWrapPath);
     }
 
-    public static bool TryReadFromJsonFile<T>(this string filePath, T inst, bool printError = false, bool unityWrapPath = true)
+    public static bool TryReadFromJsonFileUnityPath<T>(this string filePath, T inst, bool printError = false, bool unityWrapPath = true)
         where T : IJsonSerializable, new()
     {
         try
         {
-            ReadFromJsonFile(filePath, inst, unityWrapPath);
+            ReadFromJsonFileUnityPath(filePath, inst, unityWrapPath);
             return true;
         }
         catch (Exception e)
@@ -97,10 +97,10 @@ public static partial class SerializationFileTools
         }
     }
 
-    public static bool TryReadFromJsonFile<T>(this string filePath, out T result, bool unityWrapPath = true)
+    public static bool TryReadFromJsonFileUnityPath<T>(this string filePath, out T result, bool unityWrapPath = true)
         where T : IJsonSerializable, new()
     {
         result = new T();
-        return TryReadFromJsonFile(filePath, result, unityWrapPath);
+        return TryReadFromJsonFileUnityPath(filePath, result, unityWrapPath);
     }
 }

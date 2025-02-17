@@ -123,6 +123,14 @@ public static class CodeGenExtensions
     {
         return Convert.FromBase64String(str);
     }
+    
+    public static void WriteToJsonFile<T>(this T data, string path, bool formatting = true) where T : IJsonSerializable
+    {
+        using var stream = File.CreateText(path);
+        var writer = new ZRJsonTextWriter(stream);
+        writer.Formatting = formatting ? Formatting.Indented : Formatting.None;
+        data.WriteJson(writer);
+    }
 
     public static string WriteToJsonString<T>(this T data, bool formatting = true) where T : IJsonSerializable
     {
