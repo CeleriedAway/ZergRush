@@ -147,7 +147,7 @@ namespace ZergRush.CodeGen
                 baseCall = (s, info1) => s.content($"{info1.access} = ({t.RealName()}) reader.Value;");
             }
 
-            if (t.Name == "Fix64")
+            if (t.IsFix64() || (t.IsNullable() && Nullable.GetUnderlyingType(t).Name == "Fix64"))
             {
                 sink.classBuilder.usingSink("FixMath.NET");
             }

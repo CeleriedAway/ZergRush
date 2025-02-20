@@ -24,7 +24,13 @@ namespace ZergRush.CodeGen
             {
             }
 
-            if (t.IsFix64()) return $"({HashType}){name}.RawValue";
+            if (t.IsFix64())
+            {
+                if (t.IsNullable())
+                    return $"{name}.HasValue ? ({HashType}){name}.Value.RawValue : {RandomHash()}";
+                else
+                    return $"({HashType}){name}.RawValue";
+            }
             else if (t == typeof(bool)) return $"{name} ? 1u : 0u";
             else if (t.IsPrimitive || t.IsEnum) return $"({HashType}){name}";
 
