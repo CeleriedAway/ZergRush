@@ -256,7 +256,14 @@ namespace ZergRush.ReactiveUI
                 Action<TData, TView> showAndSubscribe = (item, view) =>
                 {
                     showCopy(item, view);
-                    view.connections += updater(item).Subscribe(() => showCopy(item, view));
+                    IDisposable disp = null;
+                    disp = updater(item).Subscribe(() =>
+                    {
+                        view.connections.Remove(disp);
+                        view.DisconnectAll();
+                        view.connections.Add(disp);
+                        showCopy(item, view);
+                    });
                 };
                 show = showAndSubscribe;
             }
