@@ -36,7 +36,7 @@ namespace ZergRush.ReactiveCore
         /// Wont work well if collection has same elements multiple times
         [MustUseReturnValue]
         public static IDisposable AffectEach<T>(this IReactiveCollection<T> collection,
-            Action<Connections, T> affect) where T : class
+            Action<Connections, T> affect)
         {
             var itemConnectionsDict = new Dictionary<T, Connections>();
 
@@ -65,14 +65,14 @@ namespace ZergRush.ReactiveCore
         }
 
         public static IDisposable BindEach<T>(this IReactiveCollection<T> collection, Action<T> onInsert,
-            Action<T> onRemove)
+            Action<T> onRemove, bool callRemoveEveryElementOnDisconnect = false)
         {
             foreach (var item in collection)
             {
                 onInsert(item);
             }
 
-            return collection.update.Subscribe(rce =>
+            var connection = collection.update.Subscribe(rce =>
             {
                 switch (rce.type)
                 {
@@ -100,6 +100,25 @@ namespace ZergRush.ReactiveCore
                         break;
                 }
             });
+
+            if (callRemoveEveryElementOnDisconnect)
+            {
+                return new DoubleDisposable
+                {
+                    First = connection, Second = new AnonymousDisposable(() =>
+                    {
+                        for (var i = 0; i < collection.Count; i++)
+                        {
+                            var item = collection[i];
+                            onRemove(item);
+                        }
+                    })
+                };
+            }
+            else
+            {
+                return connection;
+            }
         }
 
         /// Calls actionConfig with current value of and subscribes to its updates with that actionConfig.
