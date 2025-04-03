@@ -7,7 +7,7 @@ namespace ZergRush
 {
     public interface IUpdatable
     {
-        void Update(float dt);
+        void UpdateCustom(float dt);
     }
     
     public class UnityExecutor : MonoBehaviour
@@ -116,11 +116,11 @@ namespace ZergRush
             time.value += dt;
             for (int i = 0; i < updatables.Count; i++)
             {
-                updatables[i].Update(dt);
+                updatables[i].UpdateCustom(dt);
             }
             for (int i = 0; i < updatablesUnscaled.Count; i++)
             {
-                updatablesUnscaled[i].Update(Time.unscaledDeltaTime);
+                updatablesUnscaled[i].UpdateCustom(Time.unscaledDeltaTime);
             }
             
 
