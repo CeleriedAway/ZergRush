@@ -97,10 +97,10 @@ public static partial class SerializationFileTools
         }
     }
 
-    public static bool TryReadFromJsonFileUnityPath<T>(this string filePath, out T result, bool unityWrapPath = true)
+    public static bool TryReadFromJsonFileUnityPath<T>(this string filePath, out T result, bool printError = false, bool unityWrapPath = true)
         where T : IJsonSerializable, new()
     {
         result = new T();
-        return TryReadFromJsonFileUnityPath(filePath, result, unityWrapPath);
+        return TryReadFromJsonFileUnityPath(filePath, result, printError, unityWrapPath);
     }
 }
