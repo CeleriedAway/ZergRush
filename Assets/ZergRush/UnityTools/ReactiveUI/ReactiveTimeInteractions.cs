@@ -18,7 +18,7 @@ namespace ZergRush
                 this.update = update;
             }
 
-            public void Update(float dt)
+            public void UpdateCustom(float dt)
             {
                 update?.Invoke(dt);
             }
@@ -33,7 +33,7 @@ namespace ZergRush
                 value = decay;
             }
 
-            public void Update(float dt)
+            public void UpdateCustom(float dt)
             {
                 value = Mathf.Max(value - dt, 0);
             }
@@ -59,7 +59,7 @@ namespace ZergRush
                 time = val;
             }
 
-            public void Update(float dt)
+            public void UpdateCustom(float dt)
             {
                 time += dt * speed;
                 value = offset + Mathf.Sin(time + phaseShift) * scale;
@@ -79,7 +79,7 @@ namespace ZergRush
                 curr = 0;
             }
 
-            public void Update(float dt)
+            public void UpdateCustom(float dt)
             {
                 curr += dt;
 
@@ -117,7 +117,7 @@ namespace ZergRush
                 connection = UnityExecutor.Instance.AddUpdatable(this);
             }
 
-            public void Update(float dt)
+            public void UpdateCustom(float dt)
             {
                 remainingTime--;
                 if (remainingTime == 0)
@@ -144,7 +144,7 @@ namespace ZergRush
                     connection = UnityExecutor.Instance.AddUpdatable(this);
             }
 
-            public void Update(float dt)
+            public void UpdateCustom(float dt)
             {
                 remainingTime -= dt;
                 if (remainingTime < 0)
@@ -231,7 +231,7 @@ namespace ZergRush
             public ICell<float> source;
             EventStream<float> update;
 
-            public void Update(float dt)
+            public void UpdateCustom(float dt)
             {
                 update.Send(source.value);
             }
@@ -279,7 +279,7 @@ namespace ZergRush
             T laggedValue;
             float lagRemaining = -1;
 
-            public void Update(float dt)
+            public void UpdateCustom(float dt)
             {
                 if (lagRemaining <= 0) return;
                 lagRemaining -= dt;
@@ -372,7 +372,7 @@ namespace ZergRush
                 this.interval = interval;
             }
 
-            public void Update(float dt)
+            public void UpdateCustom(float dt)
             {
                 cur += dt;
                 if (cur > interval)

@@ -62,9 +62,19 @@ namespace ZergRush
         public ZRBinaryReader(byte[] str) : base(new MemoryStream(str))
         {
         }
+
+        static UnmanagedMemoryStream MakeStream(ReadOnlySpan<byte> str)
+        {
+            unsafe
+            {
+                fixed (byte* ptr = str)
+                {
+                    return new UnmanagedMemoryStream(ptr, str.Length);
+                }
+            }
+        }
         
-        //TODO optimize this, pinnablerefeernce cast did not worked
-        public unsafe ZRBinaryReader(ReadOnlySpan<byte> str) : base(new MemoryStream(str.ToArray()))
+        public ZRBinaryReader(ReadOnlySpan<byte> str) : base(MakeStream(str))
         {
             
         }

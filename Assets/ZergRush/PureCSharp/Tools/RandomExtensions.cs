@@ -123,8 +123,10 @@ namespace ZergRush
 
         public static T RandomElement<T>(this ICollection<T> list, ZergRandom random, T def = default)
         {
-            if (list.Count < 1) return def;
-            return list.ElementAt(random.Range(0, list.Count));
+            int count = list.Count;
+            if (count < 1) return def;
+            if (count == 1) return list.ElementAt(0);
+            return list.ElementAt(random.Range(0, count));
         }
         
         public static T TakeRandom<T>(this IList<T> list, ZergRandom random)

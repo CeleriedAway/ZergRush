@@ -117,6 +117,7 @@ namespace ZergRush.CodeGen
                 {
                     sink.content($"hash += {HashExpr(info)};");
                     sink.content(HashMixStatement("hash"));
+                    //sink.content($"UnityEngine.Debug.Log($\"hash after {info.access} {info.type.RealName()} = \" + hash);");
                 },
                 finish = sink => sink.content("return hash;"),
                 funcReturnType = HashType
