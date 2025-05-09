@@ -96,7 +96,7 @@ namespace ZergRush.Alive
             get { return _value; }
             set
             {
-                if (_value == value) return;
+                if (object.ReferenceEquals(value, _value)) return;
                 
                 if (_value != null)
                 {
