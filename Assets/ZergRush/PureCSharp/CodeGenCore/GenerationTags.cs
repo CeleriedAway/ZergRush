@@ -270,6 +270,12 @@ public class UIDComponent : Attribute
 {
 }
 
+// uses class name in uid generation
+[AttributeUsage(AttributeTargets.Class)]
+public class UIDUseClassNameHash : Attribute
+{
+}
+
 // If this attribute is set this static function will be called during main codegeneration
 // process and you can request types for generation in main chunk with CodeGen.RequestGen
 // and use CodeGen.context to gen modules and classes ect...

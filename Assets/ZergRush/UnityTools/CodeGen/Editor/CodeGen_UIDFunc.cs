@@ -24,7 +24,11 @@ namespace ZergRush.CodeGen
                     if (baseCall)
                     {
                         sink.content($"var hash = base.{UIdFuncName}();");
-                        //sink.content(HashMixStatement("hash"));
+                        if (sink.classType.HasAttribute<UIDUseClassNameHash>())
+                        {
+                            sink.content($"hash += {sink.classType.Name.CalculateHash()};");
+                            sink.content(HashMixStatement("hash"));
+                        }
                     }
                     else
                     {
