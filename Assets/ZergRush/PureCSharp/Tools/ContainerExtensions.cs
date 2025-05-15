@@ -500,6 +500,16 @@ namespace ZergRush
             list.RemoveAt(index);
             return t;
         }
+        
+        public static List<T> TakeLastSome<T>(this IList<T> list, int count)
+        {
+            var result = new List<T>();
+            for (int i = 0; i < count; i++)
+            {
+                result.Add(list.TakeLast());
+            }
+            return result;
+        }
 
         public static List<T> TakeFirstSome<T>(this IList<T> list, int count)
         {
