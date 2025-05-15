@@ -109,11 +109,24 @@ namespace ZergRush
         {
             return list.ToList().RandomElement(random, def);
         }
+        
+        public static T RandomElement<T>(this ReadOnlySpan<T> list, ZergRandom random, T def = default)
+        {
+            if (list.Length < 1) return def;
+            return list[random.Range(0, list.Length)];
+        }
+        
+        public static T RandomElement<T>(this Span<T> list, ZergRandom random, T def = default)
+        {
+            return RandomElement((ReadOnlySpan<T>)list, random, def);
+        }
 
         public static T RandomElement<T>(this ICollection<T> list, ZergRandom random, T def = default)
         {
-            if (list.Count < 1) return def;
-            return list.ElementAt(random.Range(0, list.Count));
+            int count = list.Count;
+            if (count < 1) return def;
+            if (count == 1) return list.ElementAt(0);
+            return list.ElementAt(random.Range(0, count));
         }
         
         public static T TakeRandom<T>(this IList<T> list, ZergRandom random)
@@ -157,22 +170,28 @@ namespace ZergRush
         {
             return RandomWeightedElement(elements, random, weightFunc, out _, def);
         }
-        public static T RandomWeightedElement<T>(this IList<T> elements, ZergRandom random, Func<T, float> weightFunc, out int index, T def = default)
+        
+        public static T RandomWeightedElement<T>(this Span<T> elements, ZergRandom random, Func<T, float> weightFunc, out int index, T def = default)
         {
-            if (elements.Count == 0)
+            return RandomWeightedElement((ReadOnlySpan<T>)elements, random, weightFunc, out index, def);
+        }
+       
+        public static T RandomWeightedElement<T>(this ReadOnlySpan<T> elements, ZergRandom random, Func<T, float> weightFunc, out int index, T def = default)
+        {
+            if (elements.Length == 0)
             {
                 //Debug.LogError("random with zero element count");
                 index = -1;
                 return def;
             }
-            if (elements.Count == 1)
+            if (elements.Length == 1)
             {
                 index = 0;
                 return elements[0];
             }
             // Sum all not selectedTypeName weights.
             float sum = 0;
-            for (int i = 0; i < elements.Count; i++)
+            for (int i = 0; i < elements.Length; i++)
             {
                 sum += Math.Max(weightFunc(elements[i]) , 0);
             }
@@ -186,7 +205,7 @@ namespace ZergRush
             // Find next random ind.
             float rand = random.Range(0f, sum);
             int selectedInd = -1;
-            for (int i = 0; i < elements.Count; i++)
+            for (int i = 0; i < elements.Length; i++)
             {
                 var weight = Math.Max(weightFunc(elements[i]), 0);
                 

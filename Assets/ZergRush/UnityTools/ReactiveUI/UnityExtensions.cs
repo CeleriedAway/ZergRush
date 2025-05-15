@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
@@ -67,7 +67,7 @@ public static partial class UnityExtensions
         }
     }
 
-    public static ICell<bool> IsPressedCell(this Toggle toggle)
+    public static ICell<bool> IsOnCell(this Toggle toggle)
     {
         if (toggle == null)
         {
@@ -467,7 +467,11 @@ public static partial class UnityExtensions
 
     public static IDisposable SetInteractable(this Button button, ICell<bool> val)
     {
-        return val.Bind(b => button.interactable = b);
+        return val.Bind(b =>
+        {
+            if (button) 
+                button.interactable = b;
+        });
     }
 
     public static void SetVisible(this Image image, bool val)
@@ -520,8 +524,13 @@ public static partial class UnityExtensions
     // Return true if object is stopped
     public static bool StopObject(this Rigidbody rb, float breakForcePower, float velocityLimit)
     {
+#if UNITY_6000_0_OR_NEWER
+        if (rb.linearVelocity.magnitude < velocityLimit) return true;
+        rb.AddForce(-rb.linearVelocity.normalized * breakForcePower);
+#else
         if (rb.velocity.magnitude < velocityLimit) return true;
         rb.AddForce(-rb.velocity.normalized * breakForcePower);
+#endif
         return false;
     }
 
@@ -592,7 +601,11 @@ public static partial class UnityExtensions
 
     public static void SetVelocityMagnitude(this Rigidbody rb, float mg)
     {
+#if UNITY_6000_0_OR_NEWER
+        var velocity = rb.linearVelocity;
+#else
         var velocity = rb.velocity;
+#endif
         if (velocity == Vector3.zero) velocity = rb.transform.forward * 0.0001f;
         rb.AddForce(velocity.normalized * (mg - velocity.magnitude), ForceMode.VelocityChange);
     }
@@ -800,6 +813,17 @@ public static partial class UnityExtensions
         return Vector3.Distance(pos, pos2);
     }
 
+    public static IEnumerable<Transform> FindRecursiveChilds(this Transform t, string name)
+    {
+        for (int i = 0; i < t.childCount; i++)
+        {
+            var child = t.GetChild(i);
+            if (child.name == name)
+                yield return child;
+            foreach (var c in FindRecursiveChilds(child, name))
+                yield return c;
+        }
+    }
 
     public static Transform FindRecursive(this Transform tr, string name)
     {

@@ -18,7 +18,7 @@ namespace ZergRush
                 this.update = update;
             }
 
-            public void Update(float dt)
+            public void UpdateCustom(float dt)
             {
                 update?.Invoke(dt);
             }
@@ -33,7 +33,7 @@ namespace ZergRush
                 value = decay;
             }
 
-            public void Update(float dt)
+            public void UpdateCustom(float dt)
             {
                 value = Mathf.Max(value - dt, 0);
             }
@@ -59,7 +59,7 @@ namespace ZergRush
                 time = val;
             }
 
-            public void Update(float dt)
+            public void UpdateCustom(float dt)
             {
                 time += dt * speed;
                 value = offset + Mathf.Sin(time + phaseShift) * scale;
@@ -79,7 +79,7 @@ namespace ZergRush
                 curr = 0;
             }
 
-            public void Update(float dt)
+            public void UpdateCustom(float dt)
             {
                 curr += dt;
 
@@ -117,7 +117,7 @@ namespace ZergRush
                 connection = UnityExecutor.Instance.AddUpdatable(this);
             }
 
-            public void Update(float dt)
+            public void UpdateCustom(float dt)
             {
                 remainingTime--;
                 if (remainingTime == 0)
@@ -144,7 +144,7 @@ namespace ZergRush
                     connection = UnityExecutor.Instance.AddUpdatable(this);
             }
 
-            public void Update(float dt)
+            public void UpdateCustom(float dt)
             {
                 remainingTime -= dt;
                 if (remainingTime < 0)
@@ -231,7 +231,7 @@ namespace ZergRush
             public ICell<float> source;
             EventStream<float> update;
 
-            public void Update(float dt)
+            public void UpdateCustom(float dt)
             {
                 update.Send(source.value);
             }
@@ -279,7 +279,7 @@ namespace ZergRush
             T laggedValue;
             float lagRemaining = -1;
 
-            public void Update(float dt)
+            public void UpdateCustom(float dt)
             {
                 if (lagRemaining <= 0) return;
                 lagRemaining -= dt;
@@ -372,7 +372,7 @@ namespace ZergRush
                 this.interval = interval;
             }
 
-            public void Update(float dt)
+            public void UpdateCustom(float dt)
             {
                 cur += dt;
                 if (cur > interval)
@@ -414,61 +414,6 @@ namespace ZergRush
         }
 
         // not thread safe
-        internal static class GaussFilterWeightsCache
-        {
-            static Dictionary<int, float[]> cache = new Dictionary<int, float[]>();
-
-            public static float [] GetWeights(int samples)
-            {
-                if (cache.TryGetValue(samples, out var cachedWeights))
-                {
-                    return cachedWeights;
-                }
-
-                var weights = new float[samples];
-                float weightAccum = 0;
-                for (int i = 0; i < samples; i++)
-                {
-                    float sigma = samples * samples * 2;
-                    var newWeight = Mathf.Exp(-i * i / sigma);
-                    weights[i] = newWeight;
-                    weightAccum += newWeight;
-                }
-
-                for (int i = 0; i < samples; i++)
-                {
-                    weights[i] /= weightAccum;
-                }
-
-                cache[samples] = weights;
-                return weights;
-            }
-        }
-
-        public class GaussFilterBufferBase<T> : Cell<T>
-        {
-            protected CycleBuffer<T> valueBuffer;
-
-            public GaussFilterBufferBase(int samples)
-            {
-                valueBuffer = new CycleBuffer<T>(samples);
-            }
-
-            public GaussFilterBufferBase(int samples, T prefillValue)
-            {
-                valueBuffer = new CycleBuffer<T>(samples, prefillValue);
-            }
-
-            public void Clear()
-            {
-                valueBuffer.Clear();
-            }
-            
-            public void Fill(T value)
-            {
-                valueBuffer.Fill(value);
-            }
-        }
 
         public static ICell<float> GaussFilter(this ICell<float> value, IEventStream sampler, int samples,
             IConnectionSink connectionSink, bool prefill = false)
@@ -522,147 +467,4 @@ namespace ZergRush
         }
     }
 
-    public class CycleBuffer<T>
-    {
-        int currentIndex = -1;
-        int total;
-        int max;
-        T[] values;
-
-
-        public CycleBuffer(int sampleCount)
-        {
-            max = sampleCount;
-            values = new T[sampleCount];
-        }
-
-        public CycleBuffer(int sampleCount, T prefillValue) : this(sampleCount)
-        {
-            for (var i = 0; i < values.Length; i++)
-            {
-                values[i] = prefillValue;
-            }
-            total = max;
-        }
-        
-        public CycleBuffer(int sampleCount, Func<T> prefillFactory) : this(sampleCount)
-        {
-            for (var i = 0; i < values.Length; i++)
-            {
-                values[i] = prefillFactory();
-            }
-            total = max;
-        }
-
-        public void Clear()
-        {
-            total = 0;
-        }
-
-        public int Count => total < max ? total : max;
-
-        // index sampling goes from newest value to latest at the end
-        public T Sample(int index)
-        {
-            return values[(currentIndex - index + max) % max];
-        }
-
-        public bool Filled => total == max;
-
-        // index == 0 is the last one, 1 is the previous and so on
-        public void ForEach(Action<int, T> action)
-        {
-            //Debug.Log(values.PrintCollection());
-            if (currentIndex < 0) return;
-            int limit = Count;
-            for (int i = 0; i < limit; i++)
-            {
-                action(i, Sample(i));
-            }
-        }
-
-        public void Fill(T value)
-        {
-            for (var i = 0; i < values.Length; i++)
-            {
-                values[i] = value;
-            }
-        }
-
-        public void Push(T value)
-        {
-            currentIndex = (currentIndex + 1) % max;
-            if (total != max) total = currentIndex + 1;
-            values[currentIndex] = value;
-        }
-            
-        public T PushAndReturnPrev(T value)
-        {
-            currentIndex = (currentIndex + 1) % max;
-            if (total != max) total = currentIndex + 1;
-            var prev = values[currentIndex];
-            values[currentIndex] = value;
-            return prev;
-        }
-
-        // Pushes same value that was in buffer before
-        public T PushCached()
-        {
-            currentIndex = (currentIndex + 1) % max;
-            if (total != max) total = currentIndex + 1;
-            return values[currentIndex];
-        }
-    }
-
-    public class GaussFilteredVector : ReactiveTimeInteractions.GaussFilterBufferBase<Vector3>
-    {
-        public Vector3 PushValue(Vector3 value)
-        {
-            valueBuffer.Push(value);
-            var c = valueBuffer.Count;
-            var weights = ReactiveTimeInteractions.GaussFilterWeightsCache.GetWeights(c);
-            Vector3 result = Vector3.zero;
-            for (int i = 0; i < c; i++)
-            {
-                var gauss = weights[i];
-                result += gauss * valueBuffer.Sample(i);
-            }
-            this.value = result;
-            return result;
-        }
-
-        public GaussFilteredVector(int samples) : base(samples)
-        {
-        }
-
-        public GaussFilteredVector(int samples, Vector3 prefillValue) : base(samples, prefillValue)
-        {
-        }
-    }
-
-    public class GaussFilteredFloat : ReactiveTimeInteractions.GaussFilterBufferBase<float>
-    {
-        public float PushValue(float value)
-        {
-            valueBuffer.Push(value);
-            var c = valueBuffer.Count;
-            var weights = ReactiveTimeInteractions.GaussFilterWeightsCache.GetWeights(c);
-            float result = 0;
-            for (int i = 0; i < c; i++)
-            {
-                var gauss = weights[i];
-                result += gauss * valueBuffer.Sample(i);
-            }
-            this.value = result;
-            return result;
-        }
-
-        public GaussFilteredFloat(int samples) : base(samples)
-        {
-        }
-
-        public GaussFilteredFloat(int samples, float prefillValue) : base(samples, prefillValue)
-        {
-        }
-    }
 }

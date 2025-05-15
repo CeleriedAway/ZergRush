@@ -94,6 +94,13 @@ public class SimpleList<T> : IList<T>, IReadOnlyList<T>
         }
     }
 
+    public void RemoveTail(int newLastIndex)
+    {
+        if (newLastIndex < 0 || newLastIndex >= currentCount)
+            throw new ZergRushException("remove tail last index out of range index:" + newLastIndex + " count:" + currentCount);
+        currentCount = newLastIndex + 1;
+    }
+
     public void Clear()
     {
         currentCount = 0;

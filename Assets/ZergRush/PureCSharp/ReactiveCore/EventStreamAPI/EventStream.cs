@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
+using ZergRush.CodeGen;
 
 namespace ZergRush.ReactiveCore
 {
@@ -102,8 +103,15 @@ namespace ZergRush.ReactiveCore
                     }
                     if (!found) continue;
                 }
-                
-                action(t);
+
+                try
+                {
+                    action(t);
+                }
+                catch (Exception e)
+                {
+                    LogSink.errLog.Invoke($"Error in event-stream callback; value:{t}; exception:{e.ToError()}");
+                }
             }
 
             if (nextValue != null)

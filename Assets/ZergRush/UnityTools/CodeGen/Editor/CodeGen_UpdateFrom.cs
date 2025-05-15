@@ -230,10 +230,10 @@ namespace ZergRush.CodeGen
 
         public static string ReadNewInstanceOfImmutableType(Type t, bool pooled)
         {
-            if (t.IsEnum)
-                return $"ReadEnum<{t.RealName(true)}>()";
             if (t.IsNullable())
                 return ReadNewInstanceOfImmutableType(Nullable.GetUnderlyingType(t), pooled);
+            if (t.IsEnum)
+                return $"ReadEnum<{t.RealName(true)}>()";
             if (t.IsPrimitive || t == typeof(Guid) || t.IsDateTime())
                 return $"Read{t.Name}()";
             if (t == typeof(string))

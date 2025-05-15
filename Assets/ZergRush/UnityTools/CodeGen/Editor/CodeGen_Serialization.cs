@@ -486,7 +486,7 @@ namespace ZergRush.CodeGen
             if (configType == null)
             {
                 //TODO fix, right now it is difficult to reach generation hierarchy and cleary undeerstand config loading type for a field
-                throw new NotImplementedException();
+                throw new ZergRushException($"Can't find config type for {info}");
                 //return;
             }
 

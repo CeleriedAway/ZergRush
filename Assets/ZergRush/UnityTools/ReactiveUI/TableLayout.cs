@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -206,56 +206,60 @@ namespace ZergRush.ReactiveUI
         }
     }
 
-    class LinearVariableSizeLayout : IScrollViewLayout
+    class LinearVariableSizeLayout<TData> : IScrollViewLayout
     {
         int directionSign;
         List<float> endPoints = new List<float>();
+        int? requireRefillFromPos = null;
+        IReactiveCollection<TData> data;
+        Func<TData, float> viewSizeFactory;
 
         LinearVariableSizeLayout(LinearLayoutSettings settings) : base(settings)
         {
         }
 
-        public static LinearVariableSizeLayout Create<TData>(IReactiveCollection<TData> data,
+        public static LinearVariableSizeLayout<TData> Create(IReactiveCollection<TData> data,
             Func<TData, float> viewSizeFactory, LinearLayoutSettings settings)
         {
-            var layout = new LinearVariableSizeLayout(settings);
+            var layout = new LinearVariableSizeLayout<TData>(settings);
+
+            layout.data = data;
+            layout.viewSizeFactory = viewSizeFactory;
             layout.settings = settings;
             layout.directionSign = settings.direction == LayoutDirection.Horizontal ? 1 : -1;
-
             layout.addConnection = data.update.Subscribe(e =>
             {
-                switch (e.type)
+                if (layout.requireRefillFromPos.HasValue && layout.requireRefillFromPos < e.position)
                 {
-                    case ReactiveCollectionEventType.Reset:
-                        layout.RefillFromPos(0, data, viewSizeFactory);
-                        break;
-                    case ReactiveCollectionEventType.Insert:
-                    case ReactiveCollectionEventType.Remove:
-                    case ReactiveCollectionEventType.Set:
-                        layout.RefillFromPos(e.position, data, viewSizeFactory);
-                        break;
+                    return;
                 }
+                layout.requireRefillFromPos = e.position;
             });
-            layout.RefillFromPos(0, data, viewSizeFactory);
+            layout.RefillFromPos(0);
             return layout;
+        }
+
+        void LazyRefill()
+        {
+            if (requireRefillFromPos.HasValue)
+            {
+                RefillFromPos(requireRefillFromPos.Value);
+                requireRefillFromPos = null;
+            }
         }
 
         public float EndPointForIndex(int index)
         {
+            LazyRefill();
             return endPoints[index];
         }
 
-        public void Refill<TData>(IReactiveCollection<TData> data, Func<TData, float> viewSizeFactory)
+        public void Refill()
         {
-            RefillFromPos<TData>(0, data, viewSizeFactory);
+            RefillFromPos(0);
         }
 
-        public void RefillLast<TData>(IReactiveCollection<TData> data, Func<TData, float> viewSizeFactory)
-        {
-            RefillFromPos(data.Count - 1, data, viewSizeFactory);
-        }
-
-        public void RefillFromPos<TData>(int i, IReactiveCollection<TData> data, Func<TData, float> viewSizeFactory)
+        public void RefillFromPos(int i)
         {
             var curr = data;
             float accum = 0;
@@ -288,6 +292,7 @@ namespace ZergRush.ReactiveUI
 
         public override Vector2 AncoredPositionForIndex(int index)
         {
+            LazyRefill();
             var viewPos = directionSign *
                           (topShift.value + settings.mainSize / 2 + (index > 0 ? endPoints[index - 1] : 0));
             Vector2 finalPos = settings.direction == LayoutDirection.Horizontal
@@ -298,6 +303,7 @@ namespace ZergRush.ReactiveUI
 
         public override int FirstVisibleIndexFromShift(float shift)
         {
+            LazyRefill();
             return Mathf.Min(endPoints.UpperBound(shift - topShift.value), endPoints.Count - 1);
         }
 

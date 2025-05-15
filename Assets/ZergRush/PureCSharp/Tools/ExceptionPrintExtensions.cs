@@ -15,9 +15,16 @@ public static partial class ExceptionPrintExtensions
     
     static void ToError(this Exception e, StringBuilder str, string prefix)
     {
+        #if UNITY_EDITOR
         str.Append("<color=red>");
+        #endif
+        
         str.Append(e.Message).Append("\n");
+        
+        #if UNITY_EDITOR
         str.Append("</color>");
+        #endif
+        
         var st = new StackTrace(e, true).GetFrames();
         if (st == null)
         {
@@ -32,15 +39,19 @@ public static partial class ExceptionPrintExtensions
             var fileLineNumber = stackFrame.GetFileLineNumber();
             str.Append(prefix);
             str.Append("    ");
+            #if UNITY_EDITOR
             str.Append("<a href=\"");
             str.Append(fileName);
             str.Append("\" line=\"");
             str.Append(fileLineNumber);
             str.Append("\">");
+            #endif
             str.Append(shortName);
             str.Append(":");
             str.Append(fileLineNumber);
+            #if UNITY_EDITOR
             str.Append("</a>");
+            #endif
             str.Append("\n");
             str.Append(prefix);
             str.Append("    ");

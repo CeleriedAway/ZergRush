@@ -45,7 +45,7 @@ public static class CodeGenExtensions
         return instance;
     }
     
-    public static T Read<T>(this T instance, byte[] bytes) where T : class, IBinaryDeserializable
+    public static T Read<T>(this T instance, byte[] bytes) where T : IBinaryDeserializable
     {
         using var reader = new ZRBinaryReader(new MemoryStream(bytes));
         instance.Deserialize(reader);
@@ -68,8 +68,16 @@ public static class CodeGenExtensions
         using var writer = new ZRBinaryWriter(stream);
         data.Serialize(writer);
     }
+
+    public static T ReadFromSpan<T>(this ReadOnlySpan<byte> span) where T : IBinaryDeserializable, new()
+    {
+        var instance = new T();
+        using var reader = new ZRBinaryReader(span);
+        instance.Deserialize(reader);
+        return instance;
+    }
     
-    public static byte[] WriteToByteArray<T>(this ref T data) where T : struct, IBinarySerializable
+    public static byte[] WriteToByteArrayS<T>(this ref T data) where T : struct, IBinarySerializable
     {
         using var memStream = new MemoryStream();
         using var writer = new ZRBinaryWriter(memStream);
@@ -114,6 +122,39 @@ public static class CodeGenExtensions
     public static byte[] FromBase64(this string str)
     {
         return Convert.FromBase64String(str);
+    }
+    
+    public static void WriteToBinaryFile<T>(this T data, string path) where T : IBinarySerializable
+    {
+        using var stream = File.Create(path);
+        var writer = new ZRBinaryWriter(stream);
+        data.Serialize(writer);
+    }
+
+    public static T ReadFromBinaryFile<T>(string path) where T : IBinaryDeserializable, new()
+    {
+        using var stream = File.OpenRead(path);
+        using var reader = new ZRBinaryReader(stream);
+        var data = new T();
+        data.Deserialize(reader);
+        return data;
+    }
+
+    public static void WriteToJsonFile<T>(this T data, string path, bool formatting = true) where T : IJsonSerializable
+    {
+        using var stream = File.CreateText(path);
+        var writer = new ZRJsonTextWriter(stream);
+        writer.Formatting = formatting ? Formatting.Indented : Formatting.None;
+        data.WriteJson(writer);
+    }
+    
+    public static T ReadFromJsonFile<T>(string path) where T : IJsonSerializable, new()
+    {
+        using var stream = File.OpenText(path);
+        using var reader = new ZRJsonTextReader(stream);
+        var data = new T();
+        data.ReadFromJson(reader);
+        return data;
     }
 
     public static string WriteToJsonString<T>(this T data, bool formatting = true) where T : IJsonSerializable

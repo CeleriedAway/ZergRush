@@ -164,7 +164,7 @@ namespace ZergRush.ReactiveCore
                 if (modifications[i]) return true;
             }
 
-            return false;
+            return baseValue;
         }
 
         public OrModification() : base(false)

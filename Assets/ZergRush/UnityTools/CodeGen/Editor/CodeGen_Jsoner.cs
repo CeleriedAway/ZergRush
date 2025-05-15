@@ -44,7 +44,7 @@ namespace ZergRush.CodeGen
             if (t.IsConfig() == false) RequestGen(t, sink.classType, GenTaskFlags.JsonSerialization);
 
 
-            if (info.canBeNull)
+            if (info.canBeNull || isNullable)
             {
                 sink.content($"if ({info.access} == null)");
                 sink.openBrace();
@@ -60,9 +60,8 @@ namespace ZergRush.CodeGen
 
             if (t.IsFix64())
             {
-                sink.content($"writer.WriteValue({info.access}.RawValue);");
+                sink.content($"writer.WriteValue({info.access}{(isNullable ? ".Value" : "")}.RawValue);");
                 //sink.content($"writer.WriteFixedPreview({info.access}, \"{info.access}\");");
-                return;
             }
             else if (t == typeof(DateTime))
             {
@@ -113,7 +112,7 @@ namespace ZergRush.CodeGen
                 sink.content($"{info.access}.{JsonWriteFuncName}(writer);");
             }
 
-            if (info.canBeNull)
+            if (info.canBeNull || isNullable)
             {
                 sink.closeBrace();
             }
@@ -148,7 +147,7 @@ namespace ZergRush.CodeGen
                 baseCall = (s, info1) => s.content($"{info1.access} = ({t.RealName()}) reader.Value;");
             }
 
-            if (t.Name == "Fix64")
+            if (t.IsFix64() || (t.IsNullable() && Nullable.GetUnderlyingType(t).Name == "Fix64"))
             {
                 sink.classBuilder.usingSink("FixMath.NET");
             }
