@@ -7,29 +7,30 @@ namespace ZergRush
         public int currentIndex = -1;
         public int total;
         public int max;
-        public T[] values;
+        public T[] buffer;
 
+        public T[] filledValues => total < max ? buffer[..total] : buffer;
 
         public CycleBuffer(int sampleCount)
         {
             max = sampleCount;
-            values = new T[sampleCount];
+            buffer = new T[sampleCount];
         }
 
         public CycleBuffer(int sampleCount, T prefillValue) : this(sampleCount)
         {
-            for (var i = 0; i < values.Length; i++)
+            for (var i = 0; i < buffer.Length; i++)
             {
-                values[i] = prefillValue;
+                buffer[i] = prefillValue;
             }
             total = max;
         }
         
         public CycleBuffer(int sampleCount, Func<T> prefillFactory) : this(sampleCount)
         {
-            for (var i = 0; i < values.Length; i++)
+            for (var i = 0; i < buffer.Length; i++)
             {
-                values[i] = prefillFactory();
+                buffer[i] = prefillFactory();
             }
             total = max;
         }
@@ -44,7 +45,7 @@ namespace ZergRush
         // index sampling goes from newest value to latest at the end
         public T Sample(int index)
         {
-            return values[(currentIndex - index + max) % max];
+            return buffer[(currentIndex - index + max) % max];
         }
 
         public bool Filled => total == max;
@@ -63,9 +64,9 @@ namespace ZergRush
 
         public void Fill(T value)
         {
-            for (var i = 0; i < values.Length; i++)
+            for (var i = 0; i < buffer.Length; i++)
             {
-                values[i] = value;
+                buffer[i] = value;
             }
         }
 
@@ -73,15 +74,15 @@ namespace ZergRush
         {
             currentIndex = (currentIndex + 1) % max;
             if (total != max) total = currentIndex + 1;
-            values[currentIndex] = value;
+            buffer[currentIndex] = value;
         }
             
         public T PushAndReturnPrev(T value)
         {
             currentIndex = (currentIndex + 1) % max;
             if (total != max) total = currentIndex + 1;
-            var prev = values[currentIndex];
-            values[currentIndex] = value;
+            var prev = buffer[currentIndex];
+            buffer[currentIndex] = value;
             return prev;
         }
 
@@ -90,7 +91,7 @@ namespace ZergRush
         {
             currentIndex = (currentIndex + 1) % max;
             if (total != max) total = currentIndex + 1;
-            return values[currentIndex];
+            return buffer[currentIndex];
         }
     }
 }
