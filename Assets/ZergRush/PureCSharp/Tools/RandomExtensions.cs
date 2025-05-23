@@ -161,6 +161,29 @@ namespace ZergRush
             }
             return result;
         }
+        
+        public static List<T> RandomElementsWithStrictProportions<T>(this IList<T> elements, 
+            ZergRandom random, Func<T, int> weightFunc, int count)
+        {
+            var result = new List<T>(count);
+            var sum = elements.Select(weightFunc).Sum();
+            var proportions = elements.Select(e => weightFunc(e) / (float)sum).ToArray();
+            var elemCount = new int[elements.Count];
+            var currWeights = new float[elements.Count];
+            
+            for (int i = 0; i < count; i++)
+            {
+                for (int j = 0; j < currWeights.Length; j++)
+                {
+                    currWeights[j] = proportions[j] - elemCount[j] / (float)(i + 1);
+                }
+                currWeights.RandomWeightedElement(random, f => (int)(f * 10000000), out var index);
+                var element = elements[index];
+                elemCount[index]++;
+                result.Add(element);
+            }
+            return result;
+        }
 
         public static T RandomWeightedElement<T>(this IEnumerable<T> elements, ZergRandom random, Func<T, int> weightFunc, T def = default)
         {
