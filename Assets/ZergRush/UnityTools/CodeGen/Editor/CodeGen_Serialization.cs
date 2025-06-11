@@ -357,7 +357,14 @@ namespace ZergRush.CodeGen
             path = "array";
             sink.content($"var size = {stream}.ReadInt32();");
             sink.SinkCountCheck("size");
-            sink.content($"var {path} = new {type.RealName(true)}[size];");
+            if (type.IsArray)
+            {
+                sink.content($"var {path} = new {type.GetElementType().RealName(true)}[size][];");
+            }
+            else
+            {
+                sink.content($"var {path} = new {type.RealName(true)}[size];");
+            }
             sink.content($"for (int i = 0; i < size; i++)");
             sink.content($"{{");
             sink.indent++;
