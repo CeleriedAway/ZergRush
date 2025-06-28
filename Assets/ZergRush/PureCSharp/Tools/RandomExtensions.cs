@@ -129,6 +129,21 @@ namespace ZergRush
             return list.ElementAt(random.Range(0, count));
         }
         
+        public static T RandomElement<T>(this ICollection<T> list, ZergRandom random, out int index, T def = default)
+        {
+            index = -1;
+            int count = list.Count;
+            if (count < 1) return def;
+            if (count == 1)
+            {
+                index = 0;
+                return list.ElementAt(0);
+            }
+            
+            index = random.Range(0, count);
+            return list.ElementAt(index);
+        }
+        
         public static T TakeRandom<T>(this IList<T> list, ZergRandom random)
         {
             if (list.Count < 1) return default(T);
