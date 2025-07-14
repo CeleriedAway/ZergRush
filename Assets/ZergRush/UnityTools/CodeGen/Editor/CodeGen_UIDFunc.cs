@@ -8,6 +8,22 @@ namespace ZergRush.CodeGen
     {
         public static string UIdFuncName = "UId";
         public static string ConfigRegister = "ConfigRegister";
+        
+        
+        public static ulong StrHash(ReadOnlySpan<char> array)
+        {
+            if (array == null) return 1234567;
+            ulong hash = 0;
+            for (int i = 0; i < array.Length; i++)
+            {
+                hash += array[i];
+                hash += hash << 10;
+                hash ^= hash >> 7;
+            }
+
+            return hash;
+        }
+        
         public static void GenUIDFunc(Type type, string funcPrefix)
         {
             TraverseGenCustomType(new TraversStrategy
@@ -24,9 +40,9 @@ namespace ZergRush.CodeGen
                     if (baseCall)
                     {
                         sink.content($"var hash = base.{UIdFuncName}();");
-                        if (sink.classType.HasAttribute<UIDUseClassNameHash>())
+                        if (sink.classType.HasAttribute<UIDUseClassNameHash>(true))
                         {
-                            sink.content($"hash += {sink.classType.Name.CalculateHash()};");
+                            sink.content($"hash += {StrHash(sink.classType.Name)};");
                             sink.content(HashMixStatement("hash"));
                         }
                     }
