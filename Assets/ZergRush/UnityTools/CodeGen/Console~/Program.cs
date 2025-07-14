@@ -105,7 +105,7 @@ class Programm
         var trees = new List<SyntaxTree>();
         foreach (var file in files)
         {
-            
+            if (file.EndsWith("AssemblyInfo.cs")) continue;
             if (File.Exists(file) == false) continue;
             var tree = ExtractSyntaxTree(file, defines);
             trees.Add(tree);
