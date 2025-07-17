@@ -65,7 +65,22 @@ namespace ZergRush.CodeGen
         public static void MakeAndSaveEnumWithCachedValues(string enumName, List<string> values, string genScriptFolderWithSlashAtTheEnd,
             GeneratorContext context = null, string comment = null)
         {
-            var infoCacheFilePath = genScriptFolderWithSlashAtTheEnd + enumName + "ValueCache.txt";
+            int tries = 0;
+            string currentPath = ".";
+            while (Directory.Exists(Path.Combine(currentPath, "ProjectSettings")) == false)
+            {
+                // Console.WriteLine($"{currentPath} has {Directory.GetFiles(currentPath).PrintCollection()}");
+
+                currentPath += $"{Path.DirectorySeparatorChar}..";
+                tries++;
+
+                if (tries > 30)
+                {
+                    throw new ArgumentException($"Cant find project root folder, current path {currentPath}");
+                }
+            }
+            
+            var infoCacheFilePath = Path.Combine(currentPath, genScriptFolderWithSlashAtTheEnd) + enumName + "ValueCache.txt";
             var typeTable = Load(infoCacheFilePath);
             typeTable.UpdateWithNewTypes(values);
             SaveEnumCache(infoCacheFilePath, typeTable);
