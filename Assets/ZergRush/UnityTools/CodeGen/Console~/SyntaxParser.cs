@@ -197,6 +197,7 @@ public static partial class TypeReader
         "GenTaskFlags.cs",
         Path.Combine("UnityTools", "CodeGen", "Editor")
     };
+
     public static SyntaxTree PruneTree(SyntaxTree original)
     {
         if (exceptions.Any(e => original.FilePath.Contains(e, StringComparison.InvariantCultureIgnoreCase)))
@@ -204,10 +205,15 @@ public static partial class TypeReader
             //Console.WriteLine($"Skipping {original.FilePath}");
             return original;
         }
+
         var originalRoot = original.GetRoot();
         var tp = new TreePruner();
         var newRoot = tp.Visit(originalRoot);
-        return newRoot.SyntaxTree.WithFilePath(original.FilePath);
+     
+        return CSharpSyntaxTree.Create(
+            (CSharpSyntaxNode)newRoot,
+            (CSharpParseOptions)original.Options, 
+            original.FilePath);
     }
 
     public static List<string> ProjectDefines(string filename)
