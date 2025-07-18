@@ -186,7 +186,7 @@ public class SimpleList<T> : IList<T>, IReadOnlyList<T>
         return Array.IndexOf<T>(data, item, index, count);
     }
 
-    void EnsureCapacity(int capacity)
+    public void EnsureCapacity(int capacity)
     {
         var num = 0;
         if (capacity > data.Length)
