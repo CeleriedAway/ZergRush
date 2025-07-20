@@ -85,9 +85,10 @@ namespace ZergRush.ReactiveUI
                 var childCount = parent.childCount;
                 for (int i = 0; i < childCount; i++)
                 {
-                    var childView = parent.GetChild(i).GetComponent(type) as TView;
-                    if (childView != null)
+                    var component = parent.GetChild(i).GetComponent(type);
+                    if (component?.GetType() == type)
                     {
+                        var childView = (TView)component;
                         if (childView.prefabRef != null)
                         {
                             extractPrefab = (TView)childView.prefabRef;
