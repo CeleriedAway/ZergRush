@@ -8,6 +8,19 @@ namespace ZergRush
 {
     public static partial class Utils
     {
+        public static void ResetFrom<T>(this IList<T> self, IEnumerable<T> source, ZRUpdateFromHelper zr)
+            where T : IUpdatableFrom<T>, new()
+        {
+            self.Clear();
+            foreach (var updatableFrom in source)
+            {
+                var item = updatableFrom;
+                var newItem = new T();
+                newItem.UpdateFrom(item, zr);
+                self.Add(item);
+            }
+        }
+        
         public static bool IsNullOrWhitespace(this string str)
         {
             return String.IsNullOrWhiteSpace(str);
