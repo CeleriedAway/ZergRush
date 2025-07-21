@@ -225,6 +225,11 @@ namespace ZergRush
                 if (again) again = false;
                 else break;
             }
+            
+            for (var i = 0; i < source.Count; i++)
+            {
+                source[i] = source[i].Replace("\xa0", "");
+            }
 
             rows.Clear();
             var columns = source[0].Split(',').ToList();
