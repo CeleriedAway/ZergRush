@@ -148,7 +148,7 @@ namespace ZergRush
             var part = 1f / count;
             var i = 0;
 
-            var filesToWrite = new List<(string, string)>();
+            var filesToWrite = new List<(string, Task<string>)>();
 
             foreach (var config in googleConfig)
             {
@@ -159,7 +159,7 @@ namespace ZergRush
                     #endif
                     var content = LoadTableAsCSV(config.id, page.Value, page.Key.ToString());
                     var path = $"{pathToConfigs}{config.name}";
-                    filesToWrite.Add(($"{path}/{page.Key}.csv", await content));
+                    filesToWrite.Add(($"{path}/{page.Key}.csv", content));
                     Directory.CreateDirectory(path);
                 }
             }
@@ -172,7 +172,7 @@ namespace ZergRush
 
             foreach (var (path, content) in filesToWrite)
             {
-                File.WriteAllText(path, content);
+                File.WriteAllText(path, await content);
             }
             
             Debug.Log("Load csv data complete!");
