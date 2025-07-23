@@ -472,7 +472,7 @@ namespace ZergRush.CodeGen
                     ReadJsonValueStatement(sinkReader, info, false);
                     sinkReader.content($"break;");
                 });
-                if (!immutableMode) sinkReader.content($"default: return false; break;");
+                if (!immutableMode && !externalMode) sinkReader.content($"default: return false; break;");
                 sinkReader.closeBrace();
 
                 if (externalMode)

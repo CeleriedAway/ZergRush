@@ -58,7 +58,6 @@ public static partial class SerializationExtensions
                     case "ownerId":
                     self.ownerId = (int)(Int64)reader.Value;
                     break;
-                    default: return false; break;
                 }
             }
             else if (reader.TokenType == JsonToken.EndObject) { break; }
