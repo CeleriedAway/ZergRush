@@ -1,4 +1,6 @@
-﻿namespace ZergRush.Alive
+﻿using ZergRush.ReactiveCore;
+
+namespace ZergRush.Alive
 {
     using System.Collections.Generic;
 
@@ -20,4 +22,22 @@
     /// Only config itself serialize members as data.
     /// </summary>
     public class ConfigStorageDict<TKey, T> : Dictionary<TKey, T> where T : LoadableConfig {}
+    
+    public class ConfigStorageSlot<T> : ConfigStorageList<T> where T : LoadableConfig, new()
+    {
+        public ConfigStorageSlot() : base()
+        {
+            Add(new T());
+        }
+        public T value
+        {
+            get => this[0];
+            set => this[0] = value;
+        }
+        
+        public static implicit operator T(ConfigStorageSlot<T> slot)
+        {
+            return slot.value;
+        }
+    }
 }
