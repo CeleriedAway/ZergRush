@@ -8,6 +8,7 @@ namespace ZergRush
 {
     public static partial class Utils
     {
+        #if !CONSOLE_GEN
         public static void ResetFrom<T>(this IList<T> self, IEnumerable<T> source, ZRUpdateFromHelper zr)
             where T : IUpdatableFrom<T>, new()
         {
@@ -20,6 +21,7 @@ namespace ZergRush
                 self.Add(newItem);
             }
         }
+        #endif
         
         public static bool IsNullOrWhitespace(this string str)
         {
