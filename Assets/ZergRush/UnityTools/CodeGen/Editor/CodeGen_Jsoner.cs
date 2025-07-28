@@ -33,6 +33,8 @@ namespace ZergRush.CodeGen
         public static void WriteJsonValueStatement(MethodBuilder sink, DataInfo info, bool inList,
             bool writeDataNodeAsId = false)
         {
+            if (info.realType == null) info.SetupIsCell();
+            
             var t = info.type;
             bool isNullable = false;
             if (t.IsNullable())
@@ -251,12 +253,14 @@ namespace ZergRush.CodeGen
                 sinkWriter.content($"for (int i = 0; i < {info.access}.{count}; i++)");
                 sinkWriter.content($"{{");
                 sinkWriter.indent++;
+                var dataInfo = new DataInfo
+                {
+                    type = info.type, baseAccess = $"{info.access}[i]",
+                    insideConfigStorage = type.IsConfigStorage()
+                }.SetupIsCell();
+                dataInfo.canBeNull = dataInfo.type.IsClass;
                 WriteJsonValueStatement(sinkWriter,
-                    new DataInfo
-                    {
-                        type = info.type, baseAccess = $"{info.access}[i]",
-                        insideConfigStorage = type.IsConfigStorage(), canBeNull = info.type.IsClass
-                    }, true);
+                    dataInfo, true);
                 sinkWriter.indent--;
                 sinkWriter.content($"}}");
                 sinkWriter.content($"writer.WriteEndArray();");
