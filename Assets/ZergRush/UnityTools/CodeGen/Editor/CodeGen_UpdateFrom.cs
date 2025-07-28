@@ -19,6 +19,8 @@ namespace ZergRush.CodeGen
             string directReader, string refInst, string refIdReader, bool pooled, Func<Type, string> configIdReader = null,  bool needCreateVar = false,
             bool useTempVarThenAssign = false, bool getDataNodeFromRootWithRefId = false)
         {
+            if (info.realType == null) info.SetupIsCell();
+            
             var t = info.type;
             var canBeNull = info.canBeNull && (!t.IsValueType || t.IsNullable());
 
@@ -32,7 +34,8 @@ namespace ZergRush.CodeGen
                 {
                     type = originalInfo.type,
                     baseAccess = tempVar,
-                    sureIsNull = info.sureIsNull
+                    sureIsNull = info.sureIsNull,
+                    carrierType = info.carrierType,
                 };
             }
             
@@ -45,7 +48,14 @@ namespace ZergRush.CodeGen
 
             if (needCreateVar)
             {
-                sink.content($"{info.type.RealName(true)} {info.name} = default;");
+                if (info.isValueWrapper == ValueVrapperType.None || info.isValueWrapper == ValueVrapperType.Nullable)
+                {
+                    sink.content($"{info.realType.RealName(true)} {info.name} = default;");
+                }
+                else
+                {
+                    sink.content($"{info.realType.RealName(true)} {info.name} = {NewInstExpr(info.realType, false)};");
+                }
             }
             
             if (t.IsImmutableValueType())
@@ -157,6 +167,8 @@ namespace ZergRush.CodeGen
         public static void GenUpdateValueFromInstance(MethodBuilder sink, DataInfo info, string other, bool pooled,
             bool needCreateVar = false, bool needTempVarThenAssign = false, bool readDataNodeFromRootWithId = false, bool supportMultiRef = true)
         {
+            if (info.realType == null) info.SetupIsCell();
+            
             var t = info.type;
             // info can be transformed because read from can do temp value wrapping for it
             if (supportMultiRef && info.type.IsMultipleReference() && !needCreateVar)
@@ -187,11 +199,17 @@ namespace ZergRush.CodeGen
             // {
             //     sink.content($"{info.realAccess}.{updatemod} = true;");
             // }
-
             
-            if (info.immutableData || t.IsImmutableData())
+            if (info.immutableData || info.type.IsImmutableData())
             {
-                sink.content($"{OptVar(needCreateVar)}{info.access} = {other};");
+                if (needCreateVar && info.isValueWrapper == ValueVrapperType.Cell)
+                {
+                    sink.content($"{OptVar(needCreateVar)}{info.baseAccess} = {info.realType.NewInstExpr(false, other, true) };");
+                }
+                else
+                {
+                    sink.content($"{OptVar(needCreateVar)}{info.access} = {other};");
+                }
                 return;
             }
             else if (t.IsArray)
@@ -209,7 +227,7 @@ namespace ZergRush.CodeGen
                 };
             }
 
-            RequestGen(info.type, sink.classType, pooled ? GenTaskFlags.PooledUpdateFrom : GenTaskFlags.UpdateFrom);
+            RequestGen(info.realType, sink.classType, pooled ? GenTaskFlags.PooledUpdateFrom : GenTaskFlags.UpdateFrom);
 
             GeneralReadFrom(sink, info,
                 baseReadCall: baseReadCall,
@@ -270,19 +288,21 @@ namespace ZergRush.CodeGen
                 return;
             }
             
-            var refInst = $"{other}[i]";
+            var dataInfo = new DataInfo {
+                type = elementType,
+                baseAccess = $"{accessPrefix}[i]",
+                canBeNull = !elementType.IsValueType,
+                insideLivableContainer = useAddCopyFunc
+            }.SetupIsCell();
+            
+            var refInst = dataInfo.valueTransformer($"{other}[i]");
             sink.content($"int i = 0;");
             sink.content($"int oldCount = {accessPrefix}.Count;");
             sink.content($"int crossCount = Math.Min(oldCount, {other}.Count);");
             sink.content($"for (; i < crossCount; ++i)");
             sink.content($"{{");
             sink.indent++;
-                GenUpdateValueFromInstance(sink, new DataInfo {
-                        type = elementType,
-                        baseAccess = $"{accessPrefix}[i]",
-                        canBeNull = !elementType.IsValueType,
-                        insideLivableContainer = useAddCopyFunc
-                    }, refInst,
+            GenUpdateValueFromInstance(sink, dataInfo, refInst,
                     pooled,
                     needTempVarThenAssign: elementType.IsValueType);
                 sink.indent--;

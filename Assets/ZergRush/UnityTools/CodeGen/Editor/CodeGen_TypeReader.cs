@@ -423,15 +423,7 @@ namespace ZergRush.CodeGen
                     member.canBeNull = true;
                 }
                 
-                // Make cell look like usual field in codegeneration process.
-                var isCell = member.type.IsCell();
-                if (isCell || member.type.IsLivableSlot())
-                {
-                    member.valueTransformer = n => n + ".value";
-                    member.realType = member.type;
-                    member.type = member.type.FirstGenericArg();
-                    member.isValueWrapper = isCell ? ValueVrapperType.Cell : ValueVrapperType.LivableSlot;
-                }
+                member.SetupIsCell();
 
                 if (member.realType.IsLivableSlot())
                 {
@@ -529,6 +521,23 @@ namespace ZergRush.CodeGen
         public override string ToString()
         {
             return $"{nameof(baseAccess)}: {baseAccess}, {nameof(type)}: {type}";
+        }
+
+        public DataInfo SetupIsCell()
+        {
+            if (type.IsCell() || type.IsLivableSlot())
+            {
+                var isCell = type.IsCell();
+                valueTransformer = n => n + ".value";
+                realType = type;
+                type = type.FirstGenericArg();
+                isValueWrapper = isCell ? CodeGen.ValueVrapperType.Cell : CodeGen.ValueVrapperType.LivableSlot;
+            }
+            else
+            {
+                realType = type;
+            }
+            return this;
         }
     }
 }

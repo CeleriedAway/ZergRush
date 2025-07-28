@@ -211,7 +211,7 @@ namespace ZergRush.CodeGen
             }
         }
 
-        static string NewInstExpr(Type t, bool pooled, object constructorArg = null)
+        public static string NewInstExpr(this Type t, bool pooled, object constructorArg = null, bool isCustomExprArg = false)
         {
             if (t.HasPool() && pooled)
             {
@@ -219,7 +219,7 @@ namespace ZergRush.CodeGen
             }
             else if (t.HasDefaultConstructor())
             {
-                var arg = constructorArg != null ? (constructorArg is string ? $"\"{constructorArg}\"" :  constructorArg) : "";
+                var arg = constructorArg != null ? ((constructorArg is string && !isCustomExprArg) ? $"\"{constructorArg}\"" :  constructorArg) : "";
                 
                 if (arg is bool b)
                     arg = b ? "true" : "false";

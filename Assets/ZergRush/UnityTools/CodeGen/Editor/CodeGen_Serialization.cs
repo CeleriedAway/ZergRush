@@ -99,7 +99,7 @@ namespace ZergRush.CodeGen
                 new DataInfo
                 {
                     type = info.type, baseAccess = $"{info.access}[i]", insideConfigStorage = listType.IsConfigStorage()
-                }, stream);
+                }.SetupIsCell(), stream);
             sink.indent--;
             sink.content("}");
             sink.indent--;
@@ -115,7 +115,7 @@ namespace ZergRush.CodeGen
             sink.indent++;
 
             WriteToStreamStatement(sink,
-                new DataInfo { type = keyType, baseAccess = $"item.Key", insideConfigStorage = configStorage }, stream);
+                new DataInfo { type = keyType, baseAccess = $"item.Key", insideConfigStorage = configStorage }.SetupIsCell(), stream);
 
             if (!valType.IsValueType)
             {
@@ -126,7 +126,7 @@ namespace ZergRush.CodeGen
             sink.content("{");
             sink.indent++;
             WriteToStreamStatement(sink,
-                new DataInfo { type = valType, baseAccess = $"item.Value", insideConfigStorage = configStorage },
+                new DataInfo { type = valType, baseAccess = $"item.Value", insideConfigStorage = configStorage }.SetupIsCell(),
                 stream);
 
             sink.indent--;
@@ -150,7 +150,7 @@ namespace ZergRush.CodeGen
 
             sink.content("{");
             sink.indent++;
-            WriteToStreamStatement(sink, new DataInfo { type = info.type, baseAccess = $"{info.access}[i]" }, stream);
+            WriteToStreamStatement(sink, new DataInfo { type = info.type, baseAccess = $"{info.access}[i]" }.SetupIsCell(), stream);
             sink.indent--;
             sink.content("}");
             sink.indent--;
@@ -232,6 +232,8 @@ namespace ZergRush.CodeGen
         public static void GenReadValueFromStream(MethodBuilder sink, DataInfo info, string stream, bool pooled,
             bool needVar = false, bool readDataNodeFromId = false)
         {
+            if (info.realType == null) info.SetupIsCell();
+            
             var t = info.type;
 
 
@@ -298,7 +300,7 @@ namespace ZergRush.CodeGen
                     {
                         type = type, carrierType = listType, baseAccess = $"self[self.{count} - 1]",
                         insideConfigStorage = listType.IsConfigStorage(), sureIsNull = true
-                    }, stream, pooled, false);
+                    }.SetupIsCell(), stream, pooled, false);
             }
             else
             {
@@ -309,7 +311,7 @@ namespace ZergRush.CodeGen
                     {
                         type = type, carrierType = listType, baseAccess = $"val", sureIsNull = true,
                         insideConfigStorage = listType.IsConfigStorage()
-                    },
+                    }.SetupIsCell(),
                     stream, pooled, true);
                 sink.content($"self.Add(val);");
             }
@@ -331,7 +333,7 @@ namespace ZergRush.CodeGen
             sink.content($"var key = default({keyType.RealName(true)});");
             GenReadValueFromStream(sink,
                 new DataInfo
-                    { type = keyType, baseAccess = $"key", sureIsNull = true, insideConfigStorage = configStorage },
+                    { type = keyType, baseAccess = $"key", sureIsNull = true, insideConfigStorage = configStorage }.SetupIsCell(),
                 stream, pooled);
 
             if (!valType.IsValueType)
@@ -340,7 +342,7 @@ namespace ZergRush.CodeGen
             sink.content($"var val = default({valType.RealName(true)});");
             GenReadValueFromStream(sink,
                 new DataInfo
-                    { type = valType, baseAccess = $"val", sureIsNull = true, insideConfigStorage = configStorage },
+                    { type = valType, baseAccess = $"val", sureIsNull = true, insideConfigStorage = configStorage }.SetupIsCell(),
                 stream,
                 pooled);
 
@@ -371,7 +373,7 @@ namespace ZergRush.CodeGen
             sink.indent++;
             if (!type.IsValueType)
                 sink.content($"if (!{stream}.ReadBoolean()) {{ {path}[i] = null; continue; }}");
-            GenReadValueFromStream(sink, new DataInfo {type = type, baseAccess = $"{path}[i]", sureIsNull = true},
+            GenReadValueFromStream(sink, new DataInfo {type = type, baseAccess = $"{path}[i]", sureIsNull = true}.SetupIsCell(),
                 stream, pooled);
             sink.indent--;
             sink.content($"}}");
