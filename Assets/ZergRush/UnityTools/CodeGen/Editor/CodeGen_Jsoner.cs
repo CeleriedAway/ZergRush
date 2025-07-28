@@ -126,6 +126,8 @@ namespace ZergRush.CodeGen
         public static void ReadJsonValueStatement(MethodBuilder sink, DataInfo info, bool needCreateVar,
             bool readDataNodeFromId = false, bool useTempVar = false)
         {
+            if (info.realType == null) info.SetupIsCell();
+            
             var t = info.type;
             if (t.IsConfig() == false) RequestGen(t, sink.classType, GenTaskFlags.JsonSerialization);
 

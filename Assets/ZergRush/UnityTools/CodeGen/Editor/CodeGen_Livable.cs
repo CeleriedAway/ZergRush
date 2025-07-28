@@ -48,7 +48,7 @@ namespace ZergRush.CodeGen
         {
             return (t.IsGenericOfType(typeof(LivableList<>)) || t.IsGenericOfType(typeof(ModifiableLivableList<>)));
         }
-        static bool IsLivableSlot(this Type t)
+        public static bool IsLivableSlot(this Type t)
         {
             if (t == null) return false;
             var tName = t.Name;
