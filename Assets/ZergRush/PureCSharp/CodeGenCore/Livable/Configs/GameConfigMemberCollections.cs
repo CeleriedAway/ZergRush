@@ -27,7 +27,7 @@ namespace ZergRush.Alive
     {
         public ConfigStorageSlot() : base()
         {
-            Add(new T());
+            this.EnsureSize(1);
         }
         public T value
         {
