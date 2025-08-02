@@ -148,7 +148,7 @@ public static class CodeGenExtensions
         data.WriteJson(writer);
     }
     
-    public static T ReadFromJsonFile<T>(string path) where T : IJsonSerializable, new()
+    public static T ReadFromJsonFile<T>(this string path) where T : IJsonSerializable, new()
     {
         using var stream = File.OpenText(path);
         using var reader = new ZRJsonTextReader(stream);
