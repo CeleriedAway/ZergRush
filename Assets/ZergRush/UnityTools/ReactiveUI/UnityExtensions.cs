@@ -35,7 +35,7 @@ public static partial class UnityExtensions
         dublicater.AddConnection(connection);
     }
 
-    class UnityActionDisposable : IDisposable
+    public class UnityActionDisposable : IDisposable
     {
         public UnityEvent e;
         public UnityAction action;
@@ -51,7 +51,7 @@ public static partial class UnityExtensions
         }
     }
 
-    class UnityActionDisposable<T> : IDisposable
+    public class UnityActionDisposable<T> : IDisposable
     {
         public UnityEvent<T> e;
         public UnityAction<T> action;
