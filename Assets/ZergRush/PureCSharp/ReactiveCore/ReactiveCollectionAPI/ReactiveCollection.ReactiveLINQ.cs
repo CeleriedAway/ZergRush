@@ -75,7 +75,83 @@ namespace ZergRush.ReactiveCore
             for (var index = 0; index < col.Count / 2; index++)
                 (col[index], col[col.Count - index - 1]) = (col[col.Count - index - 1], col[index]);
         }
+        
+        public static IReactiveCollection<T> TakeReactive<T>(this IReactiveCollection<T> collection, int count)
+        {
+            return new TakeReactiveCollection<T>(collection, new StaticCell<int>(count));
+        }
+        
+        public static IReactiveCollection<T> TakeReactive<T>(this IReactiveCollection<T> collection, ICell<int> count)
+        {
+            return new TakeReactiveCollection<T>(collection, count);
+        }
 
+        class TakeReactiveCollection<T> : AbstractCollectionTransform<T>
+        {
+            public readonly IReactiveCollection<T> collection;
+            public readonly ICell<int> count;
+
+            public TakeReactiveCollection(IReactiveCollection<T> collection, ICell<int> count)
+            {
+                this.collection = collection;
+                this.count = count;
+            }
+
+            protected override IDisposable StartListenAndRefill()
+            {
+                var disp = new DoubleDisposable();
+                disp.First = collection.update.Subscribe(e =>
+                {
+                    switch (e.type)
+                    {
+                        case ReactiveCollectionEventType.Reset:
+                            RefillRaw();
+                            break;
+                        case ReactiveCollectionEventType.Insert:
+                            if (e.position >= count.value) return;
+                            buffer.Insert(e.position, e.newItem);
+                            if (count.value < collection.Count)
+                            {
+                                buffer.RemoveLast();
+                            }
+                            break;
+                        case ReactiveCollectionEventType.Remove:
+                            if (e.position >= count.value) return;
+                            if (count.value < collection.Count)
+                            {
+                                buffer.Insert(count.value, collection[count.value]);
+                            }
+                            buffer.RemoveAt(e.position);
+                            break;
+                        case ReactiveCollectionEventType.Set:
+                            if (e.position >= count.value) return;
+                            buffer[e.position] = e.newItem;
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }
+                });
+                disp.Second = count.ListenUpdates(c =>
+                {
+                    while (c < buffer.Count)
+                    {
+                        buffer.RemoveLast();
+                    }
+                    while (c > buffer.Count && c <= collection.Count)
+                    {
+                        buffer.Add(collection[buffer.Count]);
+                    }
+                });
+                RefillRaw();
+                return disp;
+            }
+
+            protected override void RefillRaw()
+            {
+                buffer.Reset(collection.Take(Math.Min(collection.Count, count.value)));
+            }
+        }
+        
         public static IReactiveCollection<T> EnumerateRange<T>(this ICell<int> cellOfElemCount, Func<int, T> fill)
         {
             return new ReactiveRange<T> { fill = fill, cellOfCount = cellOfElemCount };
