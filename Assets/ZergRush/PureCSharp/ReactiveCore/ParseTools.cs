@@ -110,9 +110,8 @@ public static class ParseTools
     public static bool ParseBool(this string str)
     {
         var lower = str?.ToLower();
-        return lower == "true" || lower == "yes";
+        return lower == "true" || lower == "yes" || lower == "on";
     }
-
 
     static int[] ParseIntArray(this string str)
     {
