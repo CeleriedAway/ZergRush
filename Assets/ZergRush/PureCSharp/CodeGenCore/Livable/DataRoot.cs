@@ -84,6 +84,8 @@ namespace ZergRush.Alive
         public virtual void RootUpdateFrom(DataRoot other, ZRUpdateFromHelper __helper)
         {
             // All ids will be refilled from other model
+            var self = this;
+            __helper.TryLoadAlreadyUpdated(other, ref self);
             gameEntities.Clear();
             __updating = true;
             
