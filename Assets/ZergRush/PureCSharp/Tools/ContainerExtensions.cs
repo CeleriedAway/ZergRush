@@ -18,7 +18,7 @@ namespace ZergRush
                 var item = updatableFrom;
                 var newItem = new T();
                 newItem.UpdateFrom(item, zr);
-                self.Add(item);
+                self.Add(newItem);
             }
         }
         #endif

@@ -180,7 +180,7 @@ namespace ZergRush.CodeGen
                 var baseCall = $"{info1.access}.{UpdateFuncName}({other}, {HelperName}{t.OptPoolIfUpdatebleWithPoolSecondArg(pooled)});";
                 if (supportMultiRef && info1.type.IsMultipleReference())
                 {
-                    if (info1.type.IsDataNode())
+                    if (info1.type.IsDataNode() && info1.type.IsDataRoot() == false)
                     {
                         baseCall = $"if (!{HelperName}.TryLoadAlreadyUpdatedLivable({other}, ref {info1.access}," +
                                    $" {(info.insideLivableContainer ? "true" : "false")})) {baseCall}";

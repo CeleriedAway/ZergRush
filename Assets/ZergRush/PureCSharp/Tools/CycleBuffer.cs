@@ -38,6 +38,7 @@ namespace ZergRush
         public void Clear()
         {
             total = 0;
+            currentIndex = -1;
         }
 
         public int Count => total < max ? total : max;
