@@ -107,7 +107,7 @@ namespace ZergRush
             var docName = googleConfig.Find(c => c.pages.ContainsKey(page)).name.ToString();
             var di = new DirectoryInfo(pathToConfigs);
             di = di.GetDirectories().First(info => info.Name.StartsWith(docName));
-            var source = File.ReadAllText(Path.Combine(di.FullName, page + ".csv"));
+            var source = File.ReadAllText(Path.Combine(di.FullName, page + ".csv"), Encoding.UTF8);
             return new CsvReader(source.Split(new[] { "\r\n" }, StringSplitOptions.None));
         }
 
@@ -125,7 +125,11 @@ namespace ZergRush
                 {
                     var content = await LoadTableAsCSV(googleSheet.id, page, id.ToString());
                     var path = $"{pathToConfigs}{googleSheet.name}/{id.ToString()}.csv";
-                    await File.WriteAllTextAsync(path, content);
+                    Directory.CreateDirectory(Path.GetDirectoryName(path));
+                    using (var writer = new StreamWriter(path, false, new UTF8Encoding(false)))
+                    {
+                        await writer.WriteAsync(content ?? string.Empty);
+                    }
                     Debug.Log($"page {id} loaded and saved to {path}");
                 }
             }
@@ -172,7 +176,10 @@ namespace ZergRush
 
             foreach (var (path, content) in filesToWrite)
             {
-                File.WriteAllText(path, await content);
+                using (var writer = new StreamWriter(path, false, new UTF8Encoding(false)))
+                {
+                    await writer.WriteAsync(await content ?? string.Empty);
+                }
             }
             
             Debug.Log("Load csv data complete!");
@@ -189,7 +196,10 @@ namespace ZergRush
             var link = $"https://docs.google.com/spreadsheets/d/{tableId}/export?format=csv&id={tableId}&gid={pageId}";
 
             string csv = null;
-            var client = new WebClient();
+            var client = new WebClient
+            {
+                Encoding = Encoding.UTF8
+            };
             try
             {
                 csv = await client.DownloadStringTaskAsync(link);

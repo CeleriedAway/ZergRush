@@ -228,7 +228,12 @@ namespace ZergRush
             
             for (var i = 0; i < source.Count; i++)
             {
-                source[i] = source[i].Replace("\xa0", "");
+                // Normalize/removes non-breaking and thin spaces often used as thousands separators in exports
+                source[i] = source[i]
+                    .Replace("\xa0", "")      // NBSP U+00A0
+                    .Replace("\u202F", "")    // NARROW NO-BREAK SPACE U+202F
+                    .Replace("\u2009", "")    // THIN SPACE U+2009
+                    .Replace("\u2007", "");   // FIGURE SPACE U+2007
             }
 
             rows.Clear();
