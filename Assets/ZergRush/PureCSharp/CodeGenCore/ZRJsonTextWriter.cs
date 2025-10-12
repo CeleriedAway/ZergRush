@@ -12,6 +12,15 @@ namespace ZergRush
         public ZRJsonTextWriter(TextWriter textWriter) : base(textWriter)
         {
         }
+        
+        public void RegisterFirstObject(IJsonSerializable obj)
+        {
+            generator.GetId(obj, out bool firstTime);
+            if (!firstTime)
+            {
+                throw new ZergRushException("Object was already registered");
+            }
+        }
 
         public void WriteObjectWithRef(IJsonSerializable obj)
         {

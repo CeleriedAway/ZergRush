@@ -336,6 +336,12 @@ public unsafe static class CodeGenImplTools
         stream.Write(bytes);
     }
 
+    public static void ReadRootFromJson<T>(this T t, ZRJsonTextReader reader) where T : IJsonSerializable
+    {
+        reader.InitRootObject(t);
+        t.ReadFromJson(reader);
+    }
+
     public static void ReadFromJson<T>(this T t, ZRJsonTextReader reader) where T : IJsonSerializable
     {
         while (reader.Read())

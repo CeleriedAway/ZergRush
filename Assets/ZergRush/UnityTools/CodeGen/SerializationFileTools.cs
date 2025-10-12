@@ -50,7 +50,7 @@ public static partial class SerializationFileTools
     {
         using var file = unityWrapPath ? UnityFileWrapper.OpenText(filePath) : File.OpenText(filePath);
         instance ??= new T();
-        instance.ReadFromJson(new ZRJsonTextReader(file));
+        instance.ReadRootFromJson(new ZRJsonTextReader(file));
         return instance;
     }
 
