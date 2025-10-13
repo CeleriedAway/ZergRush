@@ -36,8 +36,6 @@ public static partial class SerializationTools
             writer.WriteNull();
             return;
         }
-        
-        writer.RegisterFirstObject(obj);
 
         writer.WriteStartObject();
         var polymorph = obj as IPolymorphable;
