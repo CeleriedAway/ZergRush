@@ -9,6 +9,25 @@ using ZergRush.Alive;
 public unsafe static class CodeGenImplTools
 {
     public static string ClassIdName = "__classId";
+
+    public static float ReadJsonFloat(this JsonReader reader)
+    {
+        if (reader.TokenType == JsonToken.Float)
+            return (float)(double)reader.Value;
+        if (reader.TokenType == JsonToken.Integer)
+            return (long)reader.Value;
+        throw new ZergRushException("Invalid token type for float: " + reader.TokenType);
+    }
+    
+    public static double ReadJsonDouble(this JsonReader reader)
+    {
+        if (reader.TokenType == JsonToken.Float)
+            return (double)reader.Value;
+        if (reader.TokenType == JsonToken.Integer)
+            return (long)reader.Value;
+        throw new ZergRushException("Invalid token type for double: " + reader.TokenType);
+    }
+    
     
     public static void LogCompError(Stack<string> path, string name, Action<string> print, float other, float self)
     {

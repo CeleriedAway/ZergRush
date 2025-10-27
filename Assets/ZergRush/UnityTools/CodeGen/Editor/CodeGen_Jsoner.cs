@@ -197,8 +197,10 @@ namespace ZergRush.CodeGen
             //     var cast = valtype == typeof(float) || valtype == typeof(double) ? "double" : "Int64";
             //     return $"(reader.Value == null ? ({valtype.RealName()})({cast})reader.Value : ({t.RealName()})null)";
             // }
-            if (t == typeof(float) || t == typeof(double))
-                return str + $"(double)reader.Value";
+            if (t == typeof(float))
+                return "reader.ReadJsonFloat()";
+            if (t == typeof(double))
+                return "reader.ReadJsonDouble()";
             if (t == typeof(ulong))
                 return $"ulong.Parse((string)reader.Value)";
             if (t.IsPrimitive)
