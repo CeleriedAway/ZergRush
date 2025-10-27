@@ -198,7 +198,7 @@ namespace ZergRush.CodeGen
             //     return $"(reader.Value == null ? ({valtype.RealName()})({cast})reader.Value : ({t.RealName()})null)";
             // }
             if (t == typeof(float))
-                return "reader.ReadJsonFloat()";
+                return "CodeGenImplTools.ReadJsonFloat(reader)";
             if (t == typeof(double))
                 return "reader.ReadJsonDouble()";
             if (t == typeof(ulong))

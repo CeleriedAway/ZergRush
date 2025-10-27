@@ -10,7 +10,7 @@ public unsafe static class CodeGenImplTools
 {
     public static string ClassIdName = "__classId";
 
-    public static float ReadJsonFloat(this JsonReader reader)
+    public static float ReadJsonFloat(JsonReader reader)
     {
         if (reader.TokenType == JsonToken.Float)
             return (float)(double)reader.Value;
