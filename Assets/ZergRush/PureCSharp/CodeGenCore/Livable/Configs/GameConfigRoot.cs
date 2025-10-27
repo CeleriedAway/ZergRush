@@ -113,7 +113,7 @@
         public static void LoadFrom(ZRJsonTextReader reader)
         {
             Instance = new T();
-            Instance.ReadFromJson(reader);
+            Instance.ReadRootFromJson(reader);
         }
     }
 }

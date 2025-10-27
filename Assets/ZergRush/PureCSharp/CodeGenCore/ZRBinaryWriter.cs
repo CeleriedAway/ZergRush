@@ -24,6 +24,15 @@ namespace ZergRush
             generator.Clear();
             this.Seek(0, SeekOrigin.Begin);
         }
+        
+        public void RegisterRootObject(IBinarySerializable obj)
+        {
+            generator.GetId(obj, out bool firstTime);
+            if (!firstTime)
+            {
+                throw new ZergRushException("Object was already registered");
+            }
+        }
 
         public void WriteObjectWithRef(IBinarySerializable obj)
         {

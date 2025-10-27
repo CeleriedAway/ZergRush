@@ -54,7 +54,7 @@ public static partial class SerializationTools
     {
         if (obj == null) obj = new T();
         reader.Read();
-        obj.ReadFromJson(reader);
+        obj.ReadRootFromJson(reader);
         return obj;
     }
 }

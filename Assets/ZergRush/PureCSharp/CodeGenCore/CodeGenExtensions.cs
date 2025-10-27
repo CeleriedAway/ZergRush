@@ -153,7 +153,7 @@ public static class CodeGenExtensions
         using var stream = File.OpenText(path);
         using var reader = new ZRJsonTextReader(stream);
         var data = new T();
-        data.ReadFromJson(reader);
+        data.ReadRootFromJson(reader);
         return data;
     }
 
@@ -171,7 +171,7 @@ public static class CodeGenExtensions
         var data = new T();
         using var reader = new StringReader(content);
         using var zrJsonTextReader = new ZRJsonTextReader(reader);
-        data.ReadFromJson(zrJsonTextReader);
+        data.ReadRootFromJson(zrJsonTextReader);
         return data;
     }
 
@@ -180,7 +180,7 @@ public static class CodeGenExtensions
         if (data == null) data = new T();
         using var reader = new StringReader(content);
         using var zrJsonTextReader = new ZRJsonTextReader(reader);
-        data.ReadFromJson(zrJsonTextReader);
+        data.ReadRootFromJson(zrJsonTextReader);
         return data;
     }
     

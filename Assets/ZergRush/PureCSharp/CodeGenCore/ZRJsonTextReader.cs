@@ -46,6 +46,12 @@ namespace ZergRush
         public ZRJsonTextReader(string str) : base(new StringReader(str))
         {
         }
+        
+        public void InitRootObject(IJsonSerializable obj)
+        {
+            currentObjects.Clear();
+            currentObjects[1] = obj;
+        }
 
         public void ReadFromRef<T>(ref T t) where T : IJsonSerializable
         {
