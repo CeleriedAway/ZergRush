@@ -321,7 +321,7 @@ namespace ZergRush.CodeGen
             if (listType.IsDataList()) sink.content($"{path}.{updatemod} = false;");
         }
 
-        public static void SinkDictReaderCode(MethodBuilder sink, Type keyType, Type valType, string path,
+        public static void SinkDictReaderCode(Type dictType,MethodBuilder sink, Type keyType, Type valType, string path,
             string stream, bool pooled, bool configStorage)
         {
             sink.content($"var size = {stream}.ReadInt32();");
@@ -333,7 +333,7 @@ namespace ZergRush.CodeGen
             sink.content($"var key = default({keyType.RealName(true)});");
             GenReadValueFromStream(sink,
                 new DataInfo
-                    { type = keyType, baseAccess = $"key", sureIsNull = true, insideConfigStorage = configStorage }.SetupIsCell(),
+                    { type = keyType, baseAccess = $"key", sureIsNull = true, insideConfigStorage = configStorage, carrierType = dictType}.SetupIsCell(),
                 stream, pooled);
 
             if (!valType.IsValueType)
@@ -342,7 +342,7 @@ namespace ZergRush.CodeGen
             sink.content($"var val = default({valType.RealName(true)});");
             GenReadValueFromStream(sink,
                 new DataInfo
-                    { type = valType, baseAccess = $"val", sureIsNull = true, insideConfigStorage = configStorage }.SetupIsCell(),
+                    { type = valType, baseAccess = $"val", sureIsNull = true, insideConfigStorage = configStorage, carrierType = dictType }.SetupIsCell(),
                 stream,
                 pooled);
 
@@ -420,7 +420,7 @@ namespace ZergRush.CodeGen
                 var valType = type.SecondGenericArg();
                 RequestGen(keyType, type, flag);
                 RequestGen(valType, type, flag);
-                SinkDictReaderCode(sinkReader, keyType, valType, accessPrefix, readerName, pooled,
+                SinkDictReaderCode(type, sinkReader, keyType, valType, accessPrefix, readerName, pooled,
                     type.IsConfigStorage());
             }
             else
