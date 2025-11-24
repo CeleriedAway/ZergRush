@@ -422,6 +422,11 @@ namespace ZergRush.CodeGen
                     member.canBeNull = true;
                 }
                 
+                if (member.type.IsNullable())
+                {
+                    member.canBeNull = true;
+                }
+                
                 member.SetupIsCell();
 
                 if (member.realType.IsLivableSlot())
@@ -429,10 +434,6 @@ namespace ZergRush.CodeGen
                     member.insideLivableContainer = true;
                 }
 
-                if (member.type.IsNullable())
-                {
-                    member.canBeNull = true;
-                }
 
                 if (type.IsTuple() && member.type.IsValueType == false)
                 {
@@ -522,21 +523,6 @@ namespace ZergRush.CodeGen
             return $"{nameof(baseAccess)}: {baseAccess}, {nameof(type)}: {type}";
         }
 
-
-        public void SetupIsNullable()
-        {
-            if (type.IsNullable())
-            {
-                //valueTransformer = n => n + ".Value";
-                realType = type;
-                type = Nullable.GetUnderlyingType(type);
-                isValueWrapper = CodeGen.ValueVrapperType.Nullable;
-            }
-            else
-            {
-                realType = type;
-            }
-        }
         public DataInfo SetupIsCell()
         {
             if (type.IsCell() || type.IsLivableSlot())
@@ -546,6 +532,14 @@ namespace ZergRush.CodeGen
                 realType = type;
                 type = type.FirstGenericArg();
                 isValueWrapper = isCell ? CodeGen.ValueVrapperType.Cell : CodeGen.ValueVrapperType.LivableSlot;
+            }
+            else if (type.IsNullable())
+            {
+                //valueTransformer = n => n + ".Value";
+                realType = type;
+                type = Nullable.GetUnderlyingType(type);
+                isValueWrapper = CodeGen.ValueVrapperType.Nullable;
+                canBeNull = true;
             }
             else
             {

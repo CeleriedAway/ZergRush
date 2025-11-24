@@ -22,7 +22,7 @@ namespace ZergRush.CodeGen
             if (info.realType == null) info.SetupIsCell();
             
             var t = info.type;
-            var canBeNull = info.canBeNull && (!t.IsValueType || t.IsNullable());
+            var canBeNull = info.canBeNull && (!t.IsValueType) || info.isValueWrapper == ValueVrapperType.Nullable;
 
             var originalInfo = info;
             string tempVar = null; 
@@ -65,7 +65,7 @@ namespace ZergRush.CodeGen
                 }
             }
             
-            if (t.IsImmutableValueType())
+            if (t.IsImmutableValueType() && !canBeNull)
             {
                 sink.content($"{name} = {directReader};");
             }
@@ -87,7 +87,14 @@ namespace ZergRush.CodeGen
                     sink.content($"if ({isNullReader}) {{");
                     sink.indent++;
                     SinkRemovePostProcess(sink, info, pooled);
-                    sink.content($"{name} = null;");
+                    if (originalInfo.isValueWrapper == ValueVrapperType.Nullable)
+                    {
+                        sink.content($"{originalInfo.access} = null;");
+                    }
+                    else
+                    {
+                        sink.content($"{name} = null;");
+                    }
                     sink.indent--;
                     sink.content($"}}");
                     sink.content($"else {{ ");

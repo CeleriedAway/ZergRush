@@ -232,10 +232,6 @@ namespace ZergRush.CodeGen
             bool needVar = false, bool readDataNodeFromId = false)
         {
             if (info.realType == null) info.SetupIsCell();
-            if (info.type.IsNullable())
-            {
-                info.SetupIsNullable();    
-            }
             var t = info.type;
 
             // info can be transformed because read from can do temp value wrapping for it
@@ -266,7 +262,7 @@ namespace ZergRush.CodeGen
                 getDataNodeFromRootWithRefId: readDataNodeFromId,
                 useTempVarThenAssign: info.isValueWrapper != ValueVrapperType.None &&
                                       info.type.IsControllableStruct() ||
-                                      (info.type.IsMultipleReference() && !needVar) || info.type.IsNullable()
+                                      (info.type.IsMultipleReference() && !needVar)
             );
         }
 
