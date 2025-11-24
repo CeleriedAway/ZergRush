@@ -289,8 +289,7 @@ namespace ZergRush.CodeGen
 
         static Dictionary<Type, List<DataInfo>> membersForCodegenCache = new Dictionary<Type, List<DataInfo>>();
 
-        static Dictionary<Type, List<DataInfo>>
-            membersForCodegenInheretedCache = new Dictionary<Type, List<DataInfo>>();
+        static Dictionary<Type, List<DataInfo>> membersForCodegenInheretedCache = new Dictionary<Type, List<DataInfo>>();
 
         public static IEnumerable<DataInfo> GetMembersForCodeGen(this Type type,
             GenTaskFlags flagRestriction = GenTaskFlags.None, bool inheretedMembers = false, bool ignoreCheck = true)
@@ -523,6 +522,21 @@ namespace ZergRush.CodeGen
             return $"{nameof(baseAccess)}: {baseAccess}, {nameof(type)}: {type}";
         }
 
+
+        public void SetupIsNullable()
+        {
+            if (type.IsNullable())
+            {
+                //valueTransformer = n => n + ".Value";
+                realType = type;
+                type = Nullable.GetUnderlyingType(type);
+                isValueWrapper = CodeGen.ValueVrapperType.Nullable;
+            }
+            else
+            {
+                realType = type;
+            }
+        }
         public DataInfo SetupIsCell()
         {
             if (type.IsCell() || type.IsLivableSlot())

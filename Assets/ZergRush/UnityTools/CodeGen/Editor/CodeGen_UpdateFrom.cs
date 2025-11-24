@@ -29,7 +29,14 @@ namespace ZergRush.CodeGen
             if (useTempVarThenAssign)
             {
                 tempVar = "__" + originalInfo.baseAccess.Replace('.', '_').Replace('-', '_').Replace(' ', '_').Replace('[', '_').Replace(']', '_');
-                sink.content($"var {tempVar} = {originalInfo.access};");
+                if (info.isValueWrapper == ValueVrapperType.Nullable)
+                {
+                    sink.content($"var {tempVar} = default({originalInfo.type.RealName()});");
+                }
+                else
+                {
+                    sink.content($"var {tempVar} = {(originalInfo.access)};");
+                }
                 info = new DataInfo
                 {
                     type = originalInfo.type,
