@@ -1,5 +1,6 @@
 using System;
 using JetBrains.Annotations;
+using ZergRush.CodeGen;
 
 namespace ZergRush.ReactiveCore
 {
@@ -12,7 +13,14 @@ namespace ZergRush.ReactiveCore
         public static IDisposable Bind<T>(this ICell<T> cell, Action<T> action)
         {
             var disp = cell.ListenUpdates(action);
-            action(cell.value);
+            try
+            {
+                action(cell.value);
+            }
+            catch (Exception e)
+            {
+                LogSink.errLog($"On Bind callback error: {e.ToError()}");
+            }
             return disp;
         }
 

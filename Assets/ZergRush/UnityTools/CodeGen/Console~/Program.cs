@@ -15,6 +15,8 @@ using System.Diagnostics;
 
 class Programm
 {
+    public static readonly LanguageVersion targetLanguageVersion = LanguageVersion.CSharp13;
+    
     public static readonly string[] PROJECT_NAMES =
     {
         "Assembly-CSharp",
@@ -111,6 +113,8 @@ class Programm
             trees.Add(tree);
         }
 
+        Console.WriteLine("Syntax trees extracted");
+        
         var pruned = trees.ConvertAll(TypeReader.PruneTree);
         var references = allReferencePaths.Where(f => File.Exists(f)).Select((rPath) => MetadataReference.CreateFromFile(rPath));        
 
@@ -140,6 +144,15 @@ class Programm
             }
         }
         
+        // var parseOpts = new CSharpParseOptions(
+        //     languageVersion: LanguageVersion.CSharp8,
+        //     preprocessorSymbols: defines);
+        //
+        // pruned = trees
+        //     .ConvertAll(TypeReader.PruneTree)
+        //     .Select(t => t.WithRootAndOptions(t.GetRoot(), parseOpts))
+        //     .ToList();
+        
         var compilation = CSharpCompilation.Create("assembly", pruned, references);
         compilation = compilation.WithOptions(new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, allowUnsafe: true));
         AppDomain.CurrentDomain.AssemblyResolve += (sender, args) =>
@@ -148,6 +161,8 @@ class Programm
             //Console.WriteLine($"!!!!!!!! {shortName}");
             return loadedAssemblies[shortName];
         };
+        
+        Console.WriteLine(compilation.LanguageVersion);
         
         var assembly = Compile(compilation);
         if (assembly == null) throw new NullReferenceException("Assembly is null");
@@ -217,7 +232,7 @@ class Programm
     public static SyntaxTree ExtractSyntaxTree(string filePath, string[] defines)
     {
         if (filePath.Contains("LogSink.cs")) defines = new string[]{};
-        var tree = SyntaxFactory.ParseSyntaxTree(System.IO.File.ReadAllText(filePath), new CSharpParseOptions(preprocessorSymbols: defines));
+        var tree = SyntaxFactory.ParseSyntaxTree(System.IO.File.ReadAllText(filePath).Replace("struct AnimancerEvent", "class AnimancerEvent"), new CSharpParseOptions(preprocessorSymbols: defines, languageVersion: targetLanguageVersion));
         return tree.WithFilePath(filePath);
     }
 

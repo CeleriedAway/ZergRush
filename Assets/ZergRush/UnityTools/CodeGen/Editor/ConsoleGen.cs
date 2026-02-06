@@ -53,6 +53,8 @@ namespace ZergRush.CodeGen
             customContextFolders.Clear();
             contextsForTypes.Clear();
             hasErrors = false;
+            membersForCodegenInheretedCache.Clear();
+            membersForCodegenCache.Clear();
 
             stubMode = stubs;
             defaultContext = new GeneratorContext(new GenInfo {sharpGenPath = defaultPath}, stubMode);
@@ -79,6 +81,7 @@ namespace ZergRush.CodeGen
                     }
                 }
 
+                
                 GenTaskFlags readGenFlags = GenTaskFlags.None;
                 
                 if ((readGenFlags = typeInAssembly.ReadGenFlags()) != GenTaskFlags.None)

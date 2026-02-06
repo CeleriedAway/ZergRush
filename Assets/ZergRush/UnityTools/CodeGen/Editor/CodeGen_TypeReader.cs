@@ -289,8 +289,7 @@ namespace ZergRush.CodeGen
 
         static Dictionary<Type, List<DataInfo>> membersForCodegenCache = new Dictionary<Type, List<DataInfo>>();
 
-        static Dictionary<Type, List<DataInfo>>
-            membersForCodegenInheretedCache = new Dictionary<Type, List<DataInfo>>();
+        static Dictionary<Type, List<DataInfo>> membersForCodegenInheretedCache = new Dictionary<Type, List<DataInfo>>();
 
         public static IEnumerable<DataInfo> GetMembersForCodeGen(this Type type,
             GenTaskFlags flagRestriction = GenTaskFlags.None, bool inheretedMembers = false, bool ignoreCheck = true)
@@ -423,6 +422,11 @@ namespace ZergRush.CodeGen
                     member.canBeNull = true;
                 }
                 
+                if (member.type.IsNullable())
+                {
+                    member.canBeNull = true;
+                }
+                
                 member.SetupIsCell();
 
                 if (member.realType.IsLivableSlot())
@@ -430,10 +434,6 @@ namespace ZergRush.CodeGen
                     member.insideLivableContainer = true;
                 }
 
-                if (member.type.IsNullable())
-                {
-                    member.canBeNull = true;
-                }
 
                 if (type.IsTuple() && member.type.IsValueType == false)
                 {
@@ -532,6 +532,14 @@ namespace ZergRush.CodeGen
                 realType = type;
                 type = type.FirstGenericArg();
                 isValueWrapper = isCell ? CodeGen.ValueVrapperType.Cell : CodeGen.ValueVrapperType.LivableSlot;
+            }
+            else if (type.IsNullable())
+            {
+                //valueTransformer = n => n + ".Value";
+                realType = type;
+                type = Nullable.GetUnderlyingType(type);
+                isValueWrapper = CodeGen.ValueVrapperType.Nullable;
+                canBeNull = true;
             }
             else
             {
