@@ -7,7 +7,7 @@ namespace ZergRush.CodeGen
 {
     public static class ViewModelTools
     {
-        public static void GentleReset<T>(this IList<T> self, IList<T> other) where T : class
+        public static void GentleReset<T>(this IList<T> self, IList<T> other) where T : new()
         {
             var i = 0;
             for (; i < other.Count; i++)
@@ -23,7 +23,7 @@ namespace ZergRush.CodeGen
                         }
                         else
                         {
-                            self.Insert(i, null);
+                            self.Insert(i, default);
                             continue;
                         }
                     }
