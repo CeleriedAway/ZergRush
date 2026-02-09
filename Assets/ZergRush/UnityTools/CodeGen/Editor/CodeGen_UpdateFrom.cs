@@ -286,7 +286,7 @@ namespace ZergRush.CodeGen
             // if (!type.IsValueType)
             //     sink.content($"if ({other}[i] == null) {{ {prefix}[i] = null; continue; }}");
             GenUpdateValueFromInstance(sink, new DataInfo {type = type, baseAccess = $"{prefix}[i]", canBeNull = !type.IsValueType},
-                $"{other}[i]", pooled);
+                $"{other}[i]{(type.IsCell()?".value":"")}", pooled);
             sink.indent--;
             sink.content($"}}");
         }
