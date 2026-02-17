@@ -491,6 +491,7 @@ namespace ZergRush.CodeGen
             var configType = info.carrierType?.ConfigRootType();
             if (configType == null)
             {
+                LogSink.errLog($"Can't find config root type for {info.name} carrier:{info.carrierType}");
                 //TODO fix, right now it is difficult to reach generation hierarchy and cleary undeerstand config loading type for a field
                 throw new ZergRushException($"Can't find config type for {info}");
                 //return;

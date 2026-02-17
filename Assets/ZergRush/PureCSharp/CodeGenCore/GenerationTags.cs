@@ -287,7 +287,7 @@ public class CodeGenExtension : Attribute
 /// <summary>
 /// An attribute used to define which config is responsible for storing config members for this hierarchy.
 /// </summary>
-[AttributeUsage(AttributeTargets.Class)]
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
 public class ConfigRootType : Attribute
 {
     public Type type;

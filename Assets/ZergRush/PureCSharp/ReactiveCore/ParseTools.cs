@@ -355,7 +355,7 @@ public static class ParseTools
         if (separator.Length == 0) separator = new []{',', ' '};
         var list = new List<int>();
         if (str.IsNullOrWhitespace()) return list;
-        list.AddRange(str.Split(separator).Select(ss => ss.Trim()).Select(ss => ss.ParseIntStrict()));
+        list.AddRange(str.Split(separator).Select(ss => ss.Trim()).Where(s => s.Length != 0).Select(ss => ss.ParseIntStrict()));
         return list;
     }
     
