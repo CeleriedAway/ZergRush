@@ -85,6 +85,79 @@ namespace ZergRush.ReactiveCore
         {
             return new TakeReactiveCollection<T>(collection, count);
         }
+        
+        class FindReactiveCell<T> : BufferCellTransform<T>
+        {
+            readonly IReactiveCollection<T> collection;
+            readonly Func<T, bool> predicate;
+            T def;
+
+            public FindReactiveCell(IReactiveCollection<T> collection, Func<T, bool> predicate, T def)
+            {
+                this.def = def;
+                this.collection = collection;
+                this.predicate = predicate;
+            }
+
+            protected override IDisposable StartListenAndRefill()
+            {
+                RefillRaw();
+                return collection.update.Subscribe(e =>
+                {
+                    switch (e.type)
+                    {
+                        case ReactiveCollectionEventType.Reset:
+                            buffer.value = e.newData.Find(predicate, def);
+                            break;
+                        case ReactiveCollectionEventType.Insert:
+                            if (EqualityComparer<T>.Default.Equals(buffer.value, def))
+                            {
+                                if  (predicate(e.newItem))
+                                {
+                                    buffer.value = e.newItem;
+                                }
+                            }
+                            break;
+                        case ReactiveCollectionEventType.Remove:
+                            if (EqualityComparer<T>.Default.Equals(buffer.value, e.oldItem))
+                            {
+                                buffer.value = collection.Find(predicate, def);
+                            }
+                            break;
+                        case ReactiveCollectionEventType.Set:
+                            
+                            if (EqualityComparer<T>.Default.Equals(buffer.value, def))
+                            {
+                                if (predicate(e.newItem))
+                                {
+                                    buffer.value = e.newItem;
+                                }
+                            }
+                            else if (EqualityComparer<T>.Default.Equals(buffer.value, e.oldItem))
+                            {
+                                if (predicate(e.newItem))
+                                {
+                                    buffer.value = e.newItem;
+                                }
+                                else
+                                {
+                                    buffer.value = collection.Find(predicate, def);
+                                }
+                            }
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }
+                });
+            }
+
+            protected override void RefillRaw()
+            {
+                buffer.value = collection.Find(predicate, def);
+            }
+
+            public T value => collection.Find(predicate, def);
+        }
 
         class TakeReactiveCollection<T> : AbstractCollectionTransform<T>
         {

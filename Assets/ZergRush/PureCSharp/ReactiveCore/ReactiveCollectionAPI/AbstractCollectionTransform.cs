@@ -124,4 +124,89 @@ namespace ZergRush.ReactiveCore
             }
         }
     }
+    
+    public abstract class BufferCellTransform<T> : ICell<T>
+    {
+        protected bool disconected => connectionCounter == 0;
+        //public int id = new Random().Next(0, 10000);
+        
+        int connectionCounter = 0;
+        IDisposable connection;
+        
+        protected readonly Cell<T> buffer = new ();
+        
+        public bool connected
+        {
+            get { return connectionCounter != 0; }
+        }
+
+        void OnConnect()
+        {
+            if (connectionCounter == 0)
+            {
+                connection = StartListenAndRefill(); 
+            }
+            connectionCounter++;
+            //Debug.Log($"connection counter increased to {connectionCounter} {this.GetType()} {id}");
+        }
+
+        protected abstract IDisposable StartListenAndRefill();
+
+        void OnDisconnect()
+        {
+            connectionCounter--;
+            //Debug.Log($"connection counter decreased to {connectionCounter} {GetType()} {id}");
+            if (connectionCounter == 0)
+            {
+                if (buffer.getConnectionCount != 0)
+                {
+                    //Debug.LogError("WTF is that");
+                    //throw new Exception("this should not happen");
+                }
+                connection.Dispose();
+                connection = null;
+            }
+        }
+
+        protected void SetBufferValue()
+        {
+            RefillRaw();
+        }
+        
+        protected abstract void RefillRaw();
+
+        void SetIfNotConnected()
+        {
+            if (!connected) SetBufferValue();
+        }
+
+        public override string ToString()
+        {
+            return buffer.ToString();
+        }
+
+        public IDisposable ListenUpdates(Action<T> reaction)
+        {
+            OnConnect();
+            var connection = buffer.ListenUpdates(reaction);
+
+            /// possible work around unity 2021 compilation crash
+            void Dispose()
+            {
+                connection.Dispose();
+                OnDisconnect();
+            }
+            var anonymousDisposable = new AnonymousDisposable(Dispose);
+            return anonymousDisposable;
+        }
+
+        public T value
+        {
+            get
+            {
+                SetIfNotConnected();
+                return buffer.value;
+            }
+        }
+    }
 }
