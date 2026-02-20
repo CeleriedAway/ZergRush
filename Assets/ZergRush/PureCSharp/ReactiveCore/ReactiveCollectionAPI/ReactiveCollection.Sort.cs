@@ -188,35 +188,41 @@ namespace ZergRush.ReactiveCore
         /// Uses list-based storage for better performance than dictionary lookups.
         /// </summary>
         public static IReactiveCollection<T> SortReactive<T>(this IReactiveCollection<T> collection,
-            Func<T, ICell<float>> keySelector)
+            Func<T, ICell<double>> keySelector)
         {
             return new SortedByKeyCellCollection<T>(collection, keySelector);
         }
         
         public static IReactiveCollection<T> SortReactive<T>(this IReactiveCollection<T> collection,
+            Func<T, ICell<float>> keySelector)
+        {
+            return new SortedByKeyCellCollection<T>(collection, t => keySelector(t).Map(v => (double)v));
+        }
+        
+        public static IReactiveCollection<T> SortReactive<T>(this IReactiveCollection<T> collection,
             Func<T, ICell<int>> keySelector)
         {
-            return new SortedByKeyCellCollection<T>(collection, t => keySelector(t).Map(v => (float)v));
+            return new SortedByKeyCellCollection<T>(collection, t => keySelector(t).Map(v => (double)v));
         }
 
         [DebuggerDisplay("{this.ToString()}")]
         class SortedByKeyCellCollection<T> : AbstractCollectionTransform<T>
         {
-            public readonly Func<T, ICell<float>> keySelector;
+            public readonly Func<T, ICell<double>> keySelector;
             public readonly IReactiveCollection<T> collection;
 
             // Subscriptions stored by original collection index
             readonly Connections connections = new();
             // Sorted entries: (originalIndex, sortKey) - sorted by sortKey
-            readonly SimpleList<(int originalIndex, float sortKey)> sortedEntries = new();
+            readonly SimpleList<(int originalIndex, double sortKey)> sortedEntries = new();
 
-            public SortedByKeyCellCollection(IReactiveCollection<T> collection, Func<T, ICell<float>> keySelector)
+            public SortedByKeyCellCollection(IReactiveCollection<T> collection, Func<T, ICell<double>> keySelector)
             {
                 this.collection = collection;
                 this.keySelector = keySelector;
             }
 
-            static int CompareEntries((int originalIndex, float sortKey) a, (int originalIndex, float sortKey) b)
+            static int CompareEntries((int originalIndex, double sortKey) a, (int originalIndex, double sortKey) b)
             {
                 return a.sortKey.CompareTo(b.sortKey);
             }
@@ -271,7 +277,7 @@ namespace ZergRush.ReactiveCore
                 }
             }
 
-            void Reaction(int originalIndex, float newValue)
+            void Reaction(int originalIndex, double newValue)
             {
                 // Update sort key in sorted entries
                 var oldSortedIndex = FindSortedEntryIndex(originalIndex);
