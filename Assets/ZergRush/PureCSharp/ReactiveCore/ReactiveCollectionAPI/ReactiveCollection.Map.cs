@@ -61,7 +61,7 @@ namespace ZergRush.ReactiveCore
             void Process(IReactiveCollectionEvent<T> e)
             {
                 if (disconected) return;
-                var reversedPos = buffer.Count - e.position;
+                var reversedPos = buffer.Count - e.position - 1;
                 switch (e.type)
                 {
                     case ReactiveCollectionEventType.Reset:
