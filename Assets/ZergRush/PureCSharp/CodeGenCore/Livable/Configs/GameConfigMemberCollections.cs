@@ -1,4 +1,5 @@
-﻿using ZergRush.ReactiveCore;
+﻿using System;
+using ZergRush.ReactiveCore;
 
 namespace ZergRush.Alive
 {
@@ -21,7 +22,11 @@ namespace ZergRush.Alive
     /// By default, all config members are deserialized by reading it from ConfigRegistry in GameConfigBase.
     /// Only config itself serialize members as data.
     /// </summary>
-    public class ConfigStorageDict<TKey, T> : Dictionary<TKey, T> where T : LoadableConfig {}
+    public class ConfigStorageDict<TKey, T> : Dictionary<TKey, T> where T : LoadableConfig
+    {
+        public ConfigStorageDict(IEqualityComparer<TKey> ordinalIgnoreCase) : base(ordinalIgnoreCase) {}
+        public ConfigStorageDict() : base() {}
+    }
     
     public class ConfigStorageSlot<T> : ConfigStorageList<T> where T : LoadableConfig, new()
     {
