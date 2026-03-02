@@ -61,20 +61,19 @@ namespace ZergRush.ReactiveCore
             void Process(IReactiveCollectionEvent<T> e)
             {
                 if (disconected) return;
-                var reversedPos = buffer.Count - e.position - 1;
                 switch (e.type)
                 {
                     case ReactiveCollectionEventType.Reset:
                         RefillRaw(e.newData);
                         break;
                     case ReactiveCollectionEventType.Insert:
-                        buffer.Insert(reversedPos, e.newItem);
+                        buffer.Insert(buffer.Count - e.position, e.newItem);
                         break;
                     case ReactiveCollectionEventType.Remove:
-                        buffer.RemoveAt(reversedPos);
+                        buffer.RemoveAt(buffer.Count - e.position - 1);
                         break;
                     case ReactiveCollectionEventType.Set:
-                        buffer[reversedPos] = e.newItem;
+                        buffer[buffer.Count - e.position - 1] = e.newItem;
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();
