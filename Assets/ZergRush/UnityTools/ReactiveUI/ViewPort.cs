@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 using ZergRush.ReactiveCore;
@@ -44,36 +44,45 @@ namespace ZergRush.ReactiveUI
             });
         }
 
-        public static float GetUnfuckedContentShift(ScrollRect scroll)
+        /// <summary>
+        /// Content shift in layout space (viewport top/left = 0). Works with any content pivot/anchors.
+        /// </summary>
+        public static float GetContentShift(ScrollRect scroll)
         {
             bool horizontal = scroll.horizontal;
-            var viewPortCorrection = horizontal
-                ? scroll.GetComponent<RectTransform>().rect.width
-                : scroll.GetComponent<RectTransform>().rect.height;
+            var viewportRect = scroll.viewport != null ? scroll.viewport.rect : scroll.GetComponent<RectTransform>().rect;
+            var viewportSize = horizontal ? viewportRect.width : viewportRect.height;
+            var viewportHalf = viewportSize / 2f;
+            var content = scroll.content;
+            var anchored = content.anchoredPosition;
+            var pivot = content.pivot;
+            var rect = content.rect;
+            var contentMainSize = horizontal ? rect.width : rect.height;
+            // Pivot position = anchoredPosition; content edge = pivot + (edge offset in local space)
+            var contentEdgeFromPivot = horizontal ? -pivot.x * contentMainSize : (1f - pivot.y) * contentMainSize;
 
-            viewPortCorrection /= 2;
+            if (horizontal)
+            {
+                var contentLeft = anchored.x + contentEdgeFromPivot;
+                var viewportLeft = -viewportHalf;
+                return viewportLeft - contentLeft;
+            }
+            else
+            {
+                var contentTop = anchored.y + contentEdgeFromPivot;
+                var viewportTop = viewportHalf;
+                return contentTop - viewportTop;
+            }
+        }
 
-            var pos = scroll.horizontal
-                ? scroll.content.anchoredPosition.x
-                : scroll.content.anchoredPosition.y; 
-            pos += horizontal ? viewPortCorrection : -viewPortCorrection;
-            if (scroll.horizontal) pos = -pos;
-            return pos;
+        public static float GetUnfuckedContentShift(ScrollRect scroll)
+        {
+            return GetContentShift(scroll);
         }
 
         public void CalculateVisibleIndexes(IScrollViewLayout layout, out int first, out int last)
         {
-            bool horizontal = rect.scroll.horizontal;
-            var viewPortCorrection = horizontal
-                ? rect.GetComponent<RectTransform>().rect.width
-                : rect.GetComponent<RectTransform>().rect.height;
-
-            viewPortCorrection /= 2;
-
-            var pos = rect.scrollPos.value;
-            pos += horizontal ? viewPortCorrection : -viewPortCorrection;
-            if (rect.scroll.horizontal) pos = -pos;
-
+            var pos = GetContentShift(rect.scroll);
             var height = rect.scroll.RectMainSize();
 
             if (layout.topShift.value - pos > height || pos - layout.size.value - layout.topShift.value > 0)

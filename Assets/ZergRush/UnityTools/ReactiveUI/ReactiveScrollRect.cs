@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 using ZergRush.ReactiveCore;
@@ -17,9 +17,10 @@ public class ReactiveScrollRect : MonoBehaviour
 			: scroll.content.anchoredPosition.y;
 	}
 
-	public IViewPort CreateViewPort()
+	public IViewPort CreateViewPort(bool adjustAnchors = true)
 	{
-        Rui.AdjustScrollRectContentAnchors(scroll, scroll.horizontal);
+        if (adjustAnchors)
+            Rui.AdjustScrollRectContentAnchors(scroll, scroll.horizontal);
 		return new ScrollRectViewPort(this);
 	}
 }

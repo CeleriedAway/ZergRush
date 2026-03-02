@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using UnityEngine;
@@ -26,6 +26,10 @@ namespace ZergRush.ReactiveUI
         // Views inside parent transform that have same name
         // will be used in view pool during present initialization
         UseChildWithSameNameAsView = 8 | __UseLoadedViews,
+        
+        // Do not adjust ScrollRect content pivot/anchors; use content's current setup.
+        // ScrollRectViewPort will compute visibility correctly for any pivot.
+        PreserveContentAnchors = 32,
         
         __UseLoadedViews = 2, // for internal use
         __NeedLayout = 16 // for internal use
@@ -188,7 +192,8 @@ namespace ZergRush.ReactiveUI
             ReactiveScrollRect scroll)
             where TView : ReusableView
         {
-            AdjustScrollRectContentAnchors(scroll.scroll, scroll.scroll.horizontal);
+            if (!connectionsAndComponents.options.Has(PresentOptions.PreserveContentAnchors))
+                AdjustScrollRectContentAnchors(scroll.scroll, scroll.scroll.horizontal);
             connectionsAndComponents.viewPort = new ScrollRectViewPort(scroll, connectionsAndComponents.layout,
                 connectionsAndComponents.connectionSink);
             return ControlItemVisibilityAndRecycle(connectionsAndComponents);
@@ -213,6 +218,8 @@ namespace ZergRush.ReactiveUI
                 throw new ZergRushException($"parent is null during presenting {data} with view:{typeof(TView)}");
             
             var components = new TableConnectionsAndComponents<TView, TData>();
+
+            components.options = options;
 
             if (options.Has(PresentOptions.__NeedLayout) && layout == null) layout = LinearLayout();
             components.layout = layout;
