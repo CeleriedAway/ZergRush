@@ -1,4 +1,4 @@
-﻿//#define GOOGLE_AUTH
+//#define GOOGLE_AUTH
 
 using System;
 using System.Collections;
@@ -111,9 +111,9 @@ namespace ZergRush
             return new CsvReader(source.Split(new[] { "\r\n" }, StringSplitOptions.None));
         }
 
-        public async void DownloadAllConfigs(Action onLoaded = null)
+        public async void DownloadAllConfigs(Action onLoaded = null, int maxConcurrentDownloads = 0)
         {
-            await DownloadAllConfigsTask();
+            await DownloadAllConfigsTask(maxConcurrentDownloads);
             onLoaded?.Invoke();
         }
 
@@ -135,7 +135,10 @@ namespace ZergRush
             }
         }
 
-        public async Task DownloadAllConfigsTask()
+        /// <param name="maxConcurrentDownloads">
+        /// Max number of sheets downloaded in parallel. 0 or less means unlimited (all at once).
+        /// </param>
+        public async Task DownloadAllConfigsTask(int maxConcurrentDownloads = 0)
         {
             Authorize();
             Connect();
@@ -154,6 +157,10 @@ namespace ZergRush
 
             var filesToWrite = new List<(string, Task<string>)>();
 
+            SemaphoreSlim semaphore = maxConcurrentDownloads > 0
+                ? new SemaphoreSlim(maxConcurrentDownloads)
+                : null;
+
             foreach (var config in googleConfig)
             {
                 foreach (var page in config.pages)
@@ -161,7 +168,9 @@ namespace ZergRush
                     #if UNITY_EDITOR
                     UnityEditor.EditorUtility.DisplayProgressBar($"Downloading {config.name} page", $"Page {page.Key}", i++ * part);
                     #endif
-                    var content = LoadTableAsCSV(config.id, page.Value, page.Key.ToString());
+                    var content = semaphore != null
+                        ? LoadTableThrottled(semaphore, config.id, page.Value, page.Key.ToString())
+                        : LoadTableAsCSV(config.id, page.Value, page.Key.ToString());
                     var path = $"{pathToConfigs}{config.name}";
                     filesToWrite.Add(($"{path}/{page.Key}.csv", content));
                     Directory.CreateDirectory(path);
@@ -181,12 +190,27 @@ namespace ZergRush
                     await writer.WriteAsync(await content ?? string.Empty);
                 }
             }
-            
+
+            semaphore?.Dispose();
+
             Debug.Log("Load csv data complete!");
 
             #if UNITY_EDITOR
             UnityEditor.EditorUtility.ClearProgressBar();
             #endif
+        }
+
+        private static async Task<string> LoadTableThrottled(SemaphoreSlim semaphore, string tableId, string pageId, string info)
+        {
+            await semaphore.WaitAsync();
+            try
+            {
+                return await LoadTableAsCSV(tableId, pageId, info);
+            }
+            finally
+            {
+                semaphore.Release();
+            }
         }
 
         private static async Task<string> LoadTableAsCSV(string tableId, string pageId, string info)
