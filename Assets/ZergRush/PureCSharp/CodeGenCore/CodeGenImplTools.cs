@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -16,15 +16,29 @@ public unsafe static class CodeGenImplTools
             return (float)(double)reader.Value;
         if (reader.TokenType == JsonToken.Integer)
             return (long)reader.Value;
+        if (reader.TokenType == JsonToken.String)
+        {
+            var s = (string)reader.Value;
+            if (s == "Infinity") return float.PositiveInfinity;
+            if (s == "-Infinity") return float.NegativeInfinity;
+            if (s == "NaN") return float.NaN;
+        }
         throw new ZergRushException("Invalid token type for float: " + reader.TokenType);
     }
-    
+
     public static double ReadJsonDouble(this JsonReader reader)
     {
         if (reader.TokenType == JsonToken.Float)
             return (double)reader.Value;
         if (reader.TokenType == JsonToken.Integer)
             return (long)reader.Value;
+        if (reader.TokenType == JsonToken.String)
+        {
+            var s = (string)reader.Value;
+            if (s == "Infinity") return double.PositiveInfinity;
+            if (s == "-Infinity") return double.NegativeInfinity;
+            if (s == "NaN") return double.NaN;
+        }
         throw new ZergRushException("Invalid token type for double: " + reader.TokenType);
     }
     
