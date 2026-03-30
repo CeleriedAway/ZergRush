@@ -85,6 +85,10 @@ class Programm
 
         var projectDefines = TypeReader.ProjectDefines(Path.Combine(projectPath, PROJECT_NAMES[0] + ".csproj"));
         projectDefines.Add("CONSOLE_GEN");
+        projectDefines.Add("MODULE_BURST");
+        projectDefines.Add("MODULE_MATHEMATICS");
+        projectDefines.Add("MODULE_COLLECTIONS");
+        
         var defines = projectDefines.ToArray();
         
         var files = projectName.SelectMany(p =>
