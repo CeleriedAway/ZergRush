@@ -95,6 +95,7 @@ public static class ParseTools
     public static float ParseFloat(this string str, float def = 0)
     {
         if (string.IsNullOrEmpty(str)) return def;
+        str = str.Replace(',', '.');
         return float.TryParse(str, NumberStyles.Any, CultureInfo.InvariantCulture, out var i) ? i : def;
     }
 
