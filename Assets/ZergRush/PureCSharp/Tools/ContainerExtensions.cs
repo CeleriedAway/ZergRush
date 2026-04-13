@@ -435,7 +435,7 @@ namespace ZergRush
 
         public static TValue GetOrDefault<TKey, TValue>(this Dictionary<TKey, TValue> dict, TKey key, TValue def)
         {
-            return !dict.ContainsKey(key) ? def : dict[key];
+            return dict.GetValueOrDefault(key, def);
         }
 
         public static int RemoveWhere<TKey, TValue>(this Dictionary<TKey, TValue> dict, Func<TKey, TValue, bool> filter)
