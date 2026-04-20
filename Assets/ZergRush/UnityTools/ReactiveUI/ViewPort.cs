@@ -25,22 +25,30 @@ namespace ZergRush.ReactiveUI
     public class ScrollRectViewPort : IViewPort
     {
         ReactiveScrollRect rect;
+        Action<ScrollRect, float> sizeSetter;
 
         public ScrollRectViewPort(ReactiveScrollRect rect)
         {
             this.rect = rect;
         }
-        public ScrollRectViewPort(ReactiveScrollRect rect, IScrollViewLayout layout, Action<IDisposable> connectionSink)
+        public ScrollRectViewPort(ReactiveScrollRect rect, IScrollViewLayout layout, Action<IDisposable> connectionSink,
+            Action<ScrollRect, float> sizeSetter = null)
         {
             this.rect = rect;
+            this.sizeSetter = sizeSetter;
             connectionSink(BindToLayout(layout));
         }
 
         public IDisposable BindToLayout(IScrollViewLayout layout)
         {
-            return layout.size.MergeBind(layout.topShift, (size, pos) =>
+            rect.scroll.SetRectMainSize(layout.size.value + layout.topShift.value + layout.settings.bottomShift);
+            return layout.size.Merge(layout.topShift).ListenUpdates(p =>
             {
-                this.rect.scroll.SetRectMainSize(size + pos + layout.settings.bottomShift);
+                var target = p.Item1 + p.Item2 + layout.settings.bottomShift;
+                if (sizeSetter != null)
+                    sizeSetter(this.rect.scroll, target);
+                else
+                    this.rect.scroll.SetRectMainSize(target);
             });
         }
 

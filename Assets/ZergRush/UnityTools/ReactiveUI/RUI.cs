@@ -195,7 +195,8 @@ namespace ZergRush.ReactiveUI
             if (!connectionsAndComponents.options.Has(PresentOptions.PreserveContentAnchors))
                 AdjustScrollRectContentAnchors(scroll.scroll, scroll.scroll.horizontal);
             connectionsAndComponents.viewPort = new ScrollRectViewPort(scroll, connectionsAndComponents.layout,
-                connectionsAndComponents.connectionSink);
+                connectionsAndComponents.connectionSink,
+                connectionsAndComponents.delegates?.sizeAnimation);
             return ControlItemVisibilityAndRecycle(connectionsAndComponents);
         }
 
