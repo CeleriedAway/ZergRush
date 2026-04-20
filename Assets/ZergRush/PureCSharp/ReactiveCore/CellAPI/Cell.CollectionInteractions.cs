@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using ZergRush.CodeGen;
 
 namespace ZergRush.ReactiveCore
 {
@@ -52,8 +53,8 @@ namespace ZergRush.ReactiveCore
             });
         }
 
-        /// If cell value is null collection has zero elements
-        public static IReactiveCollection<T> ToSingleNullableElementCollection<T>(this ICell<T> cell) where T : class
+        /// If cell value is null collection has zero elements, otherwise one element equal to cell value
+        public static IReactiveCollection<T> ToSingleElementCollectionEmptyWhenNull<T>(this ICell<T> cell) where T : class
         {
             return new SingleCollectionFromNullableCell<T> { cell = cell };
         }
@@ -62,6 +63,18 @@ namespace ZergRush.ReactiveCore
         public static IReactiveCollection<T> ToSingleElementCollection<T>(this ICell<T> cell)
         {
             return new SingleCollectionCell<T>{ cell = cell };
+        }
+        
+        /// Collection has one element, when cell value is true, otherwise zero elements
+        public static IReactiveCollection<T> ToSingleElementCollection<T>(this ICell<bool> cell, T element)
+        {
+            return new SingleElementFromBoolCell<T> { cell = cell, element = element };
+        }
+
+        /// Collection has one element equal to cell value when predicate is true, otherwise zero elements
+        public static IReactiveCollection<T> ToSingleElementCollection<T>(this ICell<T> cell, Func<T, bool> predicate)
+        {
+            return new SingleElementFromPredicateCell<T> { cell = cell, predicate = predicate };
         }
 
         public static ICell<TRes> MergeCollection<T, TRes>(this IReactiveCollection<ICell<T>> cells,
@@ -161,6 +174,163 @@ namespace ZergRush.ReactiveCore
             });
         }
         
+        class SingleElementFromBoolCell<T> : IReactiveCollection<T>
+        {
+            internal ICell<bool> cell;
+            internal T element;
+
+            public IEnumerator<T> GetEnumerator()
+            {
+                return new CellEnumerator { owner = this };
+            }
+
+            class CellEnumerator : IEnumerator<T>
+            {
+                internal SingleElementFromBoolCell<T> owner;
+                bool moved;
+
+                public bool MoveNext()
+                {
+                    if (!owner.cell.value || moved) return false;
+                    moved = true;
+                    return true;
+                }
+
+                public void Reset()
+                {
+                    moved = false;
+                }
+
+                public T Current => owner.element;
+                object IEnumerator.Current => Current;
+
+                public void Dispose()
+                {
+                }
+            }
+
+            IEnumerator IEnumerable.GetEnumerator()
+            {
+                return GetEnumerator();
+            }
+
+            public int Count => cell.value ? 1 : 0;
+
+            public T this[int index]
+            {
+                get
+                {
+                    if (index != 0 || !cell.value) throw new IndexOutOfRangeException();
+                    return element;
+                }
+            }
+
+            public IEventStream<IReactiveCollectionEvent<T>> update => cell.BufferPreviousValue().Map(e =>
+            {
+                var vNew = e.Item1;
+                var vOld = e.Item2;
+                var re = new ReactiveCollectionEvent<T> { position = 0 };
+                if (vNew && !vOld)
+                {
+                    re.type = ReactiveCollectionEventType.Insert;
+                    re.newItem = element;
+                }
+                else if (!vNew && vOld)
+                {
+                    re.type = ReactiveCollectionEventType.Remove;
+                    re.oldItem = element;
+                }
+                else
+                {
+                    LogSink.errLog($"[SingleElementFromBoolCell] Unexpected case: vNew={vNew}, vOld={vOld}");
+                    re.type = ReactiveCollectionEventType.Set;
+                    re.newItem = element;
+                    re.oldItem = element;
+                }
+                return re;
+            });
+        }
+
+        class SingleElementFromPredicateCell<T> : IReactiveCollection<T>
+        {
+            internal ICell<T> cell;
+            internal Func<T, bool> predicate;
+
+            public IEnumerator<T> GetEnumerator()
+            {
+                return new CellEnumerator { owner = this };
+            }
+
+            class CellEnumerator : IEnumerator<T>
+            {
+                internal SingleElementFromPredicateCell<T> owner;
+                bool moved;
+
+                public bool MoveNext()
+                {
+                    if (moved || !owner.predicate(owner.cell.value)) return false;
+                    moved = true;
+                    return true;
+                }
+
+                public void Reset()
+                {
+                    moved = false;
+                }
+
+                public T Current => owner.cell.value;
+                object IEnumerator.Current => Current;
+
+                public void Dispose()
+                {
+                }
+            }
+
+            IEnumerator IEnumerable.GetEnumerator()
+            {
+                return GetEnumerator();
+            }
+
+            public int Count => predicate(cell.value) ? 1 : 0;
+
+            public T this[int index]
+            {
+                get
+                {
+                    if (index != 0 || !predicate(cell.value)) throw new IndexOutOfRangeException();
+                    return cell.value;
+                }
+            }
+
+            public IEventStream<IReactiveCollectionEvent<T>> update => cell.BufferPreviousValue()
+                .Filter(e => predicate(e.Item1) || predicate(e.Item2))
+                .Map(e =>
+                {
+                    var vNew = e.Item1;
+                    var vOld = e.Item2;
+                    var pNew = predicate(vNew);
+                    var pOld = predicate(vOld);
+                    var re = new ReactiveCollectionEvent<T> { position = 0 };
+                    if (pNew && !pOld)
+                    {
+                        re.type = ReactiveCollectionEventType.Insert;
+                        re.newItem = vNew;
+                    }
+                    else if (!pNew && pOld)
+                    {
+                        re.type = ReactiveCollectionEventType.Remove;
+                        re.oldItem = vOld;
+                    }
+                    else
+                    {
+                        re.type = ReactiveCollectionEventType.Set;
+                        re.newItem = vNew;
+                        re.oldItem = vOld;
+                    }
+                    return re;
+                });
+        }
+
         class SingleCollectionCell<T> : IReactiveCollection<T>
         {
             internal ICell<T> cell;
