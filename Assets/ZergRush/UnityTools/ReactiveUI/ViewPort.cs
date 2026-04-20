@@ -26,6 +26,7 @@ namespace ZergRush.ReactiveUI
     {
         ReactiveScrollRect rect;
         Action<ScrollRect, float> sizeSetter;
+        float supposedSize;
 
         public ScrollRectViewPort(ReactiveScrollRect rect)
         {
@@ -41,10 +42,13 @@ namespace ZergRush.ReactiveUI
 
         public IDisposable BindToLayout(IScrollViewLayout layout)
         {
-            rect.scroll.SetRectMainSize(layout.size.value + layout.topShift.value + layout.settings.bottomShift);
+            supposedSize = layout.size.value + layout.topShift.value + layout.settings.bottomShift;
+            rect.scroll.SetRectMainSize(supposedSize);
+            
             return layout.size.Merge(layout.topShift).ListenUpdates(p =>
             {
                 var target = p.Item1 + p.Item2 + layout.settings.bottomShift;
+                supposedSize = target;
                 if (sizeSetter != null)
                     sizeSetter(this.rect.scroll, target);
                 else
@@ -91,7 +95,7 @@ namespace ZergRush.ReactiveUI
         public void CalculateVisibleIndexes(IScrollViewLayout layout, out int first, out int last)
         {
             var pos = GetContentShift(rect.scroll);
-            var height = rect.scroll.RectMainSize();
+            var height = supposedSize;
 
             if (layout.topShift.value - pos > height || pos - layout.size.value - layout.topShift.value > 0)
             {
