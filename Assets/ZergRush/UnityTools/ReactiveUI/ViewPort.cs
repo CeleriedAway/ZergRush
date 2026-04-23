@@ -95,7 +95,7 @@ namespace ZergRush.ReactiveUI
         public void CalculateVisibleIndexes(IScrollViewLayout layout, out int first, out int last)
         {
             var pos = GetContentShift(rect.scroll);
-            var height = supposedSize;
+            var height = GetVisibleMainSize(rect.scroll);
 
             if (layout.topShift.value - pos > height || pos - layout.size.value - layout.topShift.value > 0)
             {
@@ -106,6 +106,18 @@ namespace ZergRush.ReactiveUI
             
             first = layout.FirstVisibleIndexFromShift(pos);
             last = layout.LastVisibleIndexFromShift(pos + height);
+        }
+
+        // Visible clip region main-size. Must match the frame used by GetContentShift
+        // (viewport.rect) or the visibility window desyncs with the content-shift.
+        // `supposedSize` is the content's total extent, not the visible window; using it
+        // was the bug when viewport size != content size (which is basically always).
+        static float GetVisibleMainSize(ScrollRect scroll)
+        {
+            var viewport = scroll.viewport;
+            if (viewport != null)
+                return scroll.horizontal ? viewport.rect.width : viewport.rect.height;
+            return scroll.RectMainSize();
         }
 
         public IEventStream needRecalcVisibility { get { return rect.scrollPos.updates; } }
