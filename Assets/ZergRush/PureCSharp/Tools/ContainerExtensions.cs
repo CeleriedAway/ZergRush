@@ -574,6 +574,11 @@ namespace ZergRush
         public static void RemoveSwapBack<T>(this IList<T> list, int index)
         {
             var lastIndex = list.Count - 1;
+            if (lastIndex == 0)
+            {
+                list.Clear();
+                return;
+            }
             (list[lastIndex], list[index]) = (list[index], list[lastIndex]);
             list.RemoveAt(lastIndex);
         }
