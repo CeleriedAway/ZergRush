@@ -15,8 +15,6 @@ namespace ZergRush.CodeGen
         PooledUpdateFrom = 2 << 6,
         Deserialize = 2 << 8,
         Serialize = 2 << 9,
-        Pooled = 2 << 10,
-        PooledDeserialize = 2 << 11,
 
         PolymorphicConstruction = 2 << 12,
         PooledPolymorphicConstruction = 2 << 13,
@@ -33,11 +31,6 @@ namespace ZergRush.CodeGen
         PolymorphicDataPack = SimpleDataPack | PolymorphicConstruction,
         NodePack = PolymorphicDataPack | OwnershipHierarchy,
         LivableNodePack = NodePack | LifeSupport,
-
-        PooledDataPack = DefaultConstructor | Hash | CompareChech | JsonSerialization | Pooled | PooledUpdateFrom |
-                         PooledPolymorphicConstruction | PooledDeserialize,
-        PooledNodePack = PooledDataPack | OwnershipHierarchy,
-        PooledLivableNodePack = PooledNodePack | LifeSupport,
 
         ConfigData = Hash | Serialization | JsonSerialization | DefaultConstructor | PolymorphicConstruction |
                      CollectConfigs,

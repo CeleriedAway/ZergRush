@@ -228,7 +228,6 @@ namespace ZergRush.CodeGen
             }
 
             var method = classSink.Method(funcName, type, mType, returnType, args, genericSuffix, constraints);
-            method.stubMode = stubMode;
             method.needBaseValCall = type.NeedBaseCallForFlag(currTask);
 
             if (mode == Mode.ExtensionMethod)
@@ -257,8 +256,7 @@ namespace ZergRush.CodeGen
 
                 if (contexts.TryGetValue(genTargetFolder.folder, out var c) == false)
                 {
-                    var generatorContext =
-                        new GeneratorContext(new GenInfo { sharpGenPath = genTargetFolder.folder }, stubMode);
+                    var generatorContext = new GeneratorContext(new GenInfo { sharpGenPath = genTargetFolder.folder });
                     generatorContext.priority = genTargetFolder.priority;
                     contexts[genTargetFolder.folder] = generatorContext;
                     customContextFolders.Add(genTargetFolder.folder);
@@ -279,8 +277,6 @@ namespace ZergRush.CodeGen
             }
         }
 
-        static bool stubMode = false;
-
         [Obsolete("Reflection assembly generation was removed. Parse source with ZRCodeParser and call Gen(IEnumerable<ZRType>, string, bool).")]
         public static void Gen(List<string> includeAssemblies, bool stubs)
         {
@@ -288,12 +284,12 @@ namespace ZergRush.CodeGen
                 "Reflection assembly generation was removed. Parse source with ZRCodeParser and call CodeGen.Gen(types, defaultPath, stubs).");
         }
 
-        public static void Gen(IEnumerable<Type> types, string defaultPath, bool stubs)
+        public static void Gen(IEnumerable<Type> types, string defaultPath)
         {
-            RawGen(types, defaultPath, stubs);
+            RawGen(types, defaultPath);
         }
 
-        public static void RawGen(IEnumerable<Type> types, string defaultPath, bool stubs)
+        public static void RawGen(IEnumerable<Type> types, string defaultPath)
         {
             var priorityList = types
                 .Select(t =>
@@ -311,12 +307,10 @@ namespace ZergRush.CodeGen
 
             typeGenRequested.Clear();
             tasks.Clear();
-            genericInstances.Clear();
             polymorphicMap.Clear();
             baseClassMap.Clear();
             extensionsSignaturesGenerated.Clear();
             classes.Clear();
-            parents.Clear();
             contexts.Clear();
             customContextFolders.Clear();
             contextsForTypes.Clear();
@@ -325,8 +319,7 @@ namespace ZergRush.CodeGen
             membersForCodegenInheretedCache.Clear();
             membersForCodegenCache.Clear();
 
-            stubMode = stubs;
-            defaultContext = new GeneratorContext(new GenInfo { sharpGenPath = defaultPath }, stubMode);
+            defaultContext = new GeneratorContext(new GenInfo { sharpGenPath = defaultPath });
             contexts[defaultPath] = defaultContext;
             customContextFolders.Add(defaultPath);
 

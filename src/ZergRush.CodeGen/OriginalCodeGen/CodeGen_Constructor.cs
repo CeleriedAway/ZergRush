@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Type = ZergRush.CodeGen.ZRType;
 using ZergRush.Alive;
 using ZergRush.CodeGen;
@@ -42,10 +42,6 @@ namespace ZergRush.CodeGen
             return typeof(ObjectPool);
         }
 
-        static bool HasPool(this Type t)
-        {
-            return t.ReadGenFlags().HasFlag(GenTaskFlags.Pooled);
-        }
         static string PersonalPoolName(this Type t)
         {
             return t.UniqueName() + "Pool";
@@ -56,21 +52,6 @@ namespace ZergRush.CodeGen
             return "_Get" + t.UniqueName();
         }
         
-        static string OptPoolArgDecl(this Type t, bool need)
-        {
-            return need && t.HasPool() ? $"{t.PoolTypeName()} pool" : "";
-        }
-        
-        static string OptPoolArg(this Type t, bool need)
-        {
-            return need && t.HasPool() ? $"pool" : "";
-        }
-        
-        static string OptPoolSecondArgDecl(this Type t, bool need)
-        {
-            return need && t.HasPool() ? $", {t.PoolTypeName()} pool" : "";
-        }
-
         static bool CanPassPoolInfoUpdateFromIfNeeded(this Type t, bool need)
         {
             return need && ((t.ReadGenFlags() & GenTaskFlags.PooledUpdateFrom) != 0 ||
@@ -83,17 +64,12 @@ namespace ZergRush.CodeGen
             return t.CanPassPoolInfoUpdateFromIfNeeded(need) ? $", pool" : "";
         }
         
-        static string OptPoolSecondArg(this Type t, bool need)
-        {
-            return need && t.HasPool() ? $", pool" : "";
-        }
-
         static bool CanBeNullAfterConstruction(this ZRData info)
         {
             return info.type.CanBeAncestor() && info.cantBeAncestor == false;
         }
         
-        public static void CreateNewInstance(MethodBuilder sink, ZRData info, string classIdReader, bool pooled,
+        public static void CreateNewInstance(MethodBuilder sink, ZRData info, string classIdReader,
             string refInst, bool needCreateVar, bool wrapType = false)
         {
             // Some bullshit logic here
@@ -116,19 +92,14 @@ namespace ZergRush.CodeGen
                 needCast = true;
                 if (refInst.Valid())
                 {
-                    string poolArg = "";
-                    if (t.HasPool() && pooled)
-                    {
-                        poolArg = "pool";
-                    }
-                    newExpr = $"{refInst}.{PolymorphNewInstOfSameType}({poolArg})";
+                    newExpr = $"{refInst}.{PolymorphNewInstOfSameType}()";
                 }
                 else
                 {
                     if (classIdReader.Valid() == false)
                     {
                         if (t.IsAbstract) { return; }
-                        newExpr = NewInstExpr(t, pooled);
+                        newExpr = NewInstExpr(t);
                     }
                     else
                     {
@@ -155,7 +126,7 @@ namespace ZergRush.CodeGen
                     Error($"Type {t} is abstract but required to have constructor during {sink.classBuilder.name} generation");
                     return;
                 }
-                newExpr = NewInstExpr(t, pooled, info.defaultValue);
+                newExpr = NewInstExpr(t, info.defaultValue);
             }
 
             sink.content($"{(needCreateVar ? "var " : "")}{name} = {(needCast ? $"({t.RealName(true)})" : "")}{newExpr};");
@@ -201,7 +172,7 @@ namespace ZergRush.CodeGen
                 //if (info.type.IsLivableContainer()) return;
                 // For livables all configs should be set in Prepare method thats why its unnesseseary to generate default config values
                 if (info.isValueWrapper == ValueVrapperType.None && info.type.IsLoadableConfig() && t.IsLivableCustomType()) return;
-                CreateNewInstance(constructor, info, null, false, null, false, wrapType: true);
+                CreateNewInstance(constructor, info, null, null, false, wrapType: true);
             });
             
             if (t.HasAttribute<GenModelRootSetup>())
@@ -211,13 +182,9 @@ namespace ZergRush.CodeGen
             }
         }
 
-        public static string NewInstExpr(this Type t, bool pooled, object constructorArg = null, bool isCustomExprArg = false)
+        public static string NewInstExpr(this Type t, object constructorArg = null, bool isCustomExprArg = false)
         {
-            if (t.HasPool() && pooled)
-            {
-                return $"pool.{t.GetFromPoolFunc()}()";
-            }
-            else if (t.HasDefaultConstructor())
+            if (t.HasDefaultConstructor())
             {
                 var arg = constructorArg != null ? ((constructorArg is string && !isCustomExprArg) ? $"\"{constructorArg}\"" :  constructorArg) : "";
                 

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Type = ZergRush.CodeGen.ZRType;
 using System.Collections.Generic;
 using System.IO;
@@ -32,15 +32,10 @@ namespace ZergRush.CodeGen
 
         static Dictionary<Type, HashSet<Type>> polymorphicMap = new Dictionary<Type, HashSet<Type>>();
         static Dictionary<Type, Type> baseClassMap = new Dictionary<Type, Type>();
-        static HashSet<Type> parents = new HashSet<Type>();
-        static HashSet<Type> pooledPolymorphicConstructors = new HashSet<Type>();
         static HashSet<Type> normalPolymorphicConstructors = new HashSet<Type>();
         static Dictionary<Type, HashSet<Type>> polymorphicRootNodes = new Dictionary<Type, HashSet<Type>>();
 
-        static Dictionary<Type, Dictionary<string, int>>
-            finalTypeEnum = new Dictionary<Type, Dictionary<string, int>>();
-
-        static Dictionary<Type, HashSet<Type>> genericInstances = new Dictionary<Type, HashSet<Type>>();
+        static Dictionary<Type, Dictionary<string, int>> finalTypeEnum = new Dictionary<Type, Dictionary<string, int>>();
 
         public static string PolymorphInstanceFuncNamePooled(bool pooled)
         {
@@ -77,11 +72,6 @@ namespace ZergRush.CodeGen
                 normalPolymorphicConstructors.Add(t);
             }
 
-            if ((t.ReadGenFlags() & GenTaskFlags.PooledPolymorphicConstruction) != 0)
-            {
-                pooledPolymorphicConstructors.Add(t);
-            }
-
             Type lastValidParent = null;
             var parent = t.BaseType;
             while (parent != null)
@@ -92,8 +82,6 @@ namespace ZergRush.CodeGen
                     {
                         polymorphicRootNodes.TryGetOrNew(parent).Add(t);
                     }
-
-                    parents.Add(parent);
                     lastValidParent = parent;
                 }
 
@@ -111,42 +99,10 @@ namespace ZergRush.CodeGen
             }
         }
 
-        public static bool NeedClassIdCache(this Type t)
-        {
-            return baseClassMap.ContainsKey(t) || polymorphicMap.ContainsKey(t);
-        }
-
         public static bool CanBeAncestor(this Type t)
         {
-            if (t.IsHierarchySupportContainer()) return false;
             if (t.IsSealed) return false;
-            if (t.IsGenericParameter)
-            {
-                foreach (var genericParameterConstraint in t.GetGenericParameterConstraints())
-                {
-                    if (genericParameterConstraint.IsClass)
-                        return genericParameterConstraint.CanBeAncestor();
-                }
-            }
-
-            if (t.IsGenericType && t.BaseType != null
-            ) // IsGenericType == true also when it just implements generic interface.
-            {
-                return t.BaseType.CanBeAncestor();
-            }
-
-            return t.IsAbstract ||
-                   (baseClassMap.ContainsKey(t) || polymorphicMap.ContainsKey(t)) && parents.Contains(t);
-        }
-
-        public static Type TypeToUpdateFrom(this Type t)
-        {
-            return baseClassMap.GetOrDefault(t, t);
-        }
-
-        static bool RequirePolymorphConstruct(this Type t)
-        {
-            return polymorphicMap.ContainsKey(t);
+            return t.ChildTypes.Count > 0;
         }
 
 
@@ -479,8 +435,6 @@ namespace ZergRush.CodeGen
 
                 var mType = type == baseClass ? MethodType.Virtual : MethodType.Override;
 
-                var pooled = type.HasPool() && pooledMap;
-
                 tSink.inheritance("ICloneInst");
                 var newInstOfSameType = tSink.Method(PolymorphNewInstOfSameType, type, mType, typeof(object),
                     pooledMap ? $"{PoolTypeName(null)} pool" : "");
@@ -493,7 +447,7 @@ namespace ZergRush.CodeGen
                     newInstOfSameType.doNotGen = true;
                 }
                 else if (type.IsAbstract) newInstOfSameType.content("throw new NotImplementedException();");
-                else if (type.IsGenericTypeDecl() && pooled)
+                else if (type.IsGenericTypeDecl())
                 {
                     var genericPoolGetter = tSink.Method(GenericPoolGetter, type, MethodType.Instance,
                         typeof(IGenericPool), type.OptPoolArgDecl(type.HasPool()));

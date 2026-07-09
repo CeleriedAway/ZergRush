@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Type = ZergRush.CodeGen.ZRType;
 using System.Text;
 
@@ -51,7 +51,6 @@ namespace ZergRush.CodeGen
         public bool doNotCallBaseMethod;
         public bool needBaseValCall;
 
-        public bool stubMode;
         public bool doNotGen;
         public int indent = 0;
 

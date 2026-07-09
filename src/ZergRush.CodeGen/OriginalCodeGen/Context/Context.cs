@@ -26,12 +26,10 @@ namespace ZergRush.CodeGen
         HashSet<string> builderFileNames = new HashSet<string>();
         private GenInfo context;
         public SharpClassBuilder extensionSink;
-        bool stubModel;
         
-        public GeneratorContext(GenInfo context, bool stubMode)
+        public GeneratorContext(GenInfo context)
         {
             this.context = context;
-            this.stubModel = stubMode;
             
             extensionSink = createSharpClass("SerializationExtensions", isStatic: true, isPartial:true);
             extensionSink.usingSink("System.IO");
