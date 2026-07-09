@@ -1,4 +1,5 @@
 using System;
+using Type = ZergRush.CodeGen.ZRType;
 using System.Collections.Generic;
 using System.Reflection;
 using ZergRush.Alive;
@@ -10,13 +11,13 @@ namespace ZergRush.CodeGen
     {
         public static string WriteFuncName = "Serialize";
 
-        public static void GenWriteValueToStream(MethodBuilder sink, DataInfo info, string stream)
+        public static void GenWriteValueToStream(MethodBuilder sink, ZRData info, string stream)
         {
             if (info.canBeNull) GenWriteNullableToStream(sink, info, stream);
             else WriteToStreamStatement(sink, info, stream);
         }
 
-        public static void GenWriteNullableToStream(MethodBuilder sink, DataInfo info, string stream)
+        public static void GenWriteNullableToStream(MethodBuilder sink, ZRData info, string stream)
         {
             sink.content($"if ({info.access} == null) {stream}.Write(false);");
             sink.content($"else {{");
@@ -27,7 +28,7 @@ namespace ZergRush.CodeGen
             sink.content($"}}");
         }
 
-        public static void WriteToStreamStatement(MethodBuilder sink, DataInfo info, string stream)
+        public static void WriteToStreamStatement(MethodBuilder sink, ZRData info, string stream)
         {
             var t = info.type;
             var access = info.access;
@@ -73,7 +74,7 @@ namespace ZergRush.CodeGen
                                        t.GetGenericTypeDefinition() == typeof(ConfigStorageSlot<>));
         }
 
-        public static void SinkListWriterCode(Type listType, MethodBuilder sink, DataInfo info, string stream)
+        public static void SinkListWriterCode(Type listType, MethodBuilder sink, ZRData info, string stream)
         {
             sink.content($"{stream}.Write({info.access}.Count);");
             sink.content($"for (int i = 0; i < {info.access}.Count; i++)");
@@ -88,7 +89,7 @@ namespace ZergRush.CodeGen
             sink.content("{");
             sink.indent++;
             WriteToStreamStatement(sink,
-                new DataInfo
+                new ZRData
                 {
                     type = info.type, baseAccess = $"{info.access}[i]", insideConfigStorage = listType.IsConfigStorage()
                 }.SetupIsCell(), stream);
@@ -107,7 +108,7 @@ namespace ZergRush.CodeGen
             sink.indent++;
 
             WriteToStreamStatement(sink,
-                new DataInfo { type = keyType, baseAccess = $"item.Key", insideConfigStorage = configStorage }.SetupIsCell(), stream);
+                new ZRData { type = keyType, baseAccess = $"item.Key", insideConfigStorage = configStorage }.SetupIsCell(), stream);
 
             if (!valType.IsValueType)
             {
@@ -118,7 +119,7 @@ namespace ZergRush.CodeGen
             sink.content("{");
             sink.indent++;
             WriteToStreamStatement(sink,
-                new DataInfo { type = valType, baseAccess = $"item.Value", insideConfigStorage = configStorage }.SetupIsCell(),
+                new ZRData { type = valType, baseAccess = $"item.Value", insideConfigStorage = configStorage }.SetupIsCell(),
                 stream);
 
             sink.indent--;
@@ -127,7 +128,7 @@ namespace ZergRush.CodeGen
             sink.content($"}}");
         }
 
-        public static void SinkArrayWriterCode(MethodBuilder sink, DataInfo info, string stream)
+        public static void SinkArrayWriterCode(MethodBuilder sink, ZRData info, string stream)
         {
             sink.content($"{stream}.Write({info.access}.Length);");
             sink.content($"for (int i = 0; i < {info.access}.Length; i++)");
@@ -142,7 +143,7 @@ namespace ZergRush.CodeGen
 
             sink.content("{");
             sink.indent++;
-            WriteToStreamStatement(sink, new DataInfo { type = info.type, baseAccess = $"{info.access}[i]" }.SetupIsCell(), stream);
+            WriteToStreamStatement(sink, new ZRData { type = info.type, baseAccess = $"{info.access}[i]" }.SetupIsCell(), stream);
             sink.indent--;
             sink.content("}");
             sink.indent--;
@@ -162,13 +163,13 @@ namespace ZergRush.CodeGen
             {
                 var elemType = type.GenericTypeArguments[0];
                 RequestGen(elemType, type, GenTaskFlags.Serialize);
-                SinkListWriterCode(type, sinkWriter, DataInfo.WithTypeAndName(elemType, accessPrefix), writerName);
+                SinkListWriterCode(type, sinkWriter, ZRData.WithTypeAndName(elemType, accessPrefix), writerName);
             }
             else if (type.IsArray)
             {
                 var elemType = type.GetElementType();
                 RequestGen(elemType, type, GenTaskFlags.Serialize);
-                SinkArrayWriterCode(sinkWriter, DataInfo.WithTypeAndName(elemType, accessPrefix), writerName);
+                SinkArrayWriterCode(sinkWriter, ZRData.WithTypeAndName(elemType, accessPrefix), writerName);
             }
             else if (type.IsDictionary())
             {
@@ -197,38 +198,38 @@ namespace ZergRush.CodeGen
 
         public static bool IsNullable(this Type t)
         {
-            return Nullable.GetUnderlyingType(t) != null;
+            return t?.CommonConstruct == ZRCommonConstruct.Nullable;
         }
 
         public static bool IsNullableReferenceType(this Type t)
         {
-            var underlyingType = Nullable.GetUnderlyingType(t);
+            var underlyingType = t.NullableUnderlyingType();
             if (underlyingType != null && underlyingType.IsClass) return true;
             return false;
         }
 
         public static bool IsNullableEnum(this Type t)
         {
-            var underlyingType = Nullable.GetUnderlyingType(t);
+            var underlyingType = t.NullableUnderlyingType();
             if (underlyingType != null && underlyingType.IsEnum) return true;
             return false;
         }
 
         public static bool IsNullablePrimitive(this Type t)
         {
-            var underlyingType = Nullable.GetUnderlyingType(t);
+            var underlyingType = t.NullableUnderlyingType();
             if (underlyingType != null && underlyingType.IsPrimitive) return true;
             return false;
         }
 
-        public static void GenReadValueFromStream(MethodBuilder sink, DataInfo info, string stream, bool pooled,
+        public static void GenReadValueFromStream(MethodBuilder sink, ZRData info, string stream, bool pooled,
             bool needVar = false)
         {
             if (info.realType == null) info.SetupIsCell();
             var t = info.type;
 
             // info can be transformed because read from can do temp value wrapping for it
-            Action<MethodBuilder, DataInfo> baseCall = (s, info1) =>
+            Action<MethodBuilder, ZRData> baseCall = (s, info1) =>
                 s.content(
                     $"{info1.access}.{ReadFuncName}({stream}{(pooled && t.HasPooledDeserializeMethod() ? $", pool" : "")});");
 
@@ -282,7 +283,7 @@ namespace ZergRush.CodeGen
                 sink.content($"self.Add(null);");
                 sink.content($"if (!{stream}.ReadBoolean()) continue;");
                 GenReadValueFromStream(sink,
-                    new DataInfo
+                    new ZRData
                     {
                         type = type, carrierType = listType, baseAccess = $"self[self.{count} - 1]",
                         insideConfigStorage = listType.IsConfigStorage(), sureIsNull = true
@@ -293,7 +294,7 @@ namespace ZergRush.CodeGen
                 if (!type.IsValueType)
                     sink.content($"if (!{stream}.ReadBoolean()) {{ self.Add(null); continue; }}");
                 GenReadValueFromStream(sink,
-                    new DataInfo
+                    new ZRData
                     {
                         type = type, carrierType = listType, baseAccess = $"val", sureIsNull = true,
                         insideConfigStorage = listType.IsConfigStorage()
@@ -318,7 +319,7 @@ namespace ZergRush.CodeGen
             sink.indent++;
             sink.content($"var key = default({keyType.RealName(true)});");
             GenReadValueFromStream(sink,
-                new DataInfo
+                new ZRData
                     { type = keyType, baseAccess = $"key", sureIsNull = true, insideConfigStorage = configStorage, carrierType = dictType}.SetupIsCell(),
                 stream, pooled);
 
@@ -327,7 +328,7 @@ namespace ZergRush.CodeGen
 
             sink.content($"var val = default({valType.RealName(true)});");
             GenReadValueFromStream(sink,
-                new DataInfo
+                new ZRData
                     { type = valType, baseAccess = $"val", sureIsNull = true, insideConfigStorage = configStorage, carrierType = dictType }.SetupIsCell(),
                 stream,
                 pooled);
@@ -359,7 +360,7 @@ namespace ZergRush.CodeGen
             sink.indent++;
             if (!type.IsValueType)
                 sink.content($"if (!{stream}.ReadBoolean()) {{ {path}[i] = null; continue; }}");
-            GenReadValueFromStream(sink, new DataInfo {type = type, baseAccess = $"{path}[i]", sureIsNull = true}.SetupIsCell(),
+            GenReadValueFromStream(sink, new ZRData {type = type, baseAccess = $"{path}[i]", sureIsNull = true}.SetupIsCell(),
                 stream, pooled);
             sink.indent--;
             sink.content($"}}");
@@ -425,7 +426,7 @@ namespace ZergRush.CodeGen
             }
         }
 
-//        static bool SerializeWithFeatures(DataInfo info, MethodBuilder sink, string stream, bool deserialize)
+//        static bool SerializeWithFeatures(ZRData info, MethodBuilder sink, string stream, bool deserialize)
 //        {
 //            foreach (var serializationFeature in serializationFeatures)
 //            {
@@ -475,7 +476,7 @@ namespace ZergRush.CodeGen
             return configType;
         }
 
-        static void ConfigFromId(MethodBuilder sink, DataInfo info, Func<Type, string> idReader, bool needCreateVar)
+        static void ConfigFromId(MethodBuilder sink, ZRData info, Func<Type, string> idReader, bool needCreateVar)
         {
             var type = typeof(ulong);
             var configType = info.carrierType?.ConfigRootType();

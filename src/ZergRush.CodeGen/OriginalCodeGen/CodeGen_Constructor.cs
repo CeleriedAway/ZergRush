@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using Type = ZergRush.CodeGen.ZRType;
 using ZergRush.Alive;
 using ZergRush.CodeGen;
 
@@ -29,7 +30,7 @@ namespace ZergRush.CodeGen
 
         static bool IsLivableAncestor(this Type type)
         {
-            return typeof(Livable).IsAssignableFrom(type);
+            return type.IsAssignableTo(typeof(Livable));
         }
         
         static string PoolTypeName(this Type type)
@@ -87,12 +88,12 @@ namespace ZergRush.CodeGen
             return need && t.HasPool() ? $", pool" : "";
         }
 
-        static bool CanBeNullAfterConstruction(this DataInfo info)
+        static bool CanBeNullAfterConstruction(this ZRData info)
         {
             return info.type.CanBeAncestor() && info.cantBeAncestor == false;
         }
         
-        public static void CreateNewInstance(MethodBuilder sink, DataInfo info, string classIdReader, bool pooled,
+        public static void CreateNewInstance(MethodBuilder sink, ZRData info, string classIdReader, bool pooled,
             string refInst, bool needCreateVar, bool wrapType = false)
         {
             // Some bullshit logic here
@@ -235,7 +236,7 @@ namespace ZergRush.CodeGen
             }
         }
 
-        public static void SinkRemovePostProcess(MethodBuilder sink, DataInfo info, bool pooled)
+        public static void SinkRemovePostProcess(MethodBuilder sink, ZRData info, bool pooled)
         {
 //            if (info.type.HasPool() && pooled)
 //            {

@@ -1,4 +1,5 @@
 using System;
+using Type = ZergRush.CodeGen.ZRType;
 using ZergRush.Alive;
 using Newtonsoft.Json;
 using ZergRush.CodeGen;
@@ -30,7 +31,7 @@ namespace ZergRush.CodeGen
             return type == typeof(DateTime);
         }
 
-        public static void WriteJsonValueStatement(MethodBuilder sink, DataInfo info, bool inList)
+        public static void WriteJsonValueStatement(MethodBuilder sink, ZRData info, bool inList)
         {
             if (info.realType == null) info.SetupIsCell();
             
@@ -39,7 +40,7 @@ namespace ZergRush.CodeGen
             if (t.IsNullable())
             {
                 isNullable = true;
-                t = Nullable.GetUnderlyingType(t);
+                t = t.NullableUnderlyingType();
             }
 
             if (t.IsConfig() == false) RequestGen(t, sink.classType, GenTaskFlags.JsonSerialization);
@@ -116,7 +117,7 @@ namespace ZergRush.CodeGen
             return t.IsChildOf<LoadableConfig>();
         }
 
-        public static void ReadJsonValueStatement(MethodBuilder sink, DataInfo info, bool needCreateVar,
+        public static void ReadJsonValueStatement(MethodBuilder sink, ZRData info, bool needCreateVar,
             bool useTempVar = false)
         {
             if (info.realType == null) info.SetupIsCell();
@@ -125,7 +126,7 @@ namespace ZergRush.CodeGen
             if (t.IsConfig() == false) RequestGen(t, sink.classType, GenTaskFlags.JsonSerialization);
 
             // info can be transformed because read from can do temp value wrapping for it
-            Action<MethodBuilder, DataInfo> baseCall = (s, info1) =>
+            Action<MethodBuilder, ZRData> baseCall = (s, info1) =>
                 s.content(
                     $"{(info.type.IsArray ? info1.access + " = " : "")}{info1.access}.{JsonReadFuncName}(reader);");
             if (t.IsMultipleReference())
@@ -141,7 +142,7 @@ namespace ZergRush.CodeGen
                 baseCall = (s, info1) => s.content($"{info1.access} = ({t.RealName()}) reader.Value;");
             }
 
-            if (t.IsFix64() || (t.IsNullable() && Nullable.GetUnderlyingType(t).Name == "Fix64"))
+            if (t.IsFix64() || (t.IsNullable() && t.NullableUnderlyingType()?.Name == "Fix64"))
             {
                 sink.classBuilder.usingSink("FixMath.NET");
             }
@@ -166,7 +167,7 @@ namespace ZergRush.CodeGen
             var str = $"({t.RealName(true)})";
             if (t.IsNullable())
             {
-                t = Nullable.GetUnderlyingType(t);
+                t = t.NullableUnderlyingType();
             }
 
             if (t.IsGuid())
@@ -228,7 +229,7 @@ namespace ZergRush.CodeGen
 
                 var elemType = type.FirstGenericArg();
                 if (elemType.IsConfig() == false) RequestGen(elemType, type, GenTaskFlags.JsonSerialization);
-                var info = DataInfo.WithTypeAndName(elemType, accessPrefix);
+                var info = ZRData.WithTypeAndName(elemType, accessPrefix);
                 string count = type.IsList() ? "Count" : "Length";
 
                 // Writer
@@ -237,14 +238,14 @@ namespace ZergRush.CodeGen
                 sinkWriter.content($"for (int i = 0; i < {info.access}.{count}; i++)");
                 sinkWriter.content($"{{");
                 sinkWriter.indent++;
-                var dataInfo = new DataInfo
+                var itemInfo = new ZRData
                 {
                     type = info.type, baseAccess = $"{info.access}[i]",
                     insideConfigStorage = type.IsConfigStorage()
                 }.SetupIsCell();
-                dataInfo.canBeNull = dataInfo.type.IsClass;
+                itemInfo.canBeNull = itemInfo.type.IsClass;
                 WriteJsonValueStatement(sinkWriter,
-                    dataInfo, true);
+                    itemInfo, true);
                 sinkWriter.indent--;
                 sinkWriter.content($"}}");
                 sinkWriter.content($"writer.WriteEndArray();");
@@ -294,7 +295,7 @@ namespace ZergRush.CodeGen
 
                     string tempVarName = "__temp";
                     ReadJsonValueStatement(sinkReader,
-                        new DataInfo
+                        new ZRData
                         {
                             type = elemType, carrierType = type, baseAccess = tempVarName,
                             insideConfigStorage = type.IsConfigStorage(),
@@ -326,7 +327,7 @@ namespace ZergRush.CodeGen
                         }
                     }
 
-                    ReadJsonValueStatement(sinkReader, new DataInfo
+                    ReadJsonValueStatement(sinkReader, new ZRData
                     {
                         type = info.type, baseAccess = $"val", carrierType = type,
                         insideConfigStorage = type.IsConfigStorage(), sureIsNull = true
@@ -360,8 +361,8 @@ namespace ZergRush.CodeGen
                 RequestGen(keyType, type, GenTaskFlags.JsonSerialization);
                 RequestGen(valType, type, GenTaskFlags.JsonSerialization);
 
-                var infoKey = DataInfo.WithTypeAndName(keyType, "key");
-                var infoVal = DataInfo.WithTypeAndName(valType, "val");
+                var infoKey = ZRData.WithTypeAndName(keyType, "key");
+                var infoVal = ZRData.WithTypeAndName(valType, "val");
 
                 // Writer
 
@@ -371,12 +372,12 @@ namespace ZergRush.CodeGen
                 sinkWriter.content($"writer.WriteStartObject();");
                 sinkWriter.content($"writer.WritePropertyName(\"key\");");
                 WriteJsonValueStatement(sinkWriter,
-                    new DataInfo
+                    new ZRData
                         { type = keyType, baseAccess = $"item.Key", insideConfigStorage = type.IsConfigStorage() },
                     true);
                 sinkWriter.content($"writer.WritePropertyName(\"value\");");
                 WriteJsonValueStatement(sinkWriter,
-                    new DataInfo
+                    new ZRData
                         { type = valType, baseAccess = $"item.Value", insideConfigStorage = type.IsConfigStorage() },
                     true);
                 sinkWriter.content($"writer.WriteEndObject();");
@@ -392,7 +393,7 @@ namespace ZergRush.CodeGen
                 sinkReader.content($"reader.Read();"); // key prop name
                 sinkReader.content($"reader.Read();"); // key content
                 ReadJsonValueStatement(sinkReader,
-                    new DataInfo
+                    new ZRData
                     {
                         type = keyType, carrierType = type, baseAccess = $"key",
                         insideConfigStorage = type.IsConfigStorage(), sureIsNull = true
@@ -400,7 +401,7 @@ namespace ZergRush.CodeGen
                 sinkReader.content($"reader.Read();"); // val prop name
                 sinkReader.content($"reader.Read();"); // val content
                 ReadJsonValueStatement(sinkReader,
-                    new DataInfo
+                    new ZRData
                     {
                         type = valType, carrierType = type, baseAccess = $"val",
                         insideConfigStorage = type.IsConfigStorage(), sureIsNull = true

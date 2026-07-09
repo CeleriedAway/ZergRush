@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using Type = ZergRush.CodeGen.ZRType;
 using System.Text;
 
 public enum MethodType

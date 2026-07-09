@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using Type = ZergRush.CodeGen.ZRType;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;

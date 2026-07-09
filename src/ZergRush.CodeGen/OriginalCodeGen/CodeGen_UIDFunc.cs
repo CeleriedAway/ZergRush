@@ -1,4 +1,5 @@
 using System;
+using Type = ZergRush.CodeGen.ZRType;
 using System.Linq;
 using ZergRush.CodeGen;
 
@@ -32,7 +33,7 @@ namespace ZergRush.CodeGen
                 funcName = UIdFuncName,
                 needDictKeyTraverse = false,
                 interfaceType = typeof(IUniquelyIdentifiable),
-                memberPredicate = info => info.sharpMemberInfo.HasAttribute<UIDComponent>(),
+                memberPredicate = info => info.Member.HasAttribute<UIDComponent>(),
                 needMembersGenRequest = false,
                 start = (sink, baseCall) =>
                 {
@@ -63,7 +64,7 @@ namespace ZergRush.CodeGen
             }, type, funcPrefix);
         }
 
-        public static string UIdExpr(DataInfo info)
+        public static string UIdExpr(ZRData info)
         {
             var t = info.type;
             var name = info.access;

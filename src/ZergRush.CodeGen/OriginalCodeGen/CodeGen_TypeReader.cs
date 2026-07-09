@@ -1,19 +1,13 @@
-﻿using System;
+using System;
+using Type = ZergRush.CodeGen.ZRType;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using ZergRush.Alive;
-using ZergRush.CodeGen;
 
 namespace ZergRush.CodeGen
 {
     public static partial class CodeGen
     {
-        public static bool HasAttribute<T>(this Type t, bool inherit = false) where T : Attribute
-        {
-            return Attribute.IsDefined(t, typeof(T), inherit);
-        }
-
         public enum ValueVrapperType
         {
             None,
@@ -27,72 +21,57 @@ namespace ZergRush.CodeGen
             return t.IsControllable() ? Mode.PartialClass : Mode.ExtensionMethod;
         }
 
-        // Only single attribute is supported now
         public static GenTaskCustomImpl GetCustomImplAttr(this Type t)
         {
-            if (t.HasAttribute<GenIgnore>()) return null;
-            //if (typeof(IZeroFormatterSegment).IsAssignableFrom(t)) return null;
-
-            if (t.HasAttribute<GenTaskCustomImpl>(false) == false)
+            var current = t;
+            while (current != null)
             {
-                var baseClass = t.BaseType;
-                while (baseClass != null)
+                var custom = current.CustomImplementations.FirstOrDefault();
+                if (custom != null && (ReferenceEquals(current, t) || custom.Inheritable))
                 {
-                    var genTaskCustomImpl = baseClass.GetAttribute<GenTaskCustomImpl>(false);
-                    if (genTaskCustomImpl != null && genTaskCustomImpl.inheritable)
-                    {
-                        t = baseClass;
-                        break;
-                    }
-                    else
-                    {
-                        baseClass = baseClass.BaseType;
-                    }
+                    return custom.ToAttribute();
                 }
+
+                if ((current.Options & ZRTypeOption.DoNotInheritGenTags) != 0) break;
+                current = current.BaseType;
             }
 
-            return t.GetCustomAttribute<GenTaskCustomImpl>(false);
+            return null;
         }
 
         static Dictionary<Type, GenTaskFlags> genFlagsCache = new Dictionary<Type, GenTaskFlags>();
 
         public static GenTaskFlags ReadGenFlags(this Type t)
         {
+            if (t == null) return GenTaskFlags.None;
             if (genFlagsCache.TryGetValue(t, out var flagsCached)) return flagsCached;
-            var flags = GenTaskFlags.None;
-            var type = t;
-            // additive traverse hierarchy for flags
-            flags = type.GetCustomAttributes<GenTask>(false).Aggregate(flags, (f, task) => f | task.flags);
-            while (true)
+
+            var flags = t.Flags;
+            if ((t.Options & ZRTypeOption.DoNotInheritGenTags) == 0 && t.BaseType != null)
             {
-                if (type.HasAttribute<GenDoNotInheritGenTags>()) break;
-                var typeBaseType = type.BaseType;
-                if (typeBaseType == null) break;
-                type = typeBaseType;
-                flags |= type.ReadGenFlags();
+                flags |= t.BaseType.ReadGenFlags();
             }
 
-            if (t.HasAttribute<GenIgnore>()) flags &= ~t.GetAttribute<GenIgnore>().flags;
+            flags &= ~t.IgnoreFlags;
             genFlagsCache[t] = flags;
             return flags;
         }
 
         public static GenTaskFlags ReadGenCustomFlags(this Type t)
         {
-            var attr = t.GetCustomImplAttr();
-            if (attr == null) return GenTaskFlags.None;
-            return attr.flags;
+            return t.CustomImplementFlags;
         }
 
         static bool CanPerform(this Type t, GenTaskFlags flags)
         {
-            if ((flags & GenTaskFlags.Serialization) != 0 && typeof(IBinaryDeserializable).IsAssignableFrom(t))
+            if ((flags & GenTaskFlags.Serialization) != 0 &&
+                t.Interfaces.Any(i => i.Name == nameof(IBinaryDeserializable)))
             {
                 flags ^= GenTaskFlags.Serialization;
             }
 
-            if ((flags & GenTaskFlags.UpdateFrom) != 0 && typeof(IUpdatableFrom<>)
-                .MakeGenericType(t.TypeToUpdateFrom()).IsAssignableFrom(t))
+            if ((flags & GenTaskFlags.UpdateFrom) != 0 &&
+                t.Interfaces.Any(i => i.Name.StartsWith("IUpdatableFrom", StringComparison.Ordinal)))
             {
                 flags ^= GenTaskFlags.UpdateFrom;
             }
@@ -107,7 +86,7 @@ namespace ZergRush.CodeGen
                 flags ^= GenTaskFlags.PooledDeserialize;
             }
 
-            if ((flags & GenTaskFlags.Hash) != 0 && typeof(IHashable).IsAssignableFrom(t))
+            if ((flags & GenTaskFlags.Hash) != 0 && t.Interfaces.Any(i => i.Name == nameof(IHashable)))
             {
                 flags ^= GenTaskFlags.Hash;
             }
@@ -135,15 +114,17 @@ namespace ZergRush.CodeGen
 
         public static void RequestGen(Type t, Type requester, GenTaskFlags flags, bool allowGenericDeclRegister = false)
         {
+            if (t == null) return;
             if (t == typeof(object)) return;
             if (t == Void || t.IsPrimitive || t.IsNullable() || t.IsEnum || t.IsGenericParameter || t == typeof(string) ||
                 t == typeof(byte[]) || t == typeof(Guid) || t == typeof(DateTime)) return;
 
             if (t.IsArray && t.GetArrayRank() > 1)
             {
-                Error($"Multidimensional array is not supported {t.ToString()} requested from: {requester.ToString()}");
+                Error($"Multidimensional array is not supported {t} requested from: {requester}");
                 return;
             }
+
             RegisterTypeContext(t, requester);
             if (requester != null) typeRequestMap.TryGetOrNew(t).AddIfNotContains(requester);
 
@@ -158,17 +139,14 @@ namespace ZergRush.CodeGen
                 }
             }
 
-            GenTaskFlags registered;
-            if (typeGenRequested.TryGetValue(t.NakedGenericDefinition(), out registered))
+            if (typeGenRequested.TryGetValue(t.NakedGenericDefinition(), out var registered))
             {
                 if ((flags & ~registered) == 0) return;
             }
 
             if (t.IsInterface) return;
 
-            // For list cases we need downgrade flags by element type
             var flagsCheckType = t;
-
             if (t.IsRef()) return;
 
             if (t.IsCell() || t.IsLivableSlot() || t.IsList() || t.IsArray)
@@ -179,29 +157,25 @@ namespace ZergRush.CodeGen
                     RequestGen(typeArg, t, flags);
             }
 
-            // Pool requests hacks
             flags = DowngradeFlagsIfNeeded(flagsCheckType, flags, GenTaskFlags.PooledUpdateFrom,
                 GenTaskFlags.UpdateFrom);
             flags = DowngradeFlagsIfNeeded(flagsCheckType, flags, GenTaskFlags.PooledDeserialize,
                 GenTaskFlags.Deserialize);
 
-
-            if ((flags & (GenTaskFlags.Serialization | GenTaskFlags.UpdateFrom)) != 0)
+            if ((flags & (GenTaskFlags.Serialization | GenTaskFlags.UpdateFrom)) != 0 && t.IsArray == false)
             {
-                if (t.IsArray == false)
-                    t.CheckParameterlessConstructor(flags);
+                t.CheckParameterlessConstructor(flags);
             }
-
 
             if (t.IsControllable() && t.IsGenericType && t.IsValidType())
             {
                 genericInstances.TryGetOrNew(t.GetGenericTypeDefinition()).Add(t);
             }
 
-            // For complex polymorphism cases
-            if (t.IsList() == false && t.BaseType != null && t.BaseType.IsGenericType && t.BaseType.IsControllable())
+            if (t.IsControllable() && t.IsGenericType == false && t.BaseType is { IsGenericType: true } baseType &&
+                baseType.IsControllable())
             {
-                RequestGen(t.BaseType, t, flags);
+                RequestGen(baseType, t, flags);
             }
 
             if (t.IsControllable() && !t.IsLivableList())
@@ -212,46 +186,23 @@ namespace ZergRush.CodeGen
                 if (t.CanPerform(interfaceSupportFlags) == false)
                 {
                     Error($"Type {t} can not perform {interfaceSupportFlags} with its interfaces");
-                    t.CanPerform(interfaceSupportFlags); // For debug.
                     return;
                 }
 
                 flags &= ~interfaceSupportFlags;
-                if (flags == 0)
-                {
-                    return;
-                }
+                if (flags == 0) return;
 
                 RegisterPolymorph(t);
             }
-            else
+            else if (t.IsAbstract)
             {
-                if (t.IsAbstract)
-                {
-                    Error($"Type {t} is abstract and can not be registered for flags: " + flags);
-                }
+                Error($"Type {t} is abstract and can not be registered for flags: " + flags);
             }
 
-//            if (t.IsLivableGen() && t != typeof(Livable) && t.IsLivableContainer() == false)
-//            {
-//                var baseType = t.BaseType;
-//                while (baseType != typeof(Livable))
-//                {
-//                    if (baseType.IsLivableGen() == false)
-//                    {
-//                        Error($"All ansestors of livable should have [GenLivable] tag, type {baseType} does not have one");
-//                        return;
-//                    }
-//
-//                    baseType = baseType.BaseType;
-//                }
-//            }
-
-            if (typeof(Livable).IsAssignableFrom(t) && t.IsLivableGen() == false)
+            if (t.IsAssignableTo(typeof(Livable)) && t.IsLivableGen() == false)
             {
                 Error($"type {t} is ancestor of livable but does not have [GenLivable] tag");
             }
-
 
             if (typeGenRequested.TryGetValue(t, out registered))
             {
@@ -271,275 +222,65 @@ namespace ZergRush.CodeGen
 
         static Type NakedGenericDefinition(this Type t)
         {
-            if (t.IsGenericType && t.GenericTypeArguments.Any(par => par.IsGenericParameter))
+            if (t.IsGenericType && t.GenericArguments.Any(par => par.IsGenericParameter))
                 return t.GetGenericTypeDefinition();
-            else return t;
+            return t;
         }
 
-        static object ExtractDefaultValue(MemberInfo member)
-        {
-            if (member.HasAttribute<DefaultVal>())
-            {
-                var extractDefaultValue = member.GetCustomAttribute<DefaultVal>().val;
-                return extractDefaultValue;
-            }
+        static Dictionary<Type, List<ZRData>> membersForCodegenCache = new Dictionary<Type, List<ZRData>>();
 
-            return null;
-        }
+        static Dictionary<Type, List<ZRData>> membersForCodegenInheretedCache = new Dictionary<Type, List<ZRData>>();
 
-        static Dictionary<Type, List<DataInfo>> membersForCodegenCache = new Dictionary<Type, List<DataInfo>>();
-
-        static Dictionary<Type, List<DataInfo>> membersForCodegenInheretedCache = new Dictionary<Type, List<DataInfo>>();
-
-        public static IEnumerable<DataInfo> GetMembersForCodeGen(this Type type,
+        public static IEnumerable<ZRData> GetMembersForCodeGen(this Type type,
             GenTaskFlags flagRestriction = GenTaskFlags.None, bool inheretedMembers = false, bool ignoreCheck = true)
         {
-            IEnumerable<DataInfo> Filter(IEnumerable<DataInfo> m)
+            IEnumerable<ZRData> Filter(IEnumerable<ZRData> m)
             {
-                if (ignoreCheck)
-                {
-                    return m.Where(m => (m.ingoreFlags & flagRestriction) == 0);
-                }
-                else
-                {
-                    return m;
-                }
+                return ignoreCheck ? m.Where(member => (member.ingoreFlags & flagRestriction) == 0) : m;
             }
 
             if (ignoreCheck && inheretedMembers &&
                 membersForCodegenInheretedCache.TryGetValue(type, out var resultCached))
-                return Filter(resultCached);
+                return Filter(resultCached.Select(member => member.Copy()));
             if (ignoreCheck && !inheretedMembers && membersForCodegenCache.TryGetValue(type, out resultCached))
-                return Filter(resultCached);
+                return Filter(resultCached.Select(member => member.Copy()));
 
-            var fieldFlags = BindingFlags.Instance | BindingFlags.Public;
-
-            if (type.IsControllable())
+            var members = new List<ZRData>();
+            if (inheretedMembers || !type.IsControllable())
             {
-                fieldFlags |= BindingFlags.NonPublic;
-            }
-            else
-            {
-                inheretedMembers = true;
-                //fieldFlags |= BindingFlags.FlattenHierarchy;
-            }
-
-            if (inheretedMembers)
-            {
-                fieldFlags |= BindingFlags.FlattenHierarchy;
-            }
-            else
-            {
-                fieldFlags |= BindingFlags.DeclaredOnly;
-            }
-
-            var members = new List<DataInfo>();
-
-            foreach (var field in type.GetFields(fieldFlags))
-            {
-                if (field.Name.Contains("<")) continue;
-                if (field.Name.EndsWith("BackingField")) continue;
-
-                var ignore = field.HasAttribute<GenIgnore>()
-                    ? field.GetCustomAttribute<GenIgnore>().flags
-                    : GenTaskFlags.None;
-                ignore = ignore | (field.FieldType.HasAttribute<GenIgnore>()
-                    ? field.FieldType.GetCustomAttribute<GenIgnore>().flags
-                    : GenTaskFlags.None);
-
-                bool nullable = field.HasAttribute<CanBeNull>();
-                bool isStatic = field.HasAttribute<Immutable>();
-
-                if (nullable && field.FieldType.IsValueType)
-                    nullable = false;
-
-                members.Add(new DataInfo
+                var baseType = type.BaseType;
+                if (baseType != null && baseType != typeof(object))
                 {
-                    type = field.FieldType, baseAccess = field.Name,
-                    canBeNull = nullable, immutableData = isStatic, ingoreFlags = ignore,
-                    isPrivate = field.IsPrivate, isReadOnly = field.IsInitOnly,
-                    justData = field.HasAttribute<JustData>(),
-                    cantBeAncestor = field.HasAttribute<CantBeAncestor>(), defaultValue = ExtractDefaultValue(field),
-                    sharpMemberInfo = field
-                });
-            }
-
-            // Serialize properties only if GenInclude is set;
-            foreach (var property in type.GetProperties(fieldFlags))
-            {
-                GenTaskFlags flags;
-                var forceCanBeNull = false;
-                if (IsVectorElementProperty(property))
-                {
-                    flags = GenTaskFlags.All;
+                    members.AddRange(baseType.GetMembersForCodeGen(flagRestriction, true, ignoreCheck: false)
+                        .Select(member => member.Copy()));
                 }
-                else if (property.GetCustomAttribute<GenInclude>() != null)
-                {
-                    flags = property.GetCustomAttribute<GenInclude>().flags;
-                }
-                else
-                {
-                    continue;
-                }
-
-                bool nullable = property.HasAttribute<CanBeNull>() || forceCanBeNull;
-                bool isStatic = property.HasAttribute<Immutable>();
-                if (nullable && property.PropertyType.IsValueType)
-                    nullable = false;
-                
-                members.Add(new DataInfo
-                {
-                    type = property.PropertyType,
-                    baseAccess = property.Name, canBeNull = nullable, immutableData = isStatic, ingoreFlags = ~flags,
-                    justData = property.HasAttribute<JustData>(),
-                    isPrivate = property.GetMethod.IsPrivate ||
-                                (property.SetMethod != null && property.SetMethod.IsPrivate),
-                    cantBeAncestor = property.HasAttribute<CantBeAncestor>(),
-                    defaultValue = ExtractDefaultValue(property), sharpMemberInfo = property
-                });
             }
 
-            // Pastprocess members for some special cases
+            members.AddRange(type.DataMembers.Select(member => member.Copy()));
+
             foreach (var member in members)
             {
-                member.realType = member.type;
-
-                if (member.type.IsLivableContainer() && member.isReadOnly == false)
-                {
-                    Error($"livable container {member} in type {type} shoud be marked readonly");
-                }
-
+                member.realType ??= member.DeclaredType ?? member.type;
                 member.insideConfigStorage = type.IsConfigStorage();
 
-                if (member.type.IsLivableSlot())
-                {
-                    member.canBeNull = true;
-                }
-                
-                if (member.type.IsNullable())
-                {
-                    member.canBeNull = true;
-                }
-                
+                if (member.type.IsLivableSlot()) member.canBeNull = true;
+                if (member.type.IsNullable()) member.canBeNull = true;
+
                 member.SetupIsCell();
 
-                if (member.realType.IsLivableSlot())
-                {
-                    member.insideLivableContainer = true;
-                }
-
-
-                if (type.IsTuple() && member.type.IsValueType == false)
-                {
-                    member.canBeNull = true;
-                }
-                
-                //member.valueTransformer = member.type.FirstGenericArg().IsValueType ? n => n + ".valueRef" : n => n + ".value";
+                if (member.realType.IsLivableSlot()) member.insideLivableContainer = true;
+                if (type.IsTuple() && member.type.IsValueType == false) member.canBeNull = true;
             }
 
-            if (type.GetAttribute<GenDoNotSortFields>() == null)
+            if ((type.Options & ZRTypeOption.DoNotSortFields) == 0)
+            {
                 members = members.OrderBy(m1 => m1.name).ToList();
+            }
+
             if (ignoreCheck && inheretedMembers) membersForCodegenInheretedCache[type] = members;
             if (ignoreCheck && !inheretedMembers) membersForCodegenCache[type] = members;
 
-
-            // remove ignored members.
-            return Filter(members);
-        }
-
-        static bool IsVectorElementProperty(PropertyInfo prop)
-        {
-            return
-                prop.Name == "x" ||
-                prop.Name == "y" ||
-                prop.Name == "z"
-                ;
-        }
-
-        public static IEnumerable<FieldInfo> ReadAllInstanceFields(this Type type)
-        {
-            return
-                from f in type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-                select f;
-        }
-
-        public static IEnumerable<FieldInfo> ReadPublicInstanceFields(this Type type)
-        {
-            return
-                from f in type.GetFields(BindingFlags.Instance | BindingFlags.Public)
-                select f;
-        }
-    }
-
-    public class DataInfo
-    {
-        public Type carrierType;
-        public string name => baseAccess;
-        public string baseAccess;
-        public string accessPrefix;
-
-        public string access => (!string.IsNullOrEmpty(accessPrefix) ? accessPrefix + "." : "") +
-                                valueTransformer(baseAccess);
-
-        public string realAccess => (!string.IsNullOrEmpty(accessPrefix) ? accessPrefix + "." : "") + baseAccess;
-        public Type type;
-        public bool canBeNull;
-        public bool immutableData;
-        public GenTaskFlags ingoreFlags;
-        public bool isReadOnly;
-        public bool sureIsNull;
-        public bool isPrivate;
-        public bool cantBeAncestor;
-        public bool insideConfigStorage;
-        public bool insideLivableContainer;
-        public bool justData;
-        public MemberInfo sharpMemberInfo;
-        public Type realType; // For cases we use value wrapper transformation.
-
-        public object defaultValue;
-
-        public string pathName => string.IsNullOrEmpty(pathLog) ? $"\"{baseAccess}\"" : pathLog;
-        public string pathLog;
-
-        // needed for cells to access other cell with .value
-        public Func<string, string> valueTransformer = n => n;
-
-        public ZergRush.CodeGen.CodeGen.ValueVrapperType
-            isValueWrapper = ZergRush.CodeGen.CodeGen.ValueVrapperType.None;
-
-        public static DataInfo WithTypeAndName(Type t, string name)
-        {
-            return new DataInfo { type = t, baseAccess = name };
-        }
-
-        public override string ToString()
-        {
-            return $"{nameof(baseAccess)}: {baseAccess}, {nameof(type)}: {type}";
-        }
-
-        public DataInfo SetupIsCell()
-        {
-            if (type.IsCell() || type.IsLivableSlot())
-            {
-                var isCell = type.IsCell();
-                valueTransformer = n => n + ".value";
-                realType = type;
-                type = type.FirstGenericArg();
-                isValueWrapper = isCell ? CodeGen.ValueVrapperType.Cell : CodeGen.ValueVrapperType.LivableSlot;
-            }
-            else if (type.IsNullable())
-            {
-                //valueTransformer = n => n + ".Value";
-                realType = type;
-                type = Nullable.GetUnderlyingType(type);
-                isValueWrapper = CodeGen.ValueVrapperType.Nullable;
-                canBeNull = true;
-            }
-            else
-            {
-                realType = type;
-            }
-            return this;
+            return Filter(members.Select(member => member.Copy()));
         }
     }
 }

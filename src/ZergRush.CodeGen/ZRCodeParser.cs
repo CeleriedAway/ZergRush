@@ -60,6 +60,7 @@ public sealed class ZRCodeParser
         }
 
         LinkChildTypes();
+        BuildDataMembers();
         return parsedTypes;
     }
 
@@ -190,6 +191,11 @@ public sealed class ZRCodeParser
             RecordDeclarationSyntax => ZRTypeKind.Class,
             _ => ZRTypeKind.Unknown
         };
+        zrType.IsAbstract = declaration.Modifiers.Any(SyntaxKind.AbstractKeyword);
+        zrType.IsSealed = declaration.Modifiers.Any(SyntaxKind.SealedKeyword);
+        zrType.HasDeclaredConstructors = declaration.Members.OfType<ConstructorDeclarationSyntax>().Any();
+        zrType.HasDeclaredParameterlessConstructor = declaration.Members.OfType<ConstructorDeclarationSyntax>()
+            .Any(ctor => ctor.ParameterList.Parameters.Count == 0);
 
         zrType.Source ??= SourceLocation(declaration);
         EnsureDefaultTargetFolder(zrType);
@@ -229,6 +235,11 @@ public sealed class ZRCodeParser
             if (!HasAttribute(property.AttributeLists, "GenInclude")) continue;
             zrType.Members.Add(ParseProperty(property, model, zrType));
         }
+
+        zrType.Methods = declaration.Members.OfType<MethodDeclarationSyntax>()
+            .Where(method => !method.Modifiers.Any(SyntaxKind.StaticKeyword))
+            .Select(method => ParseMethod(method, model))
+            .ToList();
     }
 
     void ParseEnumDeclaration(EnumDeclarationSyntax declaration, SemanticModel model)
@@ -236,6 +247,9 @@ public sealed class ZRCodeParser
         var symbol = model.GetDeclaredSymbol(declaration);
         var zrType = GetOrCreateDeclaredType(symbol, declaration.Identifier.Text, declaration);
         zrType.Kind = ZRTypeKind.Enum;
+        zrType.EnumUnderlyingType = declaration.BaseList?.Types.FirstOrDefault() is { } baseType
+            ? TypeFromSyntax(baseType.Type, model)
+            : ZRType.FromSystemType(typeof(int));
         zrType.Source ??= SourceLocation(declaration);
         EnsureDefaultTargetFolder(zrType);
         zrType.Attributes = ReadAttributes(symbol, declaration.AttributeLists, model);
@@ -256,6 +270,24 @@ public sealed class ZRCodeParser
             if (baseType.ChildTypes.All(child => child.FullName != type.FullName))
             {
                 baseType.ChildTypes.Add(type);
+            }
+        }
+    }
+
+    void BuildDataMembers()
+    {
+        foreach (var type in typesByFullName.Values)
+        {
+            type.DataMembers = type.Members.Select(member =>
+            {
+                var data = member.ToData();
+                data.InsideConfigStorage = (type.Options & ZRTypeOption.HasConfigRootType) != 0;
+                return data;
+            }).ToList();
+
+            if ((type.Options & ZRTypeOption.DoNotSortFields) == 0)
+            {
+                type.DataMembers = type.DataMembers.OrderBy(member => member.Name, StringComparer.Ordinal).ToList();
             }
         }
     }
@@ -376,7 +408,57 @@ public sealed class ZRCodeParser
         return new ZRGenericParameter
         {
             Name = symbol.Name,
-            Constraints = symbol.ConstraintTypes.Select(t => TypeFromSymbol(t)).ToList()
+            Constraints = symbol.ConstraintTypes.Select(t => TypeFromSymbol(t)).ToList(),
+            Attributes = GenericParameterAttributes(symbol)
+        };
+    }
+
+    static System.Reflection.GenericParameterAttributes GenericParameterAttributes(ITypeParameterSymbol symbol)
+    {
+        var attributes = System.Reflection.GenericParameterAttributes.None;
+        if (symbol.HasConstructorConstraint)
+        {
+            attributes |= System.Reflection.GenericParameterAttributes.DefaultConstructorConstraint;
+        }
+
+        if (symbol.HasReferenceTypeConstraint)
+        {
+            attributes |= System.Reflection.GenericParameterAttributes.ReferenceTypeConstraint;
+        }
+
+        if (symbol.HasValueTypeConstraint)
+        {
+            attributes |= System.Reflection.GenericParameterAttributes.NotNullableValueTypeConstraint;
+        }
+
+        return attributes;
+    }
+
+    ZRMethod ParseMethod(MethodDeclarationSyntax method, SemanticModel model)
+    {
+        var symbol = model.GetDeclaredSymbol(method);
+        return new ZRMethod
+        {
+            Name = method.Identifier.Text,
+            IsAbstract = method.Modifiers.Any(SyntaxKind.AbstractKeyword) || symbol?.IsAbstract == true,
+            IsVirtual = method.Modifiers.Any(SyntaxKind.VirtualKeyword) ||
+                        method.Modifiers.Any(SyntaxKind.OverrideKeyword) ||
+                        symbol?.IsVirtual == true ||
+                        symbol?.IsOverride == true,
+            Parameters = method.ParameterList.Parameters.Select(parameter =>
+            {
+                var parameterSymbol = model.GetDeclaredSymbol(parameter) as IParameterSymbol;
+                var parameterType = parameterSymbol?.Type != null
+                    ? TypeFromSymbol(parameterSymbol.Type)
+                    : parameter.Type != null
+                        ? TypeFromSyntax(parameter.Type, model)
+                        : ZRType.FromSystemType(typeof(object));
+                return new ZRParameter
+                {
+                    Name = parameter.Identifier.Text,
+                    ParameterType = parameterType
+                };
+            }).ToList()
         };
     }
 
@@ -443,7 +525,12 @@ public sealed class ZRCodeParser
             WrittenName = string.IsNullOrWhiteSpace(writtenName) ? fullName : writtenName,
             Kind = KindFromSymbol(symbol),
             CommonConstruct = CommonConstructFromSymbol(symbol),
-            IsResolved = symbol.TypeKind != TypeKind.Error
+            IsResolved = symbol.TypeKind != TypeKind.Error,
+            IsAbstract = symbol.IsAbstract,
+            IsSealed = symbol.IsSealed,
+            HasDeclaredConstructors = symbol.InstanceConstructors.Any(ctor => !ctor.IsImplicitlyDeclared),
+            HasDeclaredParameterlessConstructor = symbol.InstanceConstructors.Any(ctor =>
+                !ctor.IsImplicitlyDeclared && ctor.Parameters.Length == 0)
         };
 
         typesByFullName[fullName] = type;

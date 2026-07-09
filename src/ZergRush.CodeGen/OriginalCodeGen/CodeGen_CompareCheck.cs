@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using Type = ZergRush.CodeGen.ZRType;
 using Newtonsoft.Json;
 using ZergRush.CodeGen;
 
@@ -16,7 +17,7 @@ namespace ZergRush.CodeGen
         public static string PrinterName = "printer";
         public static string CCHelper = nameof(ZRCompareCheckHelper);
 
-        public static void CompareCheckValue(MethodBuilder sink, DataInfo info, string otherValueReader)
+        public static void CompareCheckValue(MethodBuilder sink, ZRData info, string otherValueReader)
         {
             if (info.type.IsAlmostPrimitive() || info.type.IsEnum || info.type.IsString() || info.immutableData)
             {
@@ -101,7 +102,7 @@ namespace ZergRush.CodeGen
                 {
                     var countName = !type.IsArray ? "Count" : "Length";
                     var elemType = type.FirstGenericArg();
-                    CompareCheckValue(sink, new DataInfo
+                    CompareCheckValue(sink, new ZRData
                     {
                         type = typeof(int), pathLog = $"\"{countName}\"",
                         baseAccess = $"self.{countName}"
@@ -110,7 +111,7 @@ namespace ZergRush.CodeGen
                     sink.content($"for (int i = 0; i < count; i++)");
                     sink.content($"{{");
                     sink.indent++;
-                    CompareCheckValue(sink, new DataInfo
+                    CompareCheckValue(sink, new ZRData
                     {
                         type = elemType, canBeNull = !elemType.IsValueType,
                         baseAccess = $"self[i]", pathLog = $"i.ToString()"

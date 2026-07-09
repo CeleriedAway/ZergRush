@@ -1,8 +1,8 @@
 ﻿using System;
+using Type = ZergRush.CodeGen.ZRType;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using ZergRush.Alive;
 
 namespace ZergRush.CodeGen
@@ -11,7 +11,6 @@ namespace ZergRush.CodeGen
     {
         public static List<Type> allTypesInAssemblies = new List<Type>();
         static Dictionary<Type, GenTaskFlags> typeGenRequested = new Dictionary<Type, GenTaskFlags>();
-        static Dictionary<string, GenTaskFlags> typeNameRequested = new Dictionary<string, GenTaskFlags>();
         static Queue<GenerationTask> tasks = new Queue<GenerationTask>();
 
         public static GeneratorContext defaultContext;
@@ -59,9 +58,6 @@ namespace ZergRush.CodeGen
 
         public static GeneratorContext GetContext(Type t, HashSet<Type> involved = null)
         {
-            // if (involved == null) involved = new HashSet<Type>();
-            // else if (involved.Contains(t)) return defaultContext;
-            // involved.Add(t);
             if (contextsForTypes.TryGetValue(t, out var context)) return context;
 
             if (typeRequestMap.TryGetValue(t, out var requesters))
@@ -128,7 +124,7 @@ namespace ZergRush.CodeGen
         }
 
         static bool ProcessMembers(this Type type, GenTaskFlags currFlag, bool needMembersGen,
-            Action<DataInfo> strategy)
+            Action<ZRData> strategy)
         {
             bool hasMembers = false;
             foreach (var member in type.GetMembersForCodeGen(currFlag))
@@ -285,12 +281,156 @@ namespace ZergRush.CodeGen
 
         static bool stubMode = false;
 
+        [Obsolete("Reflection assembly generation was removed. Parse source with ZRCodeParser and call Gen(IEnumerable<ZRType>, string, bool).")]
         public static void Gen(List<string> includeAssemblies, bool stubs)
         {
-            var allAssemblies = AppDomain.CurrentDomain.GetAssemblies();
-            var assemblies = includeAssemblies.Select(i => allAssemblies.FirstOrDefault(a => a.GetName().Name == i))
-                .Where(a => a != null);
-            RawGen(assemblies.ToList(), "Assets/zGenerated", stubs);
+            throw new NotSupportedException(
+                "Reflection assembly generation was removed. Parse source with ZRCodeParser and call CodeGen.Gen(types, defaultPath, stubs).");
+        }
+
+        public static void Gen(IEnumerable<Type> types, string defaultPath, bool stubs)
+        {
+            RawGen(types, defaultPath, stubs);
+        }
+
+        public static void RawGen(IEnumerable<Type> types, string defaultPath, bool stubs)
+        {
+            var priorityList = types
+                .Select(t =>
+                {
+                    var targetFolder = t.TargetFolder;
+                    return (t, targetFolder?.Priority ?? 0);
+                })
+                .OrderByDescending(t => t.Item2)
+                .ThenBy(t => t.t.Namespace)
+                .ThenBy(t => t.t.Name)
+                .ToList();
+
+            allTypesInAssemblies.Clear();
+            allTypesInAssemblies.AddRange(priorityList.Select(p => p.t));
+
+            typeGenRequested.Clear();
+            tasks.Clear();
+            genericInstances.Clear();
+            polymorphicMap.Clear();
+            baseClassMap.Clear();
+            extensionsSignaturesGenerated.Clear();
+            classes.Clear();
+            parents.Clear();
+            contexts.Clear();
+            customContextFolders.Clear();
+            contextsForTypes.Clear();
+            typeRequestMap.Clear();
+            hasErrors = false;
+            membersForCodegenInheretedCache.Clear();
+            membersForCodegenCache.Clear();
+
+            stubMode = stubs;
+            defaultContext = new GeneratorContext(new GenInfo { sharpGenPath = defaultPath }, stubMode);
+            contexts[defaultPath] = defaultContext;
+            customContextFolders.Add(defaultPath);
+
+            foreach (var valueTuple in priorityList)
+            {
+                RegisterPolymorph(valueTuple.t);
+            }
+
+            foreach (var typeAndPriority in priorityList)
+            {
+                var typeInAssembly = typeAndPriority.t;
+
+                RegisterTypeContext(typeInAssembly, null);
+                var readGenFlags = typeInAssembly.ReadGenFlags();
+                if (readGenFlags != GenTaskFlags.None)
+                {
+                    RequestGen(typeInAssembly, null, readGenFlags, true);
+                }
+
+                while (tasks.Count > 0)
+                {
+                    var task = tasks.Dequeue();
+                    var type = task.type;
+
+                    if (type.IsLivableList() && type.IsConstructedGenericType == false) continue;
+                    if (type.HasAttribute<DoNotGen>()) continue;
+
+                    var classSink = GenClassSink(task.type);
+                    classSink.indent++;
+
+                    void CheckFlag(GenTaskFlags flag, Action<string> gen)
+                    {
+                        if ((task.flags & flag) == 0) return;
+
+                        var isCustom = false;
+                        var needGenBase = false;
+                        var customImpl = type.GetCustomImplAttr();
+                        if (customImpl != null && (customImpl.flags & flag) != 0)
+                        {
+                            isCustom = true;
+                            needGenBase = customImpl.genBaseMethods;
+                        }
+
+                        if (isCustom && needGenBase == false) return;
+                        gen(isCustom ? "Base" : "");
+                    }
+
+                    CheckFlag(GenTaskFlags.UpdateFrom, funcPrefix => GenUpdateFrom(type, false, funcPrefix));
+                    CheckFlag(GenTaskFlags.PooledUpdateFrom, funcPrefix => GenUpdateFrom(type, true, funcPrefix));
+                    CheckFlag(GenTaskFlags.Deserialize, funcPrefix => GenerateDeserialize(type, false, funcPrefix));
+                    CheckFlag(GenTaskFlags.PooledDeserialize, funcPrefix => GenerateDeserialize(type, true, funcPrefix));
+                    CheckFlag(GenTaskFlags.Serialize, funcPrefix => GenerateSerialize(type, funcPrefix));
+                    CheckFlag(GenTaskFlags.Hash, funcPrefix => GenHashing(type, funcPrefix));
+                    CheckFlag(GenTaskFlags.UIDGen, funcPrefix => GenUIDFunc(type, funcPrefix));
+                    CheckFlag(GenTaskFlags.CollectConfigs, funcPrefix => GenCollectConfigs(type, funcPrefix));
+                    CheckFlag(GenTaskFlags.LifeSupport, funcPrefix => GenerateLivable(type, funcPrefix));
+                    CheckFlag(GenTaskFlags.OwnershipHierarchy, funcPrefix => GenerateHierarchyAndId(type, funcPrefix));
+                    CheckFlag(GenTaskFlags.OwnershipHierarchy, _ => GenerateConstructionFromRoot(type));
+                    CheckFlag(GenTaskFlags.DefaultConstructor, funcPrefix => GenerateConstructor(type, funcPrefix));
+                    CheckFlag(GenTaskFlags.CompareChech, funcPrefix => GenerateComparisonFunc(type, funcPrefix));
+                    CheckFlag(GenTaskFlags.JsonSerialization, funcPrefix => GenerateJsonSerialization(type, funcPrefix));
+                    CheckFlag(GenTaskFlags.Pooled, _ => GeneratePoolSupportMethods(type));
+
+                    classSink.indent--;
+                }
+            }
+
+            AddMultiRefInterfaces();
+            GenerateFieldWrappers();
+            GeneratePolimorphismSupport();
+            GeneratePolymorphicRootSupport();
+            if (hasErrors)
+            {
+                LogSink.errLog("error occured");
+                return;
+            }
+
+            customContextFolders.ForEach(genFolder =>
+            {
+                if (Directory.Exists(genFolder) == false)
+                {
+                    Directory.CreateDirectory(genFolder);
+                    return;
+                }
+
+                foreach (FileInfo file in new DirectoryInfo(genFolder).GetFiles())
+                {
+                    if (file.Name.EndsWith("meta") || file.Name.EndsWith("txt")) continue;
+                    file.Delete();
+                }
+            });
+
+            foreach (var typeEnumTable in finalTypeEnum)
+            {
+                EnumTable.SaveEnumCache(typeEnumTable.Key.TypeTableFileName(),
+                    new EnumTable { records = typeEnumTable.Value });
+            }
+
+            foreach (var context in contexts.Values)
+            {
+                context.Commit();
+            }
+
+            LogSink.log("codegen complete");
         }
     }
 }

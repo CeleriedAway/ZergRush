@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using Type = ZergRush.CodeGen.ZRType;
 using System.Linq;
 using ZergRush.CodeGen;
 
@@ -16,7 +17,7 @@ namespace ZergRush.CodeGen
             return (uint)345093625; // rand.Next();
         }
 
-        public static string HashExpr(DataInfo info)
+        public static string HashExpr(ZRData info)
         {
             var t = info.type;
             var name = info.access;
@@ -52,7 +53,7 @@ namespace ZergRush.CodeGen
             {
                 return $"{name} != null ? {calcHash} : {RandomHash()}";
             }
-            else if (Nullable.GetUnderlyingType(info.type) != null)
+            else if (info.type.IsNullable())
             {
                 return $"{name}.HasValue ? (ulong){name}.Value.GetHashCode() : {RandomHash()}";
             }
@@ -134,9 +135,9 @@ namespace ZergRush.CodeGen
             public Action<MethodBuilder, bool> start;
 
             // method, elem type, elem name, 
-            public Action<MethodBuilder, DataInfo> elemProcess;
+            public Action<MethodBuilder, ZRData> elemProcess;
             public bool needDictKeyTraverse;
-            public Func<DataInfo, bool> memberPredicate;
+            public Func<ZRData, bool> memberPredicate;
             public Action<MethodBuilder> finish;
             public Type interfaceType;
             public string funcArgs;
@@ -152,7 +153,7 @@ namespace ZergRush.CodeGen
             sink.content($"for (int i = 0; i < size; i++)");
             sink.content($"{{");
             sink.indent++;
-            strategy.elemProcess(sink, new DataInfo { type = elemType, baseAccess = $"{prefix}[i]", canBeNull = true });
+            strategy.elemProcess(sink, new ZRData { type = elemType, baseAccess = $"{prefix}[i]", canBeNull = true });
             sink.indent--;
             sink.content($"}}");
             strategy.finish?.Invoke(sink);
@@ -166,8 +167,8 @@ namespace ZergRush.CodeGen
             sink.content($"{{");
             sink.indent++;
             if (strategy.needDictKeyTraverse)
-                strategy.elemProcess(sink, new DataInfo { type = keyType, baseAccess = "item.Key", canBeNull = true });
-            strategy.elemProcess(sink, new DataInfo { type = valType, baseAccess = "item.Value" });
+                strategy.elemProcess(sink, new ZRData { type = keyType, baseAccess = "item.Key", canBeNull = true });
+            strategy.elemProcess(sink, new ZRData { type = valType, baseAccess = "item.Value" });
             sink.indent--;
             sink.content($"}}");
             strategy.finish?.Invoke(sink);

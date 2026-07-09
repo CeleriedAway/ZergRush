@@ -1,4 +1,5 @@
 using System;
+using Type = ZergRush.CodeGen.ZRType;
 using System.Linq;
 using ZergRush.Alive;
 
@@ -23,7 +24,7 @@ namespace ZergRush.CodeGen
 
         static bool IsLivableCustomType(this Type t)
         {
-            return typeof(Livable).IsAssignableFrom(t) && !t.IsLivableContainer();
+            return t.IsAssignableTo(typeof(Livable)) && !t.IsLivableContainer();
         }
 
         static bool IsLivableContainer(this Type t)
