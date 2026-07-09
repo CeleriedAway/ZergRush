@@ -1,0 +1,389 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="JetBrains.Annotations" Version="2026.2.0" />
+      <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.14.0" />
+      <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\CellAPI.meta">
+        <Link>ReactiveCore\CellAPI.meta</Link>
+      </Content>
+      <Content Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\CellAPI\AnonymousCell.cs.meta">
+        <Link>ReactiveCore\CellAPI\AnonymousCell.cs.meta</Link>
+      </Content>
+      <Content Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\CellAPI\AnonymousRWCell.cs.meta">
+        <Link>ReactiveCore\CellAPI\AnonymousRWCell.cs.meta</Link>
+      </Content>
+      <Content Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\CellAPI\Cell.AuxTools.cs.meta">
+        <Link>ReactiveCore\CellAPI\Cell.AuxTools.cs.meta</Link>
+      </Content>
+      <Content Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\CellAPI\Cell.Bind.cs.meta">
+        <Link>ReactiveCore\CellAPI\Cell.Bind.cs.meta</Link>
+      </Content>
+      <Content Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\CellAPI\Cell.BooleanLogic.cs.meta">
+        <Link>ReactiveCore\CellAPI\Cell.BooleanLogic.cs.meta</Link>
+      </Content>
+      <Content Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\CellAPI\Cell.CollectionInteractions.cs.meta">
+        <Link>ReactiveCore\CellAPI\Cell.CollectionInteractions.cs.meta</Link>
+      </Content>
+      <Content Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\CellAPI\Cell.cs.meta">
+        <Link>ReactiveCore\CellAPI\Cell.cs.meta</Link>
+      </Content>
+      <Content Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\CellAPI\Cell.Gate.cs.meta">
+        <Link>ReactiveCore\CellAPI\Cell.Gate.cs.meta</Link>
+      </Content>
+      <Content Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\CellAPI\Cell.JoinAndFlatMap.cs.meta">
+        <Link>ReactiveCore\CellAPI\Cell.JoinAndFlatMap.cs.meta</Link>
+      </Content>
+      <Content Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\CellAPI\Cell.LINQ.cs.meta">
+        <Link>ReactiveCore\CellAPI\Cell.LINQ.cs.meta</Link>
+      </Content>
+      <Content Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\CellAPI\Cell.Map.cs.meta">
+        <Link>ReactiveCore\CellAPI\Cell.Map.cs.meta</Link>
+      </Content>
+      <Content Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\CellAPI\Cell.MapRW.cs.meta">
+        <Link>ReactiveCore\CellAPI\Cell.MapRW.cs.meta</Link>
+      </Content>
+      <Content Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\CellAPI\Cell.Merge.cs.meta">
+        <Link>ReactiveCore\CellAPI\Cell.Merge.cs.meta</Link>
+      </Content>
+      <Content Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\CellAPI\Cell.PreviousValueDiff.cs.meta">
+        <Link>ReactiveCore\CellAPI\Cell.PreviousValueDiff.cs.meta</Link>
+      </Content>
+      <Content Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\CellAPI\Cell.When.cs.meta">
+        <Link>ReactiveCore\CellAPI\Cell.When.cs.meta</Link>
+      </Content>
+      <Content Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\CellAPI\ReferenceEqualityCell.cs.meta">
+        <Link>ReactiveCore\CellAPI\ReferenceEqualityCell.cs.meta</Link>
+      </Content>
+      <Content Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\CellAPI\StaticCell.cs.meta">
+        <Link>ReactiveCore\CellAPI\StaticCell.cs.meta</Link>
+      </Content>
+      <Content Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\CellAPI\UncheckedCell.cs.meta">
+        <Link>ReactiveCore\CellAPI\UncheckedCell.cs.meta</Link>
+      </Content>
+      <Content Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\EventStreamAPI.meta">
+        <Link>ReactiveCore\EventStreamAPI.meta</Link>
+      </Content>
+      <Content Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\EventStreamAPI\AbandonedStream.cs.meta">
+        <Link>ReactiveCore\EventStreamAPI\AbandonedStream.cs.meta</Link>
+      </Content>
+      <Content Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\EventStreamAPI\AnonymousEventStream.cs.meta">
+        <Link>ReactiveCore\EventStreamAPI\AnonymousEventStream.cs.meta</Link>
+      </Content>
+      <Content Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\EventStreamAPI\EventStream.cs.meta">
+        <Link>ReactiveCore\EventStreamAPI\EventStream.cs.meta</Link>
+      </Content>
+      <Content Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\EventStreamAPI\EventStream.Filter.cs.meta">
+        <Link>ReactiveCore\EventStreamAPI\EventStream.Filter.cs.meta</Link>
+      </Content>
+      <Content Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\EventStreamAPI\EventStream.Merge.cs.meta">
+        <Link>ReactiveCore\EventStreamAPI\EventStream.Merge.cs.meta</Link>
+      </Content>
+      <Content Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\EventStreamAPI\EventStream.Once.cs.meta">
+        <Link>ReactiveCore\EventStreamAPI\EventStream.Once.cs.meta</Link>
+      </Content>
+      <Content Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\EventStreamAPI\EventStream.SingleMessageAsync.cs.meta">
+        <Link>ReactiveCore\EventStreamAPI\EventStream.SingleMessageAsync.cs.meta</Link>
+      </Content>
+      <Content Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\EventStreamAPI\EventStream.Subscribe.cs.meta">
+        <Link>ReactiveCore\EventStreamAPI\EventStream.Subscribe.cs.meta</Link>
+      </Content>
+      <Content Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\EventStreamAPI\EventStrema.Map.cs.meta">
+        <Link>ReactiveCore\EventStreamAPI\EventStrema.Map.cs.meta</Link>
+      </Content>
+      <Content Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\ICell.cs.meta">
+        <Link>ReactiveCore\ICell.cs.meta</Link>
+      </Content>
+      <Content Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\IEventStream.cs.meta">
+        <Link>ReactiveCore\IEventStream.cs.meta</Link>
+      </Content>
+      <Content Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\IReactiveCollection.cs.meta">
+        <Link>ReactiveCore\IReactiveCollection.cs.meta</Link>
+      </Content>
+      <Content Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\ParseTools.cs.meta">
+        <Link>ReactiveCore\ParseTools.cs.meta</Link>
+      </Content>
+      <Content Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\ReactiveCollectionAPI.meta">
+        <Link>ReactiveCore\ReactiveCollectionAPI.meta</Link>
+      </Content>
+      <Content Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\ReactiveCollectionAPI\AbstractCollectionTransform.cs.meta">
+        <Link>ReactiveCore\ReactiveCollectionAPI\AbstractCollectionTransform.cs.meta</Link>
+      </Content>
+      <Content Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\ReactiveCollectionAPI\ReactiveCollection.Bind.cs.meta">
+        <Link>ReactiveCore\ReactiveCollectionAPI\ReactiveCollection.Bind.cs.meta</Link>
+      </Content>
+      <Content Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\ReactiveCollectionAPI\ReactiveCollection.Concat.cs.meta">
+        <Link>ReactiveCore\ReactiveCollectionAPI\ReactiveCollection.Concat.cs.meta</Link>
+      </Content>
+      <Content Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\ReactiveCollectionAPI\ReactiveCollection.cs.meta">
+        <Link>ReactiveCore\ReactiveCollectionAPI\ReactiveCollection.cs.meta</Link>
+      </Content>
+      <Content Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\ReactiveCollectionAPI\ReactiveCollection.Filter.cs.meta">
+        <Link>ReactiveCore\ReactiveCollectionAPI\ReactiveCollection.Filter.cs.meta</Link>
+      </Content>
+      <Content Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\ReactiveCollectionAPI\ReactiveCollection.FromCellOfEnumerable.cs.meta">
+        <Link>ReactiveCore\ReactiveCollectionAPI\ReactiveCollection.FromCellOfEnumerable.cs.meta</Link>
+      </Content>
+      <Content Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\ReactiveCollectionAPI\ReactiveCollection.Join.cs.meta">
+        <Link>ReactiveCore\ReactiveCollectionAPI\ReactiveCollection.Join.cs.meta</Link>
+      </Content>
+      <Content Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\ReactiveCollectionAPI\ReactiveCollection.Map.cs.meta">
+        <Link>ReactiveCore\ReactiveCollectionAPI\ReactiveCollection.Map.cs.meta</Link>
+      </Content>
+      <Content Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\ReactiveCollectionAPI\ReactiveCollection.ReactiveLINQ.cs.meta">
+        <Link>ReactiveCore\ReactiveCollectionAPI\ReactiveCollection.ReactiveLINQ.cs.meta</Link>
+      </Content>
+      <Content Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\ReactiveCollectionAPI\ReactiveCollection.Sort.cs.meta">
+        <Link>ReactiveCore\ReactiveCollectionAPI\ReactiveCollection.Sort.cs.meta</Link>
+      </Content>
+      <Content Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\ReactiveCollectionAPI\StaticCollection.cs.meta">
+        <Link>ReactiveCore\ReactiveCollectionAPI\StaticCollection.cs.meta</Link>
+      </Content>
+      <Content Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\Tools.meta">
+        <Link>ReactiveCore\Tools.meta</Link>
+      </Content>
+      <Content Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\Tools\Disposables.cs.meta">
+        <Link>ReactiveCore\Tools\Disposables.cs.meta</Link>
+      </Content>
+      <Content Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\Tools\IConnectionSink.cs.meta">
+        <Link>ReactiveCore\Tools\IConnectionSink.cs.meta</Link>
+      </Content>
+      <Content Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\Tools\ContainerExtensions.cs.meta">
+        <Link>Tools\ContainerExtensions.cs.meta</Link>
+      </Content>
+      <Content Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\Tools\CsvReader.cs.meta">
+        <Link>Tools\CsvReader.cs.meta</Link>
+      </Content>
+      <Content Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\Tools\CycleBuffer.cs.meta">
+        <Link>Tools\CycleBuffer.cs.meta</Link>
+      </Content>
+      <Content Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\Tools\ExceptionPrintExtensions.cs.meta">
+        <Link>Tools\ExceptionPrintExtensions.cs.meta</Link>
+      </Content>
+      <Content Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\Tools\ExceptionPrintExtensions.MethodPrint.cs.meta">
+        <Link>Tools\ExceptionPrintExtensions.MethodPrint.cs.meta</Link>
+      </Content>
+      <Content Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\Tools\GaussFilterBufferBase.cs.meta">
+        <Link>Tools\GaussFilterBufferBase.cs.meta</Link>
+      </Content>
+      <Content Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\Tools\GaussFilteredFloat.cs.meta">
+        <Link>Tools\GaussFilteredFloat.cs.meta</Link>
+      </Content>
+      <Content Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\Tools\GaussFilteredVector.cs.meta">
+        <Link>Tools\GaussFilteredVector.cs.meta</Link>
+      </Content>
+      <Content Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\Tools\IPresentableData.cs.meta">
+        <Link>Tools\IPresentableData.cs.meta</Link>
+      </Content>
+      <Content Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\Tools\RandomExtensions.cs.meta">
+        <Link>Tools\RandomExtensions.cs.meta</Link>
+      </Content>
+      <Content Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\Tools\SimpleList.cs.meta">
+        <Link>Tools\SimpleList.cs.meta</Link>
+      </Content>
+      <Content Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\Tools\x_generated.meta">
+        <Link>Tools\x_generated.meta</Link>
+      </Content>
+      <Content Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\Tools\x_generated\SerializationExtensions.gen.cs.meta">
+        <Link>Tools\x_generated\SerializationExtensions.gen.cs.meta</Link>
+      </Content>
+      <Content Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\Tools\x_generated\ZergRush_ZergRandom.gen.cs.meta">
+        <Link>Tools\x_generated\ZergRush_ZergRandom.gen.cs.meta</Link>
+      </Content>
+      <Content Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\Tools\ZergRandom.cs.meta">
+        <Link>Tools\ZergRandom.cs.meta</Link>
+      </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\CellAPI\AnonymousCell.cs">
+        <Link>ReactiveCore\CellAPI\AnonymousCell.cs</Link>
+      </Compile>
+      <Compile Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\CellAPI\AnonymousRWCell.cs">
+        <Link>ReactiveCore\CellAPI\AnonymousRWCell.cs</Link>
+      </Compile>
+      <Compile Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\CellAPI\Cell.AuxTools.cs">
+        <Link>ReactiveCore\CellAPI\Cell.AuxTools.cs</Link>
+      </Compile>
+      <Compile Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\CellAPI\Cell.Bind.cs">
+        <Link>ReactiveCore\CellAPI\Cell.Bind.cs</Link>
+      </Compile>
+      <Compile Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\CellAPI\Cell.BooleanLogic.cs">
+        <Link>ReactiveCore\CellAPI\Cell.BooleanLogic.cs</Link>
+      </Compile>
+      <Compile Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\CellAPI\Cell.CollectionInteractions.cs">
+        <Link>ReactiveCore\CellAPI\Cell.CollectionInteractions.cs</Link>
+      </Compile>
+      <Compile Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\CellAPI\Cell.cs">
+        <Link>ReactiveCore\CellAPI\Cell.cs</Link>
+      </Compile>
+      <Compile Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\CellAPI\Cell.Gate.cs">
+        <Link>ReactiveCore\CellAPI\Cell.Gate.cs</Link>
+      </Compile>
+      <Compile Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\CellAPI\Cell.JoinAndFlatMap.cs">
+        <Link>ReactiveCore\CellAPI\Cell.JoinAndFlatMap.cs</Link>
+      </Compile>
+      <Compile Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\CellAPI\Cell.LINQ.cs">
+        <Link>ReactiveCore\CellAPI\Cell.LINQ.cs</Link>
+      </Compile>
+      <Compile Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\CellAPI\Cell.Map.cs">
+        <Link>ReactiveCore\CellAPI\Cell.Map.cs</Link>
+      </Compile>
+      <Compile Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\CellAPI\Cell.MapRW.cs">
+        <Link>ReactiveCore\CellAPI\Cell.MapRW.cs</Link>
+      </Compile>
+      <Compile Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\CellAPI\Cell.Merge.cs">
+        <Link>ReactiveCore\CellAPI\Cell.Merge.cs</Link>
+      </Compile>
+      <Compile Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\CellAPI\Cell.PreviousValueDiff.cs">
+        <Link>ReactiveCore\CellAPI\Cell.PreviousValueDiff.cs</Link>
+      </Compile>
+      <Compile Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\CellAPI\Cell.When.cs">
+        <Link>ReactiveCore\CellAPI\Cell.When.cs</Link>
+      </Compile>
+      <Compile Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\CellAPI\ReferenceEqualityCell.cs">
+        <Link>ReactiveCore\CellAPI\ReferenceEqualityCell.cs</Link>
+      </Compile>
+      <Compile Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\CellAPI\StaticCell.cs">
+        <Link>ReactiveCore\CellAPI\StaticCell.cs</Link>
+      </Compile>
+      <Compile Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\CellAPI\UncheckedCell.cs">
+        <Link>ReactiveCore\CellAPI\UncheckedCell.cs</Link>
+      </Compile>
+      <Compile Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\EventStreamAPI\AbandonedStream.cs">
+        <Link>ReactiveCore\EventStreamAPI\AbandonedStream.cs</Link>
+      </Compile>
+      <Compile Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\EventStreamAPI\AnonymousEventStream.cs">
+        <Link>ReactiveCore\EventStreamAPI\AnonymousEventStream.cs</Link>
+      </Compile>
+      <Compile Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\EventStreamAPI\EventStream.cs">
+        <Link>ReactiveCore\EventStreamAPI\EventStream.cs</Link>
+      </Compile>
+      <Compile Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\EventStreamAPI\EventStream.Filter.cs">
+        <Link>ReactiveCore\EventStreamAPI\EventStream.Filter.cs</Link>
+      </Compile>
+      <Compile Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\EventStreamAPI\EventStream.Merge.cs">
+        <Link>ReactiveCore\EventStreamAPI\EventStream.Merge.cs</Link>
+      </Compile>
+      <Compile Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\EventStreamAPI\EventStream.Once.cs">
+        <Link>ReactiveCore\EventStreamAPI\EventStream.Once.cs</Link>
+      </Compile>
+      <Compile Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\EventStreamAPI\EventStream.SingleMessageAsync.cs">
+        <Link>ReactiveCore\EventStreamAPI\EventStream.SingleMessageAsync.cs</Link>
+      </Compile>
+      <Compile Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\EventStreamAPI\EventStream.Subscribe.cs">
+        <Link>ReactiveCore\EventStreamAPI\EventStream.Subscribe.cs</Link>
+      </Compile>
+      <Compile Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\EventStreamAPI\EventStrema.Map.cs">
+        <Link>ReactiveCore\EventStreamAPI\EventStrema.Map.cs</Link>
+      </Compile>
+      <Compile Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\ICell.cs">
+        <Link>ReactiveCore\ICell.cs</Link>
+      </Compile>
+      <Compile Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\IEventStream.cs">
+        <Link>ReactiveCore\IEventStream.cs</Link>
+      </Compile>
+      <Compile Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\IReactiveCollection.cs">
+        <Link>ReactiveCore\IReactiveCollection.cs</Link>
+      </Compile>
+      <Compile Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\ParseTools.cs">
+        <Link>ReactiveCore\ParseTools.cs</Link>
+      </Compile>
+      <Compile Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\ReactiveCollectionAPI\AbstractCollectionTransform.cs">
+        <Link>ReactiveCore\ReactiveCollectionAPI\AbstractCollectionTransform.cs</Link>
+      </Compile>
+      <Compile Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\ReactiveCollectionAPI\ReactiveCollection.Bind.cs">
+        <Link>ReactiveCore\ReactiveCollectionAPI\ReactiveCollection.Bind.cs</Link>
+      </Compile>
+      <Compile Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\ReactiveCollectionAPI\ReactiveCollection.Concat.cs">
+        <Link>ReactiveCore\ReactiveCollectionAPI\ReactiveCollection.Concat.cs</Link>
+      </Compile>
+      <Compile Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\ReactiveCollectionAPI\ReactiveCollection.cs">
+        <Link>ReactiveCore\ReactiveCollectionAPI\ReactiveCollection.cs</Link>
+      </Compile>
+      <Compile Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\ReactiveCollectionAPI\ReactiveCollection.Filter.cs">
+        <Link>ReactiveCore\ReactiveCollectionAPI\ReactiveCollection.Filter.cs</Link>
+      </Compile>
+      <Compile Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\ReactiveCollectionAPI\ReactiveCollection.FromCellOfEnumerable.cs">
+        <Link>ReactiveCore\ReactiveCollectionAPI\ReactiveCollection.FromCellOfEnumerable.cs</Link>
+      </Compile>
+      <Compile Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\ReactiveCollectionAPI\ReactiveCollection.Join.cs">
+        <Link>ReactiveCore\ReactiveCollectionAPI\ReactiveCollection.Join.cs</Link>
+      </Compile>
+      <Compile Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\ReactiveCollectionAPI\ReactiveCollection.Map.cs">
+        <Link>ReactiveCore\ReactiveCollectionAPI\ReactiveCollection.Map.cs</Link>
+      </Compile>
+      <Compile Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\ReactiveCollectionAPI\ReactiveCollection.ReactiveLINQ.cs">
+        <Link>ReactiveCore\ReactiveCollectionAPI\ReactiveCollection.ReactiveLINQ.cs</Link>
+      </Compile>
+      <Compile Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\ReactiveCollectionAPI\ReactiveCollection.Sort.cs">
+        <Link>ReactiveCore\ReactiveCollectionAPI\ReactiveCollection.Sort.cs</Link>
+      </Compile>
+      <Compile Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\ReactiveCollectionAPI\StaticCollection.cs">
+        <Link>ReactiveCore\ReactiveCollectionAPI\StaticCollection.cs</Link>
+      </Compile>
+      <Compile Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\Tools\Disposables.cs">
+        <Link>ReactiveCore\Tools\Disposables.cs</Link>
+      </Compile>
+      <Compile Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\Tools\IConnectionSink.cs">
+        <Link>ReactiveCore\Tools\IConnectionSink.cs</Link>
+      </Compile>
+      <Compile Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\ReactiveCore\Tools\ZergRushException.cs">
+        <Link>ReactiveCore\Tools\ZergRushException.cs</Link>
+      </Compile>
+      <Compile Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\Tools\ContainerExtensions.cs">
+        <Link>Tools\ContainerExtensions.cs</Link>
+      </Compile>
+      <Compile Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\Tools\CsvReader.cs">
+        <Link>Tools\CsvReader.cs</Link>
+      </Compile>
+      <Compile Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\Tools\CycleBuffer.cs">
+        <Link>Tools\CycleBuffer.cs</Link>
+      </Compile>
+      <Compile Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\Tools\ExceptionPrintExtensions.cs">
+        <Link>Tools\ExceptionPrintExtensions.cs</Link>
+      </Compile>
+      <Compile Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\Tools\ExceptionPrintExtensions.MethodPrint.cs">
+        <Link>Tools\ExceptionPrintExtensions.MethodPrint.cs</Link>
+      </Compile>
+      <Compile Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\Tools\GaussFilterBufferBase.cs">
+        <Link>Tools\GaussFilterBufferBase.cs</Link>
+      </Compile>
+      <Compile Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\Tools\GaussFilteredFloat.cs">
+        <Link>Tools\GaussFilteredFloat.cs</Link>
+      </Compile>
+      <Compile Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\Tools\GaussFilteredVector.cs">
+        <Link>Tools\GaussFilteredVector.cs</Link>
+      </Compile>
+      <Compile Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\Tools\IPresentableData.cs">
+        <Link>Tools\IPresentableData.cs</Link>
+      </Compile>
+      <Compile Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\Tools\RandomExtensions.cs">
+        <Link>Tools\RandomExtensions.cs</Link>
+      </Compile>
+      <Compile Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\Tools\SimpleList.cs">
+        <Link>Tools\SimpleList.cs</Link>
+      </Compile>
+      <Compile Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\Tools\x_generated\SerializationExtensions.gen.cs">
+        <Link>Tools\x_generated\SerializationExtensions.gen.cs</Link>
+      </Compile>
+      <Compile Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\Tools\x_generated\ZergRush_ZergRandom.gen.cs">
+        <Link>Tools\x_generated\ZergRush_ZergRandom.gen.cs</Link>
+      </Compile>
+      <Compile Include="..\..\ZergRush\Assets\ZergRush\PureCSharp\Tools\ZergRandom.cs">
+        <Link>Tools\ZergRandom.cs</Link>
+      </Compile>
+    </ItemGroup>
+
+</Project>
