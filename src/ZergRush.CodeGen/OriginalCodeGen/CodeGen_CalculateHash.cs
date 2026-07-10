@@ -223,7 +223,7 @@ namespace ZergRush.CodeGen
                 {
                     if (strategy.memberPredicate == null || strategy.memberPredicate(member))
                         strategy.elemProcess(sink, member);
-                });
+                }, GenericMembers(sink));
                 strategy.finish?.Invoke(sink);
             }
         }

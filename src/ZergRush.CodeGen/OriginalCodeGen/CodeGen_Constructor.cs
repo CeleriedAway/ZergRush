@@ -34,7 +34,7 @@ namespace ZergRush.CodeGen
             // Some bullshit logic here
             // All of this because of value wrapper concept that should be reconsidered
             var t = wrapType ? info.realType : info.type;
-            var name = wrapType ? info.accessPrefix + info.baseAccess : info.access;
+            var name = wrapType ? info.realAccess : info.access;
             
             string newExpr = "";
             bool needCast = false;
@@ -133,7 +133,7 @@ namespace ZergRush.CodeGen
                 if (info.isValueWrapper == ValueVrapperType.None && info.type.IsLoadableConfig() && t.IsLivableCustomType()) return;
                 CreateNewInstance(constructor, info, null, null, false, wrapType: true);
                 InitializeWrappedValues(constructor, info);
-            });
+            }, GenericMembers(constructor));
             
             if (t.HasAttribute<GenModelRootSetup>())
             {

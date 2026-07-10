@@ -51,6 +51,15 @@ public sealed class GeneratedCodeBehaviorTests
     }
 
     [Fact]
+    public void Unregistered_generic_hierarchy_instance_throws_clearly()
+    {
+        var exception = Assert.Throws<NotSupportedException>(() => new TestGenericAncestor<long>());
+
+        Assert.Contains("TestGenericAncestor", exception.Message);
+        Assert.Contains("not registered", exception.Message);
+    }
+
+    [Fact]
     public void Dictionary_UpdateFrom_reuses_values_and_deep_copies_new_entries()
     {
         var reusedValue = new OtherData { someData = -1 };

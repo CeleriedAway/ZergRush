@@ -16,6 +16,16 @@ public sealed class ZRCodeParser
     readonly Dictionary<string, ZRType> typesByFullName = new(StringComparer.Ordinal);
     readonly HashSet<string> declaredTypeNames = new(StringComparer.Ordinal);
     readonly List<ZRType> parsedTypes = new();
+    readonly List<PendingGenericInstanceRegistration> pendingGenericInstanceRegistrations = new();
+
+    sealed class PendingGenericInstanceRegistration
+    {
+        public required ZRType Type;
+        public required INamedTypeSymbol Symbol;
+        public required TypeDeclarationSyntax Declaration;
+        public required SemanticModel SemanticModel;
+        public required ZRAttributeInfo Attribute;
+    }
 
     public IReadOnlyList<ZRType> ParseInputs(IEnumerable<string> inputs)
     {
@@ -28,6 +38,7 @@ public sealed class ZRCodeParser
         typesByFullName.Clear();
         declaredTypeNames.Clear();
         parsedTypes.Clear();
+        pendingGenericInstanceRegistrations.Clear();
 
         var syntaxTrees = files
             .Where(File.Exists)
@@ -59,6 +70,7 @@ public sealed class ZRCodeParser
             }
         }
 
+        RegisterExplicitGenericInstances(compilation);
         LinkChildTypes();
         BuildDataMembers();
         return parsedTypes;
@@ -203,7 +215,7 @@ public sealed class ZRCodeParser
         ApplyTypeAttributes(zrType);
         if (symbol?.IsGenericType == true)
         {
-            zrType.Options |= ZRTypeOption.GenericDefinition | ZRTypeOption.DoNotGen;
+            zrType.Options |= ZRTypeOption.GenericDefinition;
         }
 
         if (symbol != null)
@@ -213,11 +225,18 @@ public sealed class ZRCodeParser
                 : null;
             zrType.Interfaces = symbol.Interfaces.Select(t => TypeFromSymbol(t)).ToList();
             zrType.GenericParameters = symbol.TypeParameters.Select(ReadGenericParameter).ToList();
+            RegisterConstructedGenericSurface(zrType.BaseType, zrType);
+            foreach (var interfaceType in zrType.Interfaces)
+            {
+                RegisterConstructedGenericSurface(interfaceType, zrType);
+            }
         }
         else
         {
             zrType.BaseType = ReadBaseTypeFromSyntax(declaration, model);
         }
+
+        QueueExplicitGenericInstances(zrType, symbol, declaration, model);
 
         foreach (var field in declaration.Members.OfType<FieldDeclarationSyntax>())
         {
@@ -238,8 +257,140 @@ public sealed class ZRCodeParser
 
         zrType.Methods = declaration.Members.OfType<MethodDeclarationSyntax>()
             .Where(method => !method.Modifiers.Any(SyntaxKind.StaticKeyword))
-            .Select(method => ParseMethod(method, model))
+            .Select(method => ParseMethod(method, model, zrType))
             .ToList();
+    }
+
+    void QueueExplicitGenericInstances(
+        ZRType type,
+        INamedTypeSymbol? symbol,
+        TypeDeclarationSyntax declaration,
+        SemanticModel model)
+    {
+        foreach (var attribute in type.Attributes.Where(attribute => attribute.Name == "GenRegGenericInstance"))
+        {
+            if (symbol == null || !symbol.IsGenericType || symbol.TypeParameters.Length != 1)
+            {
+                throw AttributeError(
+                    type,
+                    attribute,
+                    "can only be used on a generic declaration with exactly one type parameter");
+            }
+
+            pendingGenericInstanceRegistrations.Add(new PendingGenericInstanceRegistration
+            {
+                Type = type,
+                Symbol = symbol,
+                Declaration = declaration,
+                SemanticModel = model,
+                Attribute = attribute
+            });
+        }
+    }
+
+    void RegisterExplicitGenericInstances(CSharpCompilation compilation)
+    {
+        foreach (var registration in pendingGenericInstanceRegistrations)
+        {
+            var typeName = ArgAt(registration.Attribute, 0, "").Trim();
+            if (string.IsNullOrEmpty(typeName))
+            {
+                throw AttributeError(registration.Type, registration.Attribute, "requires a non-empty type name");
+            }
+
+            var typeSyntax = SyntaxFactory.ParseTypeName(typeName);
+            if (typeSyntax.ContainsDiagnostics)
+            {
+                throw AttributeError(registration.Type, registration.Attribute, $"contains invalid C# type syntax '{typeName}'");
+            }
+
+            var typeInfo = registration.SemanticModel.GetSpeculativeTypeInfo(
+                registration.Declaration.Identifier.SpanStart,
+                typeSyntax,
+                SpeculativeBindingOption.BindAsTypeOrNamespace);
+            var typeArgument = typeInfo.Type;
+            if (typeArgument == null || typeArgument.TypeKind == TypeKind.Error)
+            {
+                throw AttributeError(registration.Type, registration.Attribute, $"could not resolve type '{typeName}'");
+            }
+
+            if (typeArgument.SpecialType == SpecialType.System_Void || ContainsTypeParameter(typeArgument))
+            {
+                throw AttributeError(registration.Type, registration.Attribute, $"type '{typeName}' must be a closed non-void type");
+            }
+
+            INamedTypeSymbol constructed;
+            try
+            {
+                constructed = registration.Symbol.Construct(typeArgument);
+            }
+            catch (ArgumentException exception)
+            {
+                throw AttributeError(registration.Type, registration.Attribute, exception.Message);
+            }
+
+            ValidateGenericConstraints(compilation, registration, constructed, typeName);
+            var registeredType = TypeFromNamedSymbol(constructed, constructed.ToDisplayString(FullNameFormat));
+            RegisterConstructedGenericSurface(registeredType, registration.Type);
+        }
+    }
+
+    static bool ContainsTypeParameter(ITypeSymbol type)
+    {
+        return type switch
+        {
+            ITypeParameterSymbol => true,
+            IArrayTypeSymbol array => ContainsTypeParameter(array.ElementType),
+            IPointerTypeSymbol pointer => ContainsTypeParameter(pointer.PointedAtType),
+            INamedTypeSymbol named => named.TypeArguments.Any(ContainsTypeParameter),
+            _ => false
+        };
+    }
+
+    static readonly HashSet<string> GenericConstraintDiagnosticIds = new(StringComparer.Ordinal)
+    {
+        "CS0310",
+        "CS0311",
+        "CS0452",
+        "CS0453",
+        "CS0701",
+        "CS0718",
+        "CS8377"
+    };
+
+    static void ValidateGenericConstraints(
+        CSharpCompilation compilation,
+        PendingGenericInstanceRegistration registration,
+        INamedTypeSymbol constructed,
+        string typeName)
+    {
+        var probeSource = $"internal sealed class __ZRGenericConstraintProbe {{ private {constructed.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} value; }}";
+        var probeTree = CSharpSyntaxTree.ParseText(
+            probeSource,
+            new CSharpParseOptions(LanguageVersion.Preview),
+            "__ZRGenericConstraintProbe.cs");
+        var constraintError = compilation.AddSyntaxTrees(probeTree)
+            .GetDiagnostics()
+            .FirstOrDefault(diagnostic =>
+                diagnostic.Severity == DiagnosticSeverity.Error &&
+                diagnostic.Location.SourceTree == probeTree &&
+                GenericConstraintDiagnosticIds.Contains(diagnostic.Id));
+
+        if (constraintError != null)
+        {
+            throw AttributeError(
+                registration.Type,
+                registration.Attribute,
+                $"type '{typeName}' does not satisfy the generic constraints: {constraintError.GetMessage()}");
+        }
+    }
+
+    static InvalidOperationException AttributeError(ZRType type, ZRAttributeInfo attribute, string message)
+    {
+        var location = type.Source == null
+            ? type.FullName
+            : $"{type.Source.FilePath}:{type.Source.Line}";
+        return new InvalidOperationException($"{attribute.SourceText} on {type.FullName} at {location} {message}.");
     }
 
     void ParseEnumDeclaration(EnumDeclarationSyntax declaration, SemanticModel model)
@@ -314,7 +465,7 @@ public sealed class ZRCodeParser
             Attributes = ReadAttributes(symbol, field.AttributeLists, model)
         };
         member.DeclaredType.WrittenName = field.Declaration.Type.ToString();
-        RegisterConstructedGeneric(declaredType, parent);
+        RegisterConstructedGenericSurface(declaredType, parent);
 
         ApplyMemberAttributes(member);
         return member;
@@ -342,7 +493,7 @@ public sealed class ZRCodeParser
             Attributes = ReadAttributes(symbol, property.AttributeLists, model)
         };
         member.DeclaredType.WrittenName = property.Type.ToString();
-        RegisterConstructedGeneric(declaredType, parent);
+        RegisterConstructedGenericSurface(declaredType, parent);
 
         ApplyMemberAttributes(member);
         return member;
@@ -434,9 +585,14 @@ public sealed class ZRCodeParser
         return attributes;
     }
 
-    ZRMethod ParseMethod(MethodDeclarationSyntax method, SemanticModel model)
+    ZRMethod ParseMethod(MethodDeclarationSyntax method, SemanticModel model, ZRType owner)
     {
         var symbol = model.GetDeclaredSymbol(method);
+        if (symbol != null)
+        {
+            RegisterConstructedGenericSurface(TypeFromSymbol(symbol.ReturnType), owner);
+        }
+
         return new ZRMethod
         {
             Name = method.Identifier.Text,
@@ -453,6 +609,7 @@ public sealed class ZRCodeParser
                     : parameter.Type != null
                         ? TypeFromSyntax(parameter.Type, model)
                         : ZRType.FromSystemType(typeof(object));
+                RegisterConstructedGenericSurface(parameterType, owner);
                 return new ZRParameter
                 {
                     Name = parameter.Identifier.Text,
@@ -581,6 +738,22 @@ public sealed class ZRCodeParser
         if (type.TargetFolder != null)
         {
             type.Options |= ZRTypeOption.TargetFolder;
+        }
+    }
+
+    void RegisterConstructedGenericSurface(ZRType? type, ZRType owner)
+    {
+        if (type == null) return;
+
+        RegisterConstructedGeneric(type, owner);
+        if (type.IsArray)
+        {
+            RegisterConstructedGenericSurface(type.GetElementType(), owner);
+        }
+
+        foreach (var genericArgument in type.GetGenericArguments())
+        {
+            RegisterConstructedGenericSurface(genericArgument, owner);
         }
     }
 

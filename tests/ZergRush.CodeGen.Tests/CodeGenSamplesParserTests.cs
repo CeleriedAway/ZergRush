@@ -9,12 +9,12 @@ public sealed class CodeGenSamplesParserTests
     {
         var types = ParseCodeGenSamples();
 
-        Assert.Equal(15, types.Count);
+        Assert.Equal(20, types.Count);
 
         var sample = FindType(types, "ZergRush.Samples.CodeGenSamples");
         Assert.Equal(ZRTypeKind.Class, sample.Kind);
         Assert.Equal(GenTaskFlags.PolymorphicDataPack, sample.Flags);
-        Assert.Equal(33, sample.DataMembers.Count);
+        Assert.Equal(34, sample.DataMembers.Count);
         Assert.Contains(sample.ChildTypes, child => child.FullName == "ZergRush.Samples.Ancestor");
         Assert.NotNull(sample.TargetFolder);
         Assert.EndsWith(
@@ -58,10 +58,132 @@ public sealed class CodeGenSamplesParserTests
         AssertMember(generic, "reactiveValue", "int", "reactiveValue.value", FieldWrapperType.Cell);
     }
 
+    [Fact]
+    public void Generic_hierarchy_registers_automatic_and_attribute_instances()
+    {
+        var types = ParseCodeGenSamples();
+
+        var definition = FindType(types, "ZergRush.Samples.TestGenericAncestor<T>");
+        Assert.True(definition.Options.HasFlag(ZRTypeOption.GenericDefinition));
+        Assert.False(definition.Options.HasFlag(ZRTypeOption.DoNotGen));
+
+        var intInstance = FindType(types, "ZergRush.Samples.TestGenericAncestor<int>");
+        Assert.Equal("ZergRush.Samples.TestGenericAncestor<T>", intInstance.GenericDefinition?.FullName);
+        AssertMember(intInstance, "genericField", "int", "genericField");
+
+        var sampleInstance = FindType(types, "ZergRush.Samples.TestGenericAncestor<ZergRush.Samples.CodeGenSamples>");
+        Assert.Equal("ZergRush.Samples.TestGenericAncestor<T>", sampleInstance.GenericDefinition?.FullName);
+        AssertMember(sampleInstance, "genericField", "ZergRush.Samples.CodeGenSamples", "genericField");
+
+        Assert.Single(types, type => type.FullName == "ZergRush.Samples.TestGenericAncestor<int>");
+    }
+
+    [Fact]
+    public void Generic_instance_attribute_resolves_CSharp_type_syntax_in_declaration_context()
+    {
+        var types = ParseSource("""
+            using System.Collections.Generic;
+            using ZergRush.CodeGen;
+
+            namespace ParserSamples;
+
+            public sealed class CustomArg {}
+
+            [GenRegGenericInstance("int")]
+            [GenRegGenericInstance("CustomArg")]
+            [GenRegGenericInstance("List<int>")]
+            [GenRegGenericInstance("int[]")]
+            [GenRegGenericInstance("int?")]
+            public class Generic<T>
+            {
+                public T value;
+            }
+            """);
+
+        Assert.Contains(types, type => type.FullName == "ParserSamples.Generic<int>");
+        Assert.Contains(types, type => type.FullName == "ParserSamples.Generic<ParserSamples.CustomArg>");
+        Assert.Contains(types, type => type.FullName == "ParserSamples.Generic<System.Collections.Generic.List<int>>");
+        Assert.Contains(types, type => type.FullName == "ParserSamples.Generic<int[]>");
+        Assert.Contains(types, type => type.FullName == "ParserSamples.Generic<int?>");
+    }
+
+    [Fact]
+    public void Constructed_generic_instances_are_discovered_recursively_from_method_signatures()
+    {
+        var types = ParseSource("""
+            using System.Collections.Generic;
+
+            namespace ParserSamples;
+
+            public class Generic<T>
+            {
+                public T value;
+            }
+
+            public class Consumer
+            {
+                public List<Generic<int>> Convert(Generic<string>[] values) => null;
+            }
+            """);
+
+        Assert.Contains(types, type => type.FullName == "ParserSamples.Generic<int>");
+        Assert.Contains(types, type => type.FullName == "ParserSamples.Generic<string>");
+    }
+
+    [Fact]
+    public void Generic_instance_attribute_rejects_invalid_usage()
+    {
+        var misplaced = Assert.Throws<InvalidOperationException>(() => ParseSource("""
+            using ZergRush.CodeGen;
+
+            [GenRegGenericInstance("int")]
+            public class NotGeneric {}
+            """));
+        Assert.Contains("exactly one type parameter", misplaced.Message);
+
+        var unresolved = Assert.Throws<InvalidOperationException>(() => ParseSource("""
+            using ZergRush.CodeGen;
+
+            [GenRegGenericInstance("MissingType")]
+            public class Generic<T> {}
+            """));
+        Assert.Contains("could not resolve", unresolved.Message);
+
+        var open = Assert.Throws<InvalidOperationException>(() => ParseSource("""
+            using ZergRush.CodeGen;
+
+            [GenRegGenericInstance("T")]
+            public class Generic<T> {}
+            """));
+        Assert.Contains("closed non-void type", open.Message);
+
+        var constraint = Assert.Throws<InvalidOperationException>(() => ParseSource("""
+            using ZergRush.CodeGen;
+
+            [GenRegGenericInstance("string")]
+            public class Generic<T> where T : struct {}
+            """));
+        Assert.Contains("does not satisfy the generic constraints", constraint.Message);
+    }
+
     static IReadOnlyList<ZRType> ParseCodeGenSamples()
     {
         var parser = new ZRCodeParser();
         return parser.ParseInputs([CodeGenSamplesPath()]);
+    }
+
+    static IReadOnlyList<ZRType> ParseSource(string source)
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"ZergRushParserTests_{Guid.NewGuid():N}.cs");
+        File.WriteAllText(path, source);
+        try
+        {
+            return new ZRCodeParser().ParseInputs([path]);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
     }
 
     static string CodeGenSamplesPath()

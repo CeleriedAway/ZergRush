@@ -447,20 +447,49 @@ namespace ZergRush.CodeGen
                 }
 
                 type.ProcessMembers(GenTaskFlags.JsonSerialization, true,
-                    info => { WriteJsonValueStatement(sinkWriter, info, false); });
+                    info => { WriteJsonValueStatement(sinkWriter, info, false); },
+                    GenericMembers(sinkWriter));
 
                 if (type.IsControllable() && type.IsValueType == false)
                     sinkReader.classBuilder.inheritance("IJsonSerializable");
+                var hasGenericJsonMembers = type.IsGenericTypeDecl() &&
+                                            type.GetMembersForCodeGen(GenTaskFlags.JsonSerialization)
+                                                .Any(MemberDependsOnGenericParameter);
+                var genericReaderBranchesStarted = false;
+                var readerOptions = GenericMembers(sinkReader);
+                if (hasGenericJsonMembers)
+                {
+                    readerOptions.beforeGenericBranches = () =>
+                    {
+                        sinkReader.content("default: break;");
+                        sinkReader.closeBrace();
+                        genericReaderBranchesStarted = true;
+                    };
+                    readerOptions.beginGenericBranch = _ =>
+                    {
+                        sinkReader.content("switch(__name)");
+                        sinkReader.openBrace();
+                    };
+                    readerOptions.endGenericBranch = _ =>
+                    {
+                        sinkReader.content(externalMode ? "default: break;" : "default: return false;");
+                        sinkReader.closeBrace();
+                    };
+                }
+
                 sinkReader.content($"switch(__name)");
                 sinkReader.openBrace();
                 type.ProcessMembers(GenTaskFlags.JsonSerialization, true, info =>
                 {
                     sinkReader.content($"case \"{info.name}\":");
                     ReadJsonValueStatement(sinkReader, info, false);
-                    sinkReader.content($"break;");
-                });
-                if (!immutableMode && !externalMode) sinkReader.content($"default: return false; break;");
-                sinkReader.closeBrace();
+                    sinkReader.content(hasGenericJsonMembers && !externalMode ? "return true;" : "break;");
+                }, readerOptions);
+                if (!genericReaderBranchesStarted)
+                {
+                    if (!immutableMode && !externalMode) sinkReader.content($"default: return false; break;");
+                    sinkReader.closeBrace();
+                }
 
                 if (externalMode)
                 {

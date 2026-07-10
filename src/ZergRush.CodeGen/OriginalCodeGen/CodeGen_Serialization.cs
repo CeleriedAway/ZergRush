@@ -171,7 +171,8 @@ namespace ZergRush.CodeGen
                 }
 
                 type.ProcessMembers(GenTaskFlags.Serialize, true,
-                    info => { GenWriteValueToStream(sinkWriter, info, writerName); });
+                    info => { GenWriteValueToStream(sinkWriter, info, writerName); },
+                    GenericMembers(sinkWriter));
             }
         }
 
@@ -408,7 +409,8 @@ namespace ZergRush.CodeGen
                 if (immutableMode)
                     sinkReader.content($"var self = new {type.RealName(true)}();");
                 type.ProcessMembers(flag, true,
-                    info => { GenReadValueFromStream(sinkReader, info, readerName, pooled); });
+                    info => { GenReadValueFromStream(sinkReader, info, readerName, pooled); },
+                    GenericMembers(sinkReader));
                 if (immutableMode) sinkReader.content("return self;");
             }
         }

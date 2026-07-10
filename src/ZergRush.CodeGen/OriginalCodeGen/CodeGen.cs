@@ -122,20 +122,140 @@ namespace ZergRush.CodeGen
             return !t.IsControllable() ? "self" : "";
         }
 
-        static bool ProcessMembers(this Type type, GenTaskFlags currFlag, bool needMembersGen,
-            Action<ZRData> strategy)
+        sealed class GenericMemberBranch
         {
-            bool hasMembers = false;
-            foreach (var member in type.GetMembersForCodeGen(currFlag))
+            public Type instance;
+            public string thisName;
+            public int index;
+        }
+
+        sealed class MemberProcessingOptions
+        {
+            public MethodBuilder[] genericSinks = Array.Empty<MethodBuilder>();
+            public Action beforeGenericBranches;
+            public Action<GenericMemberBranch> beginGenericBranch;
+            public Action<GenericMemberBranch> endGenericBranch;
+        }
+
+        static MemberProcessingOptions GenericMembers(params MethodBuilder[] sinks)
+        {
+            return new MemberProcessingOptions { genericSinks = sinks };
+        }
+
+        static bool ProcessMembers(this Type type, GenTaskFlags currFlag, bool needMembersGen,
+            Action<ZRData> strategy, MemberProcessingOptions options = null)
+        {
+            var members = type.GetMembersForCodeGen(currFlag).ToList();
+            var genericMembers = type.IsGenericTypeDecl()
+                ? members.Where(MemberDependsOnGenericParameter).ToList()
+                : new List<ZRData>();
+            var ordinaryMembers = genericMembers.Count == 0
+                ? members
+                : members.Where(member => !MemberDependsOnGenericParameter(member)).ToList();
+
+            foreach (var member in ordinaryMembers)
             {
-                member.carrierType = type;
-                if (needMembersGen && !member.type.IsLoadableConfig()) RequestGen(member.type, type, currFlag);
-                member.accessPrefix = type.AccessPrefixInGeneratedFunction();
-                strategy(member);
-                hasMembers = true;
+                ProcessMember(type, member, type.AccessPrefixInGeneratedFunction(), currFlag, needMembersGen, strategy);
             }
 
-            return hasMembers;
+            if (genericMembers.Count == 0) return members.Count > 0;
+
+            if (options == null || options.genericSinks.Length == 0)
+            {
+                throw new InvalidOperationException($"Generic member generation for {type} requires a method sink.");
+            }
+
+            options.beforeGenericBranches?.Invoke();
+
+            var instances = GenericInstancesFor(type);
+            var genericParameter = type.GetGenericArguments()[0];
+            for (var index = 0; index < instances.Count; ++index)
+            {
+                var instance = instances[index];
+                var thisName = $"__genericThis{index}";
+                var branch = new GenericMemberBranch
+                {
+                    instance = instance,
+                    thisName = thisName,
+                    index = index
+                };
+
+                foreach (var sink in options.genericSinks)
+                {
+                    sink.content($"{(index == 0 ? "" : "else ")}if (typeof({genericParameter.Name}) == typeof({instance.FirstGenericArg().RealName(true)}))");
+                    sink.openBrace();
+                    sink.content($"var {thisName} = ({instance.RealName(true)})(object)this;");
+                }
+
+                options.beginGenericBranch?.Invoke(branch);
+
+                var specializedMembers = instance.GetMembersForCodeGen(currFlag)
+                    .ToDictionary(member => member.name, StringComparer.Ordinal);
+                foreach (var genericMember in genericMembers)
+                {
+                    if (!specializedMembers.TryGetValue(genericMember.name, out var specializedMember))
+                    {
+                        Error($"Could not find member {genericMember.name} on registered generic instance {instance}.");
+                        continue;
+                    }
+
+                    ProcessMember(type, specializedMember, thisName, currFlag, needMembersGen, strategy);
+                }
+
+                options.endGenericBranch?.Invoke(branch);
+                foreach (var sink in options.genericSinks)
+                {
+                    sink.closeBrace();
+                }
+            }
+
+            foreach (var sink in options.genericSinks)
+            {
+                if (instances.Count > 0)
+                {
+                    sink.content("else");
+                    sink.openBrace();
+                }
+
+                sink.content($"throw new System.NotSupportedException($\"Generic specialization '{{GetType()}}' is not registered for {type.RealName(true)}.\");");
+                if (instances.Count > 0) sink.closeBrace();
+            }
+
+            return members.Count > 0;
+        }
+
+        static void ProcessMember(Type carrierType, ZRData member, string accessPrefix, GenTaskFlags currFlag,
+            bool needMembersGen, Action<ZRData> strategy)
+        {
+            member.carrierType = carrierType;
+            if (needMembersGen && !member.type.IsLoadableConfig()) RequestGen(member.type, carrierType, currFlag);
+            member.accessPrefix = accessPrefix;
+            strategy(member);
+        }
+
+        static bool MemberDependsOnGenericParameter(ZRData member)
+        {
+            return TypeDependsOnGenericParameter(member.type) ||
+                   TypeDependsOnGenericParameter(member.realType) ||
+                   TypeDependsOnGenericParameter(member.DeclaredType);
+        }
+
+        static bool TypeDependsOnGenericParameter(Type type)
+        {
+            if (type == null) return false;
+            if (type.IsGenericParameter) return true;
+            if (type.IsArray && TypeDependsOnGenericParameter(type.GetElementType())) return true;
+            return type.GetGenericArguments().Any(TypeDependsOnGenericParameter);
+        }
+
+        static List<Type> GenericInstancesFor(Type type)
+        {
+            var definition = type.GetGenericTypeDefinition();
+            if (!genericInstances.TryGetValue(definition, out var instances)) return new List<Type>();
+            return instances
+                .Where(instance => instance.IsValidType())
+                .OrderBy(instance => instance.FirstGenericArg().FullName, StringComparer.Ordinal)
+                .ToList();
         }
 
         public static Type Void => typeof(void);
@@ -317,10 +437,25 @@ namespace ZergRush.CodeGen
             hasErrors = false;
             membersForCodegenInheretedCache.Clear();
             membersForCodegenCache.Clear();
+            genFlagsCache.Clear();
 
             defaultContext = new GeneratorContext(new GenInfo { sharpGenPath = defaultPath });
             contexts[defaultPath] = defaultContext;
             customContextFolders.Add(defaultPath);
+
+            var unsupportedGenericDeclaration = allTypesInAssemblies.FirstOrDefault(type =>
+                type.IsControllable() && type.IsGenericTypeDecl() && type.GetGenericArguments().Length != 1);
+            if (unsupportedGenericDeclaration != null)
+            {
+                throw new NotSupportedException(
+                    $"Generated generic declarations currently require exactly one type parameter: {unsupportedGenericDeclaration}.");
+            }
+
+            foreach (var type in allTypesInAssemblies.Where(type =>
+                         type.IsControllable() && type.IsGenericType && type.IsValidType()))
+            {
+                genericInstances.TryGetOrNew(type.GetGenericTypeDefinition()).Add(type);
+            }
 
             foreach (var typeAndPriority in priorityList)
             {

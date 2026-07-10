@@ -134,12 +134,19 @@ namespace ZergRush.CodeGen
                         sink.content($"var {instanceCastedName} = ({type.RealName(true)}){instanceName};");
                     }
 
+                    var genericOtherName = otherName;
+                    var genericOptions = GenericMembers(sink);
+                    genericOptions.beginGenericBranch = branch =>
+                    {
+                        genericOtherName = $"__genericOther{branch.index}";
+                        sink.content($"var {genericOtherName} = ({branch.instance.RealName(true)})(object){otherName};");
+                    };
                     var hasMembers = type.ProcessMembers(GenTaskFlags.CompareChech, true,
                         memberInfo =>
                         {
                             CompareCheckValue(sink, memberInfo,
-                                memberInfo.valueTransformer($"{otherName}.{memberInfo.baseAccess}"));
-                        });
+                                memberInfo.valueTransformer($"{genericOtherName}.{memberInfo.baseAccess}"));
+                        }, genericOptions);
                     if (!hasMembers && sink.type == MethodType.Override)
                     {
                         sink.doNotGen = true;

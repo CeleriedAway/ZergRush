@@ -28,12 +28,12 @@ namespace ZergRush.CodeGen
 
                 if (info.realType.NeedsHierarchy())
                 {
-                    setupHierarchy.content($"{info.baseAccess}.{nameof(Livable.SetRootAndCarrier)}(root, this);");
+                    setupHierarchy.content($"{info.realAccess}.{nameof(Livable.SetRootAndCarrier)}(root, this);");
                     //if (info.type.IsLivableContainer() || info.isValueWrapper == ValueVrapperType.LivableSlot || info.type.HasChildrenThatNeedsRootSetup())
                     //if (info.type.HasChildrenThatNeedsRootSetup() || info.type.IsLivableList() || info.type.IsLivableSlot())
-                    setupHierarchy.content($"{info.baseAccess}.{SetupHierarchyFuncName}();");
+                    setupHierarchy.content($"{info.realAccess}.{SetupHierarchyFuncName}();");
                 }
-            });
+            }, GenericMembers(setupHierarchy));
             
         }
         

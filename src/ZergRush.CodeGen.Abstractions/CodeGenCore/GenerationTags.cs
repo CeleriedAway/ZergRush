@@ -45,6 +45,17 @@ namespace ZergRush.CodeGen
         }
     }
 
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = true, Inherited = false)]
+    public sealed class GenRegGenericInstance : Attribute
+    {
+        public readonly string typeName;
+
+        public GenRegGenericInstance(string typeName)
+        {
+            this.typeName = typeName;
+        }
+    }
+
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
     public class GenDoNotSortFields : Attribute {}
 

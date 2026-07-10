@@ -61,10 +61,23 @@ public partial class CodeGenSamples
         data.reactiveCollections.Add(157);
         data.ancestorArray.Add(new Ancestor { fields = 163 });
         
-        data.genericAncestorArray.Add(new TestPolyGenericParent());
-        data.genericAncestorArray.Add(new TestGenericAncestor<int>());
-        data.genericAncestorArray.Add(new TestGenericAncestor<CodeGenSamples>());
-        data.genericAncestorArray.Add(new TestGenericChild());
+        data.genericAncestorArray.Add(new TestPolyGenericParent { intField = 163 });
+        data.genericAncestorArray.Add(new TestGenericAncestor<int>
+        {
+            intField = 167,
+            genericField = 173
+        });
+        data.genericAncestorArray.Add(new TestGenericAncestor<CodeGenSamples>
+        {
+            intField = 179,
+            genericField = new CodeGenSamples { intField = 181 }
+        });
+        data.genericAncestorArray.Add(new TestGenericChild
+        {
+            intField = 191,
+            genericField = 193,
+            additionalField = 197
+        });
 
         return data;
     }

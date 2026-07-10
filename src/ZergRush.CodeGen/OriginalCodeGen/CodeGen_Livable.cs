@@ -106,9 +106,9 @@ namespace ZergRush.CodeGen
                     return;
                 }
                 
-                sinkEnliveChildren.content($"{info.baseAccess}.{LivableEntryEnliveName}();");
-                sinkMortifyChildren.content($"{info.baseAccess}.{LivableEntryMortifyName}();");
-            });
+                sinkEnliveChildren.content($"{info.realAccess}.{LivableEntryEnliveName}();");
+                sinkMortifyChildren.content($"{info.realAccess}.{LivableEntryMortifyName}();");
+            }, GenericMembers(sinkEnliveChildren, sinkMortifyChildren));
 
             TraverseGenCustomType(new TraversStrategy
             {
@@ -120,7 +120,7 @@ namespace ZergRush.CodeGen
                 elemProcess = (sink, info) => {
                     // if (info.type.IsHierarchySupportContainer() == false)
                     //     sink.content($"action({info.baseAccess});");
-                    sink.content($"{info.baseAccess}.VisitNode(action);");
+                    sink.content($"{info.realAccess}.VisitNode(action);");
                 },
                 flag = GenTaskFlags.OwnershipHierarchy
             }, type, funcPrefix);

@@ -528,13 +528,20 @@ namespace ZergRush.CodeGen
                         .inheritance($"IUpdatableFrom<{updateFromType.RealName(true)}>");
                 }
 
+                var genericOtherName = otherName;
+                var genericOptions = GenericMembers(sink);
+                genericOptions.beginGenericBranch = branch =>
+                {
+                    genericOtherName = $"__genericOther{branch.index}";
+                    sink.content($"var {genericOtherName} = ({branch.instance.RealName(true)})(object){otherName};");
+                };
                 type.ProcessMembers(flag, true,
                     memberInfo =>
                     {
                         GenUpdateValueFromInstance(sink, memberInfo,
-                            memberInfo.valueTransformer($"{otherName}.{memberInfo.baseAccess}"), pooled,
+                            memberInfo.valueTransformer($"{genericOtherName}.{memberInfo.baseAccess}"), pooled,
                             needTempVarThenAssign: memberInfo.Member?.Kind == ZRMemberKind.Property || memberInfo.realType.IsCell() || memberInfo.realType.IsLivableSlot());
-                    });
+                    }, genericOptions);
             }
         }
         

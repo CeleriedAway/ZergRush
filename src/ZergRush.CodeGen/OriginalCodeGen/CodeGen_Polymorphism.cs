@@ -99,7 +99,8 @@ namespace ZergRush.CodeGen
             if (genericInstances.ContainsKey(genericDef))
             {
                 bool first = true;
-                foreach (var type in genericInstances[genericDef])
+                foreach (var type in genericInstances[genericDef]
+                             .OrderBy(type => type.FirstGenericArg().FullName, StringComparer.Ordinal))
                 {
                     sink.content(
                         $"{(first ? "" : "else ")} if (typeof({T.Name}) == typeof({type.FirstGenericArg()})) {{");

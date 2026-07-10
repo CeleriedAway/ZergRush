@@ -162,9 +162,12 @@ namespace ZergRush.Samples
         public int intField;
     }
 
+    [GenRegGenericInstance("int")]
+    [GenRegGenericInstance("CodeGenSamples")]
     public partial class TestGenericAncestor<T> : TestPolyGenericParent
     {
         public T genericField;
+        public string normalField;
     }
 
     public partial class TestGenericChild : TestGenericAncestor<int>
