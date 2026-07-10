@@ -7,11 +7,6 @@ namespace ZergRush.CodeGen
 {
     public static partial class CodeGen
     {
-        static bool HasPooledUpdateFromMethod(this Type type)
-        {
-            return type.ReadGenFlags().HasFlag(GenTaskFlags.PooledUpdateFrom);
-        }
-        
         static bool HasGeneratedDefaultConstructor(this Type type)
         {
             return type.ReadGenFlags().HasFlag(GenTaskFlags.DefaultConstructor);
@@ -23,45 +18,9 @@ namespace ZergRush.CodeGen
             return type.ReadGenFlags().HasFlag(GenTaskFlags.DefaultConstructor) || type.GetConstructor(Type.EmptyTypes) != null;
         }
         
-        static bool HasPooledDeserializeMethod(this Type type)
-        {
-            return type.ReadGenFlags().HasFlag(GenTaskFlags.PooledDeserialize);
-        }
-
         static bool IsLivableAncestor(this Type type)
         {
             return type.IsAssignableTo(typeof(Livable));
-        }
-        
-        static string PoolTypeName(this Type type)
-        {
-            return "ObjectPool";
-        }
-        static Type PoolType(this Type type)
-        {
-            return typeof(ObjectPool);
-        }
-
-        static string PersonalPoolName(this Type t)
-        {
-            return t.UniqueName() + "Pool";
-        }
-        
-        static string GetFromPoolFunc(this Type t)
-        {
-            return "_Get" + t.UniqueName();
-        }
-        
-        static bool CanPassPoolInfoUpdateFromIfNeeded(this Type t, bool need)
-        {
-            return need && ((t.ReadGenFlags() & GenTaskFlags.PooledUpdateFrom) != 0 ||
-                t.IsLivableList() || t.IsLivableSlot() ||
-                (t.IsLivableContainer() && t.FirstGenericArg().CanPassPoolInfoUpdateFromIfNeeded(need)));
-        }
-        
-        static string OptPoolIfUpdatebleWithPoolSecondArg(this Type t, bool need)
-        {
-            return t.CanPassPoolInfoUpdateFromIfNeeded(need) ? $", pool" : "";
         }
         
         static bool CanBeNullAfterConstruction(this ZRData info)
@@ -205,10 +164,6 @@ namespace ZergRush.CodeGen
 
         public static void SinkRemovePostProcess(MethodBuilder sink, ZRData info, bool pooled)
         {
-//            if (info.type.HasPool() && pooled)
-//            {
-//                sink.content($"{info.access}?.{PolymorphReturnToPool}(pool);");
-//            }
         }
     }
 }

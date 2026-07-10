@@ -231,7 +231,7 @@ namespace ZergRush.CodeGen
             // info can be transformed because read from can do temp value wrapping for it
             Action<MethodBuilder, ZRData> baseCall = (s, info1) =>
                 s.content(
-                    $"{info1.access}.{ReadFuncName}({stream}{(pooled && t.HasPooledDeserializeMethod() ? $", pool" : "")});");
+                    $"{info1.access}.{ReadFuncName}({stream});");
 
             if (t.IsArray || t.IsImmutableType() || (t.IsValueType && t.IsControllable() == false))
                 baseCall = (s, info1) =>
@@ -373,18 +373,18 @@ namespace ZergRush.CodeGen
 
             const string readerName = "reader";
 
-            var flag = pooled ? GenTaskFlags.PooledDeserialize : GenTaskFlags.Deserialize;
+            var flag = GenTaskFlags.Deserialize;
 
             MethodBuilder sinkReader = null;
             if (type.GenMode() == Mode.ExtensionMethod && type.IsStruct() || type.IsArray)
             {
                 sinkReader = MakeGenMethod(type, flag, $"Read{type.UniqueName()}", type,
-                    $"this ZRBinaryReader {readerName}{type.OptPoolSecondArgDecl(pooled)}", disablebleFirstArg: true);
+                    $"this ZRBinaryReader {readerName}", disablebleFirstArg: true);
             }
             else
             {
                 sinkReader = MakeGenMethod(type, flag, funcPrefix + ReadFuncName, Void,
-                    $"ZRBinaryReader {readerName}{type.OptPoolSecondArgDecl(pooled)}");
+                    $"ZRBinaryReader {readerName}");
             }
 
 

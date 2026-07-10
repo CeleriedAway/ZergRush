@@ -12,12 +12,10 @@ namespace ZergRush.CodeGen
         DefaultConstructor = 2 << 3,
         CompareChech = 2 << 4,
         OwnershipHierarchy = 2 << 5,
-        PooledUpdateFrom = 2 << 6,
         Deserialize = 2 << 8,
         Serialize = 2 << 9,
 
         PolymorphicConstruction = 2 << 12,
-        PooledPolymorphicConstruction = 2 << 13,
         JsonSerialization = 2 << 14,
         RPC = 2 << 15,
 

@@ -89,7 +89,6 @@ namespace ZergRush.Alive
             {
                 item.Destroy();
             }
-            if (root != null && root.pool != null) item.ReturnToPool(root.pool);
         }
         
         public void Enlive()
@@ -258,21 +257,6 @@ namespace ZergRush.Alive
             }
         }
 
-        public void OnReturnToPool(ObjectPool pool)
-        {
-            if (alive)
-            {
-                throw new ZergRushException("this method should not be called on alive list");
-            }
-
-            foreach (var item in items)
-            {
-                item?.ReturnToPool(pool);
-            }
-
-            items.Clear();
-        }
-        
         public void SwapItem(int i, int j)
         {
             (items[i], items[j]) = (items[j], items[i]);

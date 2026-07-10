@@ -14,7 +14,7 @@ namespace ZergRush.CodeGen
     
     public class SharpClassBuilder : IBuilder
     {
-        public SharpClassBuilder(SharpCustomModule module, string name, string namespaceName, bool isStruct, bool isSealed, bool isPartial, bool isStatic, bool stubMode)
+        public SharpClassBuilder(SharpCustomModule module, string name, string namespaceName, bool isStruct, bool isSealed, bool isPartial, bool isStatic)
         {
             this.module = module;
             this.name = name;
@@ -23,7 +23,6 @@ namespace ZergRush.CodeGen
             this.isSealed = isSealed;
             this.isPartial = isPartial;
             this.isStatic = isStatic;
-            this.stubMode = stubMode;
 
             indent++;
             if (namespaceName.Valid())
@@ -40,7 +39,6 @@ namespace ZergRush.CodeGen
         public bool isPartial;
         public bool isStatic;
         public bool doNotGen;
-        public bool stubMode;
 
         // for debug purposes
         public GeneratorContext context;
@@ -68,7 +66,6 @@ namespace ZergRush.CodeGen
         {
             var methodBuilder = new MethodBuilder(this, classType, name, type, returnType, args, genericTypes, constraints);
             methods.Add(methodBuilder);
-            methodBuilder.stubMode = stubMode;
             return methodBuilder;
         }
 

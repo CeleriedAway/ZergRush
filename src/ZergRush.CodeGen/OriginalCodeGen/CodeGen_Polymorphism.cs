@@ -24,23 +24,16 @@ namespace ZergRush.CodeGen
         public static readonly string PolymorphClassIdGetterName = "ClassIdCached";
         public static readonly string PolymorphClassIdCached = "__classId";
         public static readonly string PolymorphInstanceFuncName = "CreatePolymorphic";
+        
         public static readonly string PolymorphNewInstOfSameType = "NewInst";
-        public static readonly string PolymorphReturnToPool = "ReturnToPool";
-        public static readonly string PolymorphReturnChildrenToPool = "ReturnChildrenToPool";
-        public static readonly string GenericPoolGetter = "GetPoolForGenericType";
         const string TypeEnumName = "Types";
 
+        static Dictionary<Type, HashSet<Type>> genericInstances = new Dictionary<Type, HashSet<Type>>();
         static Dictionary<Type, HashSet<Type>> polymorphicMap = new Dictionary<Type, HashSet<Type>>();
         static Dictionary<Type, Type> baseClassMap = new Dictionary<Type, Type>();
         static HashSet<Type> normalPolymorphicConstructors = new HashSet<Type>();
-        static Dictionary<Type, HashSet<Type>> polymorphicRootNodes = new Dictionary<Type, HashSet<Type>>();
 
         static Dictionary<Type, Dictionary<string, int>> finalTypeEnum = new Dictionary<Type, Dictionary<string, int>>();
-
-        public static string PolymorphInstanceFuncNamePooled(bool pooled)
-        {
-            return PolymorphInstanceFuncName + (pooled ? "Pooled" : "");
-        }
 
         public static string PolymorphicRootTypeEnumName(this Type t)
         {
@@ -49,18 +42,12 @@ namespace ZergRush.CodeGen
 
         public static bool NeedsPolymorphRegistration(this Type t)
         {
-            return (t.ReadGenFlags() &
-                    (GenTaskFlags.PolymorphicConstruction | GenTaskFlags.PooledPolymorphicConstruction)) != 0;
+            return (t.ReadGenFlags() & GenTaskFlags.PolymorphicConstruction) != 0;
         }
 
         public static bool NeedsClassicPolymorphConstruction(this Type t)
         {
             return (t.ReadGenFlags() & GenTaskFlags.PolymorphicConstruction) != 0;
-        }
-
-        public static bool NeedsPooledPolymorphConstruction(this Type t)
-        {
-            return (t.ReadGenFlags() & GenTaskFlags.PooledPolymorphicConstruction) != 0;
         }
 
         static void RegisterPolymorph(Type t)
@@ -78,10 +65,6 @@ namespace ZergRush.CodeGen
             {
                 if (parent.NeedsPolymorphRegistration())
                 {
-                    if (parent.HasAttribute<GenPolymorphicNode>())
-                    {
-                        polymorphicRootNodes.TryGetOrNew(parent).Add(t);
-                    }
                     lastValidParent = parent;
                 }
 
@@ -108,17 +91,20 @@ namespace ZergRush.CodeGen
 
         static void GeneratePolymorphicRootSupport()
         {
-            foreach (var polymorphicRootNode in polymorphicRootNodes)
+            foreach (var node in PolymorphicConstructionRoots())
             {
-                var node = polymorphicRootNode.Key;
-                var types = polymorphicRootNode.Value
+                if (!finalTypeEnum.TryGetValue(node, out var typeEnum)) continue;
+
+                var types = PolymorphicConstructionTypes(node)
                     .Where(t => t.IsValidType())
-                    .Where(t => t.IsAbstract == false);
+                    .Where(t => t.IsAbstract == false)
+                    .Select(t => t.UniqueName(false))
+                    .Where(typeEnum.ContainsKey);
                 var nodeClass = GenClassSink(node);
                 var enumName = node.PolymorphicRootTypeEnumName();
 
                 var module = nodeClass.module;
-                var c = new GeneratorContext(new GenInfo {sharpGenPath = module.path}, false);
+                var c = new GeneratorContext(new GenInfo {sharpGenPath = module.path});
                 contexts.Add(enumName, c);
                 module = c.createSharpCustomModule($"{enumName}", "enum");
                 module.content("");
@@ -128,8 +114,7 @@ namespace ZergRush.CodeGen
                     module.indent++;
                 }
 
-                EnumTable.PrintEnum(module, enumName, types.Select(t => t.UniqueName(false)),
-                    type => finalTypeEnum[baseClassMap[node]][type]);
+                EnumTable.PrintEnum(module, enumName, types, type => typeEnum[type]);
                 if (!string.IsNullOrEmpty(nodeClass.namespaceName))
                 {
                     module.indent--;
@@ -144,31 +129,53 @@ namespace ZergRush.CodeGen
 
         static void GeneratePolymorphicCreatorFuncs()
         {
-            foreach (var polymorphicRootNode in polymorphicRootNodes)
+            foreach (var node in PolymorphicConstructionRoots())
             {
-                var node = polymorphicRootNode.Key;
+                if (!finalTypeEnum.ContainsKey(node)) continue;
+
                 var nodeClass = GenClassSink(node);
                 var enumName = node.PolymorphicRootTypeEnumName();
 
-                Action<bool> gen = pooled =>
-                {
-                    var poolCreatorFunc = nodeClass.Method(PolymorphInstanceFuncNamePooled(pooled), node,
-                        MethodType.StaticFunction, node,
-                        $"{enumName} {CodeGenImplTools.ClassIdName}{node.OptPoolSecondArgDecl(pooled)}", "", "");
-                    poolCreatorFunc.content($"return {node.NewPolymorphicFromClassIdExpression(pooled)};");
-                };
-                if (node.NeedsClassicPolymorphConstruction()) gen(false);
-                if (node.NeedsPooledPolymorphConstruction()) gen(true);
+                var creatorFunc = nodeClass.Method(PolymorphInstanceFuncName, node,
+                    MethodType.StaticFunction, node,
+                    $"{enumName} {CodeGenImplTools.ClassIdName}", "", "");
+                creatorFunc.content($"return {node.NewPolymorphicFromClassIdExpression(false)};");
                 nodeClass.content(
                     $"public {node.PolymorphicRootTypeEnumName()} type => ({node.PolymorphicRootTypeEnumName()}) GetClassId();");
             }
         }
 
+        static IEnumerable<Type> PolymorphicConstructionRoots()
+        {
+            return allTypesInAssemblies
+                .Where(t => t.PolymorphicConstructionRoot() == t)
+                .OrderBy(t => t.Namespace)
+                .ThenBy(t => t.Name);
+        }
+
+        static IEnumerable<Type> PolymorphicConstructionTypes(Type root)
+        {
+            return allTypesInAssemblies.Where(t => t.PolymorphicConstructionRoot() == root);
+        }
+
+        static Type PolymorphicConstructionRoot(this Type t)
+        {
+            return new[] { t }
+                .Concat(t.Parents())
+                .Where(type => (type.Flags & GenTaskFlags.PolymorphicConstruction) != 0)
+                .LastOrDefault();
+        }
+
+        static bool IsPolymorphicConstructionRoot(this Type t)
+        {
+            return t.PolymorphicConstructionRoot() == t;
+        }
+
         static string NewPolymorphicFromClassIdExpression(this Type type, bool pooled)
         {
             return
-                $"({type.RealName(true)}){type.RealName(true)}.{PolymorphInstanceFuncNamePooled(pooled)}(({PolymorphClassIdTypeName}) " +
-                $"{CodeGenImplTools.ClassIdName}{type.OptPoolSecondArg(pooled)})";
+                $"({type.RealName(true)}){type.RealName(true)}.{PolymorphInstanceFuncName}(({PolymorphClassIdTypeName}) " +
+                $"{CodeGenImplTools.ClassIdName})";
         }
 
         static bool IsValidType(this Type t)
@@ -214,70 +221,6 @@ namespace ZergRush.CodeGen
             return Path.Combine($"{GetContext(t).pathToSharp}", $"types_cache_{t.Name}.txt");
         }
 
-        static void GeneratePoolSupportMethods(Type type)
-        {
-            if (type.IsValidType() == false) return;
-
-            if (type.IsAbstract == false && type.IsValidType())
-            {
-                var pool = typeof(ObjectPool);
-                var poolClass = GenClassSink(pool);
-                string poolType = $"Pool<{type.RealName(true)}>";
-                string prototypeName = $"prototype{type.UniqueName()}";
-                poolClass.content($"public {poolType} {type.PersonalPoolName()} = new {poolType}();");
-                poolClass.content($"public {type.RealName(true)} {prototypeName};");
-                var getFromPool = poolClass.Method(type.GetFromPoolFunc(), typeof(ObjectPool), MethodType.Instance,
-                    type,
-                    "",
-                    "", "");
-                getFromPool.content($"{type.RealName(true)} inst = null;");
-                getFromPool.content(
-                    $"if ({type.PersonalPoolName()}.Count > 0) {{ inst = {type.PersonalPoolName()}.Pop();");
-                getFromPool.indent++;
-                getFromPool.content($"if ({prototypeName} == null) {prototypeName} = new {type.RealName(true)}();");
-                getFromPool.content($"inst.UpdateFrom({prototypeName}, this);");
-                getFromPool.indent--;
-                getFromPool.content($"}}");
-                getFromPool.content($"else inst = new {type.RealName(true)}();");
-                getFromPool.content($"return inst;");
-            }
-
-            var returnToPoolMethod = MakeGenMethod(type, GenTaskFlags.Pooled, PolymorphReturnToPool, Void,
-                type.OptPoolArgDecl(true));
-            returnToPoolMethod.doNotCallBaseMethod = true;
-
-            if (type.IsAbstract)
-            {
-                returnToPoolMethod.content("throw new NotImplementedException();");
-            }
-            else
-            {
-                if (type.IsGenericTypeDecl())
-                    returnToPoolMethod.content($"{GenericPoolGetter}(pool).PushGeneric(this);");
-                else returnToPoolMethod.content($"pool.{type.PersonalPoolName()}.Push(this);");
-                returnToPoolMethod.content($"{PolymorphReturnChildrenToPool}(pool);");
-                if (type.IsLivableGen())
-                {
-                    returnToPoolMethod.content("root = null;");
-                    returnToPoolMethod.content("carrier = null;");
-                }
-            }
-
-            var returnToPoolChildrenMethod = MakeGenMethod(type, GenTaskFlags.Pooled,
-                PolymorphReturnChildrenToPool, Void,
-                type.OptPoolArgDecl(true));
-
-            // Command all containers to push all its content back to pool.
-            ProcessMembers(type, GenTaskFlags.Pooled, false, info =>
-            {
-                if (info.type.IsLivableSlot() || info.isValueWrapper == ValueVrapperType.LivableSlot ||
-                    info.type.IsLivableList())
-                {
-                    returnToPoolChildrenMethod.content($"{info.baseAccess}.OnReturnToPool(pool);");
-                }
-            });
-        }
-
         static void AddMultiRefInterfaces()
         {
             typeRequestMap.Keys.ForEach(t =>
@@ -319,18 +262,11 @@ namespace ZergRush.CodeGen
 
                 GenClassIdFuncs(baseClass, typesToGenPolymorphMethods, sink);
 
-                if (baseClass.NeedsPooledPolymorphConstruction())
-                {
-                    GenPolymorphicRootSetup(baseClass, sink, finalTypeIndexedList, true);
-                    GenPolymorphMaps(baseClass, typesThatCanBeConstructed, typesToGenPolymorphMethods, sink, true);
-                }
-
                 if (baseClass.NeedsClassicPolymorphConstruction()
-                    || (!baseClass.HasPool() && (baseClass.ReadGenFlags()
-                                                 & (GenTaskFlags.UpdateFrom | GenTaskFlags.Serialization)) != 0))
+                    || ((baseClass.ReadGenFlags() & (GenTaskFlags.UpdateFrom | GenTaskFlags.Serialization)) != 0))
                 {
-                    GenPolymorphicRootSetup(baseClass, sink, finalTypeIndexedList, false);
-                    GenPolymorphMaps(baseClass, typesThatCanBeConstructed, typesToGenPolymorphMethods, sink, false);
+                    GenPolymorphicRootSetup(baseClass, sink, finalTypeIndexedList);
+                    GenPolymorphMaps(baseClass, typesThatCanBeConstructed, typesToGenPolymorphMethods, sink);
                 }
             }
         }
@@ -384,29 +320,19 @@ namespace ZergRush.CodeGen
         }
 
         static void GenPolymorphicRootSetup(Type baseClass, SharpClassBuilder sink,
-            List<Type> typeIndexer, bool pooled)
+            List<Type> typeIndexer)
         {
-            string poolTypeArgIfAny = pooled ? $"{baseClass.PoolTypeName()} ," : "";
-            if (pooled)
-            {
-                sink.usingSink("ZergRush.Alive");
-                sink.usingSink("ZergRush");
-            }
-
             // Array with constructors
-            var constructorsArrayName = $"polymorph{(pooled ? "Pulled" : "")}Constructors";
+            var constructorsArrayName = "polymorphConstructors";
             sink.content(
-                $"static Func<{poolTypeArgIfAny}{baseClass.RealName()}> [] {constructorsArrayName} =" +
-                $" new Func<{poolTypeArgIfAny}{baseClass.RealName()}> [] {{");
+                $"static Func<{baseClass.RealName()}> [] {constructorsArrayName} =" +
+                $" new Func<{baseClass.RealName()}> [] {{");
             sink.indent++;
-            if (stubMode == false)
+            for (var i = 0; i < typeIndexer.Count; i++)
             {
-                for (var i = 0; i < typeIndexer.Count; i++)
-                {
-                    var type = typeIndexer[i];
-                    sink.content(
-                        $"{(pooled ? "pool" : "()")} => {(type != null ? NewInstExpr(type, pooled) : "null")}, // {i}");
-                }
+                var type = typeIndexer[i];
+                sink.content(
+                    $"() => {(type != null ? NewInstExpr(type) : "null")}, // {i}");
             }
 
             sink.indent--;
@@ -414,14 +340,14 @@ namespace ZergRush.CodeGen
 
             // Create function
             sink.content(
-                $"public static {baseClass.RealName()} {PolymorphInstanceFuncNamePooled(pooled)}(" +
-                $"{PolymorphClassIdType} typeId{baseClass.OptPoolSecondArgDecl(pooled)}) {{");
-            sink.content($"\treturn {constructorsArrayName}[typeId]({(pooled ? "pool" : "")});");
+                $"public static {baseClass.RealName()} {PolymorphInstanceFuncName}(" +
+                $"{PolymorphClassIdType} typeId) {{");
+            sink.content($"\treturn {constructorsArrayName}[typeId]();");
             sink.content($"}}");
         }
 
         static void GenPolymorphMaps(Type baseClass, List<Type> typesThatCanBeConstructed,
-            List<Type> typesToGenPolymorphMethods, SharpClassBuilder sink, bool pooledMap)
+            List<Type> typesToGenPolymorphMethods, SharpClassBuilder sink)
         {
             // Class id overloaded functions
             foreach (var type in typesToGenPolymorphMethods)
@@ -437,7 +363,7 @@ namespace ZergRush.CodeGen
 
                 tSink.inheritance("ICloneInst");
                 var newInstOfSameType = tSink.Method(PolymorphNewInstOfSameType, type, mType, typeof(object),
-                    pooledMap ? $"{PoolTypeName(null)} pool" : "");
+                    "");
 
                 newInstOfSameType.doNotCallBaseMethod = true;
 
@@ -447,22 +373,7 @@ namespace ZergRush.CodeGen
                     newInstOfSameType.doNotGen = true;
                 }
                 else if (type.IsAbstract) newInstOfSameType.content("throw new NotImplementedException();");
-                else if (type.IsGenericTypeDecl())
-                {
-                    var genericPoolGetter = tSink.Method(GenericPoolGetter, type, MethodType.Instance,
-                        typeof(IGenericPool), type.OptPoolArgDecl(type.HasPool()));
-                    PrintGenericSwitch(type, genericPoolGetter,
-                        (t, s) => s.content($"return pool.{t.PersonalPoolName()};"));
-                    genericPoolGetter.content("return null;");
-                    newInstOfSameType.content(
-                        $"return ({type.RealName()}){GenericPoolGetter}(pool).PopGeneric();");
-                }
-                else if (pooled) newInstOfSameType.content($"return pool.{type.GetFromPoolFunc()}();");
                 else newInstOfSameType.content($"return new {type.RealName()}();");
-
-                if (pooled)
-                {
-                }
             }
         }
     }

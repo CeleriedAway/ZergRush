@@ -101,7 +101,7 @@ namespace ZergRush.CodeGen
                 {
                     if (info.sureIsNull && !info.type.IsValueType)
                     {
-                        CreateNewInstance(sink, info, classIdReader, pooled, refInst, false);
+                        CreateNewInstance(sink, info, classIdReader, refInst, false);
                     }
                     else
                     {
@@ -123,7 +123,7 @@ namespace ZergRush.CodeGen
                             sink.content($"if ({createNewCondition}) {{");
                             sink.indent++;
                             SinkRemovePostProcess(sink, info, pooled);
-                            CreateNewInstance(sink, info, classIdVarName, pooled, refInst, false);
+                            CreateNewInstance(sink, info, classIdVarName, refInst, false);
                             sink.indent--;
                             sink.content($"}}");
                         }
@@ -176,7 +176,7 @@ namespace ZergRush.CodeGen
             }
             Func<ZRData, string> defaultContent = info1 =>
             {
-                var baseCall = $"{info1.access}.{UpdateFuncName}({other}, {HelperName}{t.OptPoolIfUpdatebleWithPoolSecondArg(pooled)});";
+                var baseCall = $"{info1.access}.{UpdateFuncName}({other}, {HelperName});";
                 if (supportMultiRef && info1.type.IsMultipleReference())
                 {
                     if (info1.type.IsLivableNode() && info1.type.IsLivableRoot() == false)
@@ -203,7 +203,7 @@ namespace ZergRush.CodeGen
             {
                 if (needCreateVar && info.isValueWrapper == ValueVrapperType.Cell)
                 {
-                    sink.content($"{OptVar(needCreateVar)}{info.baseAccess} = {info.realType.NewInstExpr(false, other, true) };");
+                    sink.content($"{OptVar(needCreateVar)}{info.baseAccess} = {info.realType.NewInstExpr(other, true) };");
                 }
                 else
                 {
@@ -226,7 +226,7 @@ namespace ZergRush.CodeGen
                 };
             }
 
-            RequestGen(info.realType, sink.classType, pooled ? GenTaskFlags.PooledUpdateFrom : GenTaskFlags.UpdateFrom);
+            RequestGen(info.realType, sink.classType, GenTaskFlags.UpdateFrom);
 
             GeneralReadFrom(sink, info,
                 baseReadCall: baseReadCall,
@@ -256,7 +256,7 @@ namespace ZergRush.CodeGen
                 return "ReadByteArray()";
             if (t.IsFix64())
                 return "ReadFix64()";
-            return $"Read{t.UniqueName()}({(pooled && t.HasPooledDeserializeMethod() ? $"pool" : "")})";
+            return $"Read{t.UniqueName()}()";
         }
 
         public static void SinkArrayUpdateFromWithFixedSize(MethodBuilder sink, Type type, string prefix, string other,
@@ -308,7 +308,7 @@ namespace ZergRush.CodeGen
             sink.indent++;
                 if (useAddCopyFunc)
                 {
-                    CreateNewInstance(sink, ZRData.WithTypeAndName(elementType, "inst"), $"{refInst}.{CodeGen.PolymorphClassIdGetter}", pooled, refInst, true);
+                    CreateNewInstance(sink, ZRData.WithTypeAndName(elementType, "inst"), $"{refInst}.{CodeGen.PolymorphClassIdGetter}", refInst, true);
                     sink.content($"self.AddCopy(inst, {refInst}, {HelperName});");
     //                sink.content($"self.Add(null);");
     //                GenUpdateValueFromInstance(sink, new ZRData {type = elementType, baseAccess = $"self[i]", sureIsNull = true},
@@ -340,13 +340,13 @@ namespace ZergRush.CodeGen
             const string instanceName = "other";
 
             string otherName = instanceName;
-            var flag = pooled ? GenTaskFlags.PooledUpdateFrom : GenTaskFlags.UpdateFrom;
+            var flag = GenTaskFlags.UpdateFrom;
 
             var updateFromType = type.TopParentImplementingFlag(flag) ?? type;
             if (type.IsLivableList()) updateFromType = type;
             
             MethodBuilder sink = MakeGenMethod(type, flag, funcPrefix + UpdateFuncName, typeof(void),
-                $"{updateFromType.RealName(true)} {instanceName}, {UpdateFromHelperClassName} {HelperName}{(pooled ? ", ObjectPool pool" : "")}");
+                $"{updateFromType.RealName(true)} {instanceName}, {UpdateFromHelperClassName} {HelperName}");
 
             if (type.IsValueType)
             {
@@ -387,15 +387,15 @@ namespace ZergRush.CodeGen
                     sink.content($"var {instanceCastedName} = ({type.RealName(true)}){instanceName};");
                     
                     var directUpdateSink = GenClassSink(type).Method(funcPrefix + UpdateFuncName, type, MethodType.Instance, typeof(void),
-                        $"{type.RealName(true)} {instanceName}, {UpdateFromHelperClassName} {HelperName}{(pooled ? ", ObjectPool pool" : "")}");
+                        $"{type.RealName(true)} {instanceName}, {UpdateFromHelperClassName} {HelperName}");
 
-                    directUpdateSink.content($"this.UpdateFrom(({updateFromType.RealName(true)})other, {HelperName}{(pooled ? ", pool" : "")});");
-                    directUpdateSink.classBuilder.inheritance($"I{(pooled ? "Pooled" : "")}UpdatableFrom<{type.RealName(true)}>");
+                    directUpdateSink.content($"this.UpdateFrom(({updateFromType.RealName(true)})other, {HelperName});");
+                    directUpdateSink.classBuilder.inheritance($"IUpdatableFrom<{type.RealName(true)}>");
                 }
                 if (type.IsControllable())
                 {
                     GenClassSink(type)
-                        .inheritance($"I{(pooled ? "Pooled" : "")}UpdatableFrom<{updateFromType.RealName(true)}>");
+                        .inheritance($"IUpdatableFrom<{updateFromType.RealName(true)}>");
                 }
 
                 type.ProcessMembers(flag, true,

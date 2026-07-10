@@ -53,10 +53,6 @@ namespace ZergRush.Alive
                 if (_value != null)
                 {
                     if (isAlive) _value.Mortify();
-                    if (root != null)
-                    {
-                        _value.ReturnToPool(root.pool);
-                    }
                     if (!__update_mod)
                     {
                         _value.Destroy();
@@ -99,12 +95,6 @@ namespace ZergRush.Alive
                 _value.SetRootAndCarrier(root, carrier);
                 _value.__PropagateHierarchy();
             }
-        }
-
-        public void OnReturnToPool(ObjectPool pool)
-        {
-            _value?.ReturnToPool(pool);
-            _value = null;
         }
 
         public void TransplantTo(LivableSlot<TLivable> otherSlotOfSameParent)

@@ -76,16 +76,6 @@ namespace ZergRush.CodeGen
                 flags ^= GenTaskFlags.UpdateFrom;
             }
 
-            if ((flags & GenTaskFlags.PooledUpdateFrom) != 0 && t.ReadGenFlags().HasFlag(GenTaskFlags.UpdateFrom))
-            {
-                flags ^= GenTaskFlags.PooledUpdateFrom;
-            }
-
-            if ((flags & GenTaskFlags.PooledDeserialize) != 0 && t.ReadGenFlags().HasFlag(GenTaskFlags.Deserialize))
-            {
-                flags ^= GenTaskFlags.PooledDeserialize;
-            }
-
             if ((flags & GenTaskFlags.Hash) != 0 && t.Interfaces.Any(i => i.Name == nameof(IHashable)))
             {
                 flags ^= GenTaskFlags.Hash;
@@ -156,11 +146,6 @@ namespace ZergRush.CodeGen
                 if (!typeArg.IsLoadableConfig())
                     RequestGen(typeArg, t, flags);
             }
-
-            flags = DowngradeFlagsIfNeeded(flagsCheckType, flags, GenTaskFlags.PooledUpdateFrom,
-                GenTaskFlags.UpdateFrom);
-            flags = DowngradeFlagsIfNeeded(flagsCheckType, flags, GenTaskFlags.PooledDeserialize,
-                GenTaskFlags.Deserialize);
 
             if ((flags & (GenTaskFlags.Serialization | GenTaskFlags.UpdateFrom)) != 0 && t.IsArray == false)
             {

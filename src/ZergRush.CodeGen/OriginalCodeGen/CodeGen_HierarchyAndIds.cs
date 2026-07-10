@@ -64,8 +64,7 @@ namespace ZergRush.CodeGen
                         // ctor mwthod found
                         var constructFull = GenClassSink(rootType).Method(type.CreateLivableInRootFunc(), rootType, MethodType.Instance, type, sig, "", "");
                         constructFull.indent++;
-                        //constructFull.content($"var inst = pool.{type.GetFromPoolFunc()}();");
-                        CreateNewInstance(constructFull, new ZRData{type = type, baseAccess = "inst", sureIsNull = true}, "", true, "", true );
+                        CreateNewInstance(constructFull, new ZRData{type = type, baseAccess = "inst", sureIsNull = true}, "", "", true);
                         fillCreateWithLivableSetup(constructFull);
                         
                         constructFull.content($"inst.{methodInfo.Name}({call});");
@@ -78,7 +77,7 @@ namespace ZergRush.CodeGen
                 {
                     var createWithSetup = GenClassSink(rootType).Method(type.CreateLivableInRootFunc(), rootType, MethodType.Instance, type, "", "", "");
                     createWithSetup.indent++;
-                    CreateNewInstance(createWithSetup, new ZRData{type = type, baseAccess = "inst", sureIsNull = true}, "", true, "", true );
+                    CreateNewInstance(createWithSetup, new ZRData{type = type, baseAccess = "inst", sureIsNull = true}, "", "", true);
                     fillCreateWithLivableSetup(createWithSetup);
                     createWithSetup.content($"return inst;");
                 }
@@ -86,7 +85,7 @@ namespace ZergRush.CodeGen
             }
             
             // Create from prototype
-            if ((type.ReadGenFlags() & GenTaskFlags.UpdateFrom) != 0 && type.IsGenericTypeDecl() == false)
+            if ((type.ReadGenFlags() & GenTaskFlags.UpdateFrom) != 0)
             {
                 var createFromProrotype = GenClassSink(rootType).Method(type.CreateLivableInRootFunc(), rootType, MethodType.Instance, type, $"{type.RealName(true)} prototype", "", "");
                 createFromProrotype.indent++;
@@ -99,7 +98,7 @@ namespace ZergRush.CodeGen
                 createFromProrotype.content($"return inst;");
             }
 
-            if (polymorphicRootNodes.ContainsKey(type))
+            if (type.IsPolymorphicConstructionRoot())
             {
                 foreach (var methodInfo in type.GetMethods(constructorMethodFlags))
                 {
@@ -116,7 +115,7 @@ namespace ZergRush.CodeGen
                         var constructFull = GenClassSink(rootType).Method($"CreatePolymorphic{type.UniqueName(false)}", 
                             rootType, MethodType.Instance, type, sig, "", "");
                         constructFull.indent++;
-                        constructFull.content($"var inst = {type.NewPolymorphicFromClassIdExpression(type.NeedsPooledPolymorphConstruction())};");
+                        constructFull.content($"var inst = {type.NewPolymorphicFromClassIdExpression(false)};");
                         fillCreateWithLivableSetup(constructFull);                       
                         constructFull.content($"inst.{methodInfo.Name}({call});");
                         constructFull.content($"return inst;");

@@ -85,7 +85,7 @@ namespace ZergRush.CodeGen
         public static SharpClassBuilder GenClassSink(Type t, GeneratorContext ctx = null)
         {
             var context = ctx ?? GetContext(t);
-            if (t.IsControllable() == false && t != typeof(ObjectPool))
+            if (t.IsControllable() == false)
             {
                 return context.extensionSink;
             }
@@ -94,7 +94,6 @@ namespace ZergRush.CodeGen
 
             var classSink = context.createSharpClass(t.RealName(), t.FileName(), namespaceName: t.Namespace,
                 isPartial: true, isStruct: t.IsValueType, isSealed: false);
-            classSink.stubMode = stubMode;
             classSink.usingSink("ZergRush.Alive");
             classSink.usingSink("ZergRush");
             classSink.context = context;
@@ -368,9 +367,7 @@ namespace ZergRush.CodeGen
                     }
 
                     CheckFlag(GenTaskFlags.UpdateFrom, funcPrefix => GenUpdateFrom(type, false, funcPrefix));
-                    CheckFlag(GenTaskFlags.PooledUpdateFrom, funcPrefix => GenUpdateFrom(type, true, funcPrefix));
                     CheckFlag(GenTaskFlags.Deserialize, funcPrefix => GenerateDeserialize(type, false, funcPrefix));
-                    CheckFlag(GenTaskFlags.PooledDeserialize, funcPrefix => GenerateDeserialize(type, true, funcPrefix));
                     CheckFlag(GenTaskFlags.Serialize, funcPrefix => GenerateSerialize(type, funcPrefix));
                     CheckFlag(GenTaskFlags.Hash, funcPrefix => GenHashing(type, funcPrefix));
                     CheckFlag(GenTaskFlags.UIDGen, funcPrefix => GenUIDFunc(type, funcPrefix));
@@ -381,8 +378,6 @@ namespace ZergRush.CodeGen
                     CheckFlag(GenTaskFlags.DefaultConstructor, funcPrefix => GenerateConstructor(type, funcPrefix));
                     CheckFlag(GenTaskFlags.CompareChech, funcPrefix => GenerateComparisonFunc(type, funcPrefix));
                     CheckFlag(GenTaskFlags.JsonSerialization, funcPrefix => GenerateJsonSerialization(type, funcPrefix));
-                    CheckFlag(GenTaskFlags.Pooled, _ => GeneratePoolSupportMethods(type));
-
                     classSink.indent--;
                 }
             }

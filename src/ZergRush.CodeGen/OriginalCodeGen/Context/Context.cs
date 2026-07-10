@@ -56,8 +56,7 @@ namespace ZergRush.CodeGen
             {
                 name = name,
                 path = pathToSharp,
-                suffix = suffix,
-                stubMode = stubModel
+                suffix = suffix
             };
             builderFileNames.Add(name);
             builders.Add(builder);

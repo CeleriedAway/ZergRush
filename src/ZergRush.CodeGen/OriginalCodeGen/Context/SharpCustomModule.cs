@@ -38,11 +38,10 @@ namespace ZergRush.CodeGen
         public int indent { get; set; }
 
         List<SharpClassBuilder> classes = new List<SharpClassBuilder>();
-        public bool stubMode;
         
         public SharpClassBuilder Class(string name, string namespaceName, bool isStruct, bool isSealed, bool isPartial, bool isStatic)
         {
-            sharpClassBuilder = new SharpClassBuilder(this, name, namespaceName, isStruct, isSealed, isPartial, isStatic, stubMode);
+            sharpClassBuilder = new SharpClassBuilder(this, name, namespaceName, isStruct, isSealed, isPartial, isStatic);
             classes.Add(sharpClassBuilder);
             return sharpClassBuilder;
         }

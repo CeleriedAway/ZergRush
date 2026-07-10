@@ -7,8 +7,6 @@ namespace ZergRush.Alive
     public abstract partial class LivableRoot : Livable
     {
         [GenIgnore] bool alive;
-        [GenIgnore] public ObjectPool pool;
-        
         // Ignore hierarchy side effects during updatefrom.
         [GenIgnore] public bool __updating;
         [GenIgnore] public string __debugTag;

@@ -87,9 +87,6 @@ namespace ZergRush.CodeGen
         {
             if (doNotGen) return;
             
-            //if (stubMode && (type == MethodType.Override || (classBuilder.name == "SerializationExtensions"))) return;
-            if (stubMode && (type == MethodType.Override )) return;
-            
             var indent = "";
             if (classBuilder.namespaceName.Valid())
                 indent = ("\t\t");
@@ -98,35 +95,28 @@ namespace ZergRush.CodeGen
 
             sink(indent + sig());
             sink($"{indent}{{");
-            if (!stubMode)
+            if (isDebug)
             {
-                if (isDebug)
+                sink("#if !RELEASE");
+            }
+            if (needBaseValCall && !doNotCallBaseMethod)
+            {
+                var asyncPart = async ? "await " : "";
+                if (returnType != typeof(void))
                 {
-                    sink("#if !RELEASE");
+                    sink($"{indent}\tvar baseVal = {asyncPart}base.{RemoveBaseIfNeeded(name)}({CodeGenTools.ExtranctArgNames(args)});");
                 }
-                if (needBaseValCall && !doNotCallBaseMethod)
+                else
                 {
-                    var asyncPart = async ? "await " : "";
-                    if (returnType != typeof(void))
-                    {
-                        sink($"{indent}\tvar baseVal = {asyncPart}base.{RemoveBaseIfNeeded(name)}({CodeGenTools.ExtranctArgNames(args)});");
-                    }
-                    else
-                    {
-                        sink($"{indent}\t{asyncPart}base.{RemoveBaseIfNeeded(name)}({CodeGenTools.ExtranctArgNames(args)});");
-                    }
-                }
-                sink(builder.ToStringWithoutListLineEnd());
-                if (isDebug)
-                {
-                    sink("#else");
-                    sink($"{indent}\tthrow new HackCommandExecutionOnReleaseBuild();");
-                    sink("#endif");
+                    sink($"{indent}\t{asyncPart}base.{RemoveBaseIfNeeded(name)}({CodeGenTools.ExtranctArgNames(args)});");
                 }
             }
-            else
+            sink(builder.ToStringWithoutListLineEnd());
+            if (isDebug)
             {
-                sink(indent + "\tthrow new NotImplementedException();");
+                sink("#else");
+                sink($"{indent}\tthrow new HackCommandExecutionOnReleaseBuild();");
+                sink("#endif");
             }
             
             sink($"{indent}}}");

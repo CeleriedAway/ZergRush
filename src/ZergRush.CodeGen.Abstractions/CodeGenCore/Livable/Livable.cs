@@ -87,10 +87,6 @@ namespace ZergRush.Alive
             }
         }
 
-        public virtual void ReturnToPool(ObjectPool pool)
-        {
-        }
-        
         public virtual void VisitNode(Action<object> visitor)
         {
             visitor(this);
