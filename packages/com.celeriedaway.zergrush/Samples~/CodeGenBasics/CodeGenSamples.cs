@@ -56,7 +56,7 @@ namespace ZergRush.Samples
         
         // You can ignore specific parts of code generation, for example if you do not want default construction of this field
         [GenIgnore(GenTaskFlags.DefaultConstructor)]
-        OtherData otherData2;
+        OtherData otherData2 = new OtherData();
         
         List<int> listsOfPrimitivesAreOk;
         List<OtherData> listsOfDataAreOk;
@@ -91,11 +91,9 @@ namespace ZergRush.Samples
         ReactiveCollection<int> reactiveCollections;
 
         [GenIgnore(GenTaskFlags.DefaultConstructor)]
-        public List<CodeGenSamples> ancestorArray = new List<CodeGenSamples>
-        {
-            // because of PolymorphicConstruction, Ancestor class will be serialized in right way
-            new Ancestor()
-        };
+        public List<CodeGenSamples> ancestorArray = new List<CodeGenSamples>();
+
+        public List<TestPolyGenericParent> genericAncestorArray;
 
         static void HowToUse()
         {
@@ -147,16 +145,33 @@ namespace ZergRush.Samples
     public struct CustomStruct
     {
         public int id;
-        public string name;
+        [CanBeNull] public string name;
     }
 
     public class TestGeneric<T>
     {
         public T value;
-        public List<T> values;
-        public Cell<T> reactiveValue;
-        public Dictionary<string, T> valuesByName;
+        public List<T> values = new List<T>();
+        public Cell<T> reactiveValue = new Cell<T>();
+        public Dictionary<string, T> valuesByName = new Dictionary<string, T>();
     }
+
+    [GenTask(GenTaskFlags.PolymorphicDataPack)]
+    public partial class TestPolyGenericParent
+    {
+        public int intField;
+    }
+
+    public partial class TestGenericAncestor<T> : TestPolyGenericParent
+    {
+        public T genericField;
+    }
+
+    public partial class TestGenericChild : TestGenericAncestor<int>
+    {
+        public int additionalField;
+    }
+    
 
     [GenTask(GenTaskFlags.SimpleDataPack)]
     [GenInLocalFolder]

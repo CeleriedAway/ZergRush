@@ -1,18 +1,47 @@
 using ZergRush.CodeGen;
 
-if (args.Length == 0)
+string? generationOutput = null;
+var inputs = new List<string>();
+for (var i = 0; i < args.Length; i++)
 {
-    args =
-    [
+    if (args[i] == "--generate")
+    {
+        if (++i >= args.Length) throw new ArgumentException("--generate requires an output directory.");
+        generationOutput = Path.GetFullPath(args[i]);
+        continue;
+    }
+
+    inputs.Add(Path.GetFullPath(args[i]));
+}
+
+if (inputs.Count == 0)
+{
+    inputs.Add(
         Path.GetFullPath(Path.Combine(
             AppContext.BaseDirectory,
             "..", "..", "..", "..", "..",
-            "packages", "com.celeriedaway.zergrush", "Samples~", "CodeGenBasics", "CodeGenSamples.cs"))
-    ];
+            "packages", "com.celeriedaway.zergrush", "Samples~", "CodeGenBasics", "CodeGenSamples.cs")));
 }
 
 var parser = new ZRCodeParser();
-var types = parser.ParseInputs(args);
+var types = parser.ParseInputs(inputs);
+
+if (generationOutput != null)
+{
+    foreach (var type in types)
+    {
+        type.TargetFolder = new ZRTargetFolderInfo
+        {
+            Folder = generationOutput,
+            Inheritable = true,
+            Priority = type.TargetFolder?.Priority ?? 1
+        };
+    }
+
+    CodeGen.Gen(types, generationOutput);
+    Console.WriteLine($"Generated {Directory.EnumerateFiles(generationOutput, "*.cs").Count()} files in {generationOutput}");
+    return;
+}
 
 Console.WriteLine($"Parsed types: {types.Count}");
 foreach (var type in types)

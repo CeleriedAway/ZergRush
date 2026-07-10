@@ -29,11 +29,12 @@ namespace ZergRush.CodeGen
                 string accessSuffix = "";
                 if (info.canBeNull)
                 {
-                    var compNull = info.type.IsNullable() ? CompNullableFunc : CompNullComp;
+                    var nullableValue = info.type.IsNullable() || info.isValueWrapper == ValueVrapperType.Nullable;
+                    var compNull = nullableValue ? CompNullableFunc : CompNullComp;
                     sink.content(
                         $"if ({compNull}({HelperName}, {info.pathName}, {PrinterName}, {info.access}, {otherValueReader})) {{");
                     sink.indent++;
-                    if (info.type.IsNullable())
+                    if (nullableValue)
                     {
                         accessSuffix = ".Value";
                     }

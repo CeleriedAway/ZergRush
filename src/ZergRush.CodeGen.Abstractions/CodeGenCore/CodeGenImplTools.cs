@@ -9,6 +9,20 @@ using ZergRush.CodeGen;
 
 public unsafe static class CodeGenImplTools
 {
+    public static ulong CalculateStringHash(string value)
+    {
+        if (value == null) return 345093625;
+        ulong hash = 0;
+        for (var i = 0; i < value.Length; ++i)
+        {
+            hash += value[i];
+            hash += hash << 10;
+            hash ^= hash >> 7;
+        }
+
+        return hash;
+    }
+
     public static string ClassIdName = "__classId";
 
     public static float ReadJsonFloat(JsonReader reader)

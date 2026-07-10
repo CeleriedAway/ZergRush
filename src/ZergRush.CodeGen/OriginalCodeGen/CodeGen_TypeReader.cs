@@ -241,6 +241,11 @@ namespace ZergRush.CodeGen
 
             members.AddRange(type.DataMembers.Select(member => member.Copy()));
 
+            if (!type.IsControllable())
+            {
+                members = members.Where(member => !member.isPrivate).ToList();
+            }
+
             foreach (var member in members)
             {
                 member.realType ??= member.DeclaredType ?? member.type;

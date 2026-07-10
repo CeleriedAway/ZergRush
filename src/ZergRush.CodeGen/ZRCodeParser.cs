@@ -641,6 +641,7 @@ public sealed class ZRCodeParser
     static ZRTypeKind KindFromSymbol(INamedTypeSymbol symbol)
     {
         if (symbol.SpecialType == SpecialType.System_Void) return ZRTypeKind.Void;
+        if (symbol.SpecialType is SpecialType.System_String or SpecialType.System_Object) return ZRTypeKind.Class;
         if (symbol.SpecialType != SpecialType.None) return ZRTypeKind.Primitive;
 
         return symbol.TypeKind switch

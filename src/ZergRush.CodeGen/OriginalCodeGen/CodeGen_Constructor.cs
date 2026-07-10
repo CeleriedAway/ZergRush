@@ -132,6 +132,7 @@ namespace ZergRush.CodeGen
                 // For livables all configs should be set in Prepare method thats why its unnesseseary to generate default config values
                 if (info.isValueWrapper == ValueVrapperType.None && info.type.IsLoadableConfig() && t.IsLivableCustomType()) return;
                 CreateNewInstance(constructor, info, null, null, false, wrapType: true);
+                InitializeWrappedValues(constructor, info);
             });
             
             if (t.HasAttribute<GenModelRootSetup>())
@@ -164,6 +165,40 @@ namespace ZergRush.CodeGen
 
         public static void SinkRemovePostProcess(MethodBuilder sink, ZRData info, bool pooled)
         {
+        }
+
+        static void InitializeWrappedValues(MethodBuilder constructor, ZRData info)
+        {
+            if (info.WrapperTypes.Count == 0) return;
+
+            var declaredType = info.realType;
+            var access = info.realAccess;
+            for (var i = 0; i < info.WrapperTypes.Count; ++i)
+            {
+                var wrapper = info.WrapperTypes[i];
+                if (wrapper is not (FieldWrapperType.Cell or FieldWrapperType.LivableSlot)) continue;
+
+                var innerType = declaredType?.FirstGenericArg();
+                if (innerType == null) return;
+
+                var nextWrapper = i + 1 < info.WrapperTypes.Count
+                    ? info.WrapperTypes[i + 1]
+                    : FieldWrapperType.None;
+                if (nextWrapper is FieldWrapperType.Cell or FieldWrapperType.LivableSlot)
+                {
+                    constructor.content($"{access}.value = {innerType.NewInstExpr()};");
+                    access += ".value";
+                    declaredType = innerType;
+                    continue;
+                }
+
+                if (nextWrapper == FieldWrapperType.Nullable) return;
+                if (!info.canBeNull && !info.type.IsValueType)
+                {
+                    constructor.content($"{access}.value = {info.type.NewInstExpr()};");
+                }
+                return;
+            }
         }
     }
 }

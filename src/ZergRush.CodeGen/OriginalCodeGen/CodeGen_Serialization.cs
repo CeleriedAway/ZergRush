@@ -13,7 +13,8 @@ namespace ZergRush.CodeGen
 
         public static void GenWriteValueToStream(MethodBuilder sink, ZRData info, string stream)
         {
-            if (info.canBeNull) GenWriteNullableToStream(sink, info, stream);
+            if (info.canBeNull || info.type.IsNullable() || info.isValueWrapper == ValueVrapperType.Nullable)
+                GenWriteNullableToStream(sink, info, stream);
             else WriteToStreamStatement(sink, info, stream);
         }
 
@@ -80,21 +81,14 @@ namespace ZergRush.CodeGen
             sink.content($"for (int i = 0; i < {info.access}.Count; i++)");
             sink.content($"{{");
             sink.indent++;
-            if (!info.type.IsValueType)
-            {
-                sink.content($"{stream}.Write({info.access}[i] != null);");
-                sink.content($"if ({info.access}[i] != null)");
-            }
-
-            sink.content("{");
-            sink.indent++;
-            WriteToStreamStatement(sink,
+            GenWriteValueToStream(sink,
                 new ZRData
                 {
-                    type = info.type, baseAccess = $"{info.access}[i]", insideConfigStorage = listType.IsConfigStorage()
+                    type = info.type,
+                    baseAccess = $"{info.access}[i]",
+                    insideConfigStorage = listType.IsConfigStorage(),
+                    canBeNull = !info.type.IsValueType
                 }.SetupIsCell(), stream);
-            sink.indent--;
-            sink.content("}");
             sink.indent--;
             sink.content($"}}");
         }
@@ -110,20 +104,15 @@ namespace ZergRush.CodeGen
             WriteToStreamStatement(sink,
                 new ZRData { type = keyType, baseAccess = $"item.Key", insideConfigStorage = configStorage }.SetupIsCell(), stream);
 
-            if (!valType.IsValueType)
-            {
-                sink.content($"{stream}.Write(item.Value != null);");
-                sink.content("if (item.Value != null)");
-            }
-
-            sink.content("{");
-            sink.indent++;
-            WriteToStreamStatement(sink,
-                new ZRData { type = valType, baseAccess = $"item.Value", insideConfigStorage = configStorage }.SetupIsCell(),
+            GenWriteValueToStream(sink,
+                new ZRData
+                {
+                    type = valType,
+                    baseAccess = $"item.Value",
+                    insideConfigStorage = configStorage,
+                    canBeNull = !valType.IsValueType
+                }.SetupIsCell(),
                 stream);
-
-            sink.indent--;
-            sink.content("}");
             sink.indent--;
             sink.content($"}}");
         }
@@ -135,17 +124,12 @@ namespace ZergRush.CodeGen
             sink.content($"{{");
             sink.indent++;
 
-            if (!info.type.IsValueType)
+            GenWriteValueToStream(sink, new ZRData
             {
-                sink.content($"{stream}.Write({info.access}[i] != null);");
-                sink.content($"if ({info.access}[i] != null)");
-            }
-
-            sink.content("{");
-            sink.indent++;
-            WriteToStreamStatement(sink, new ZRData { type = info.type, baseAccess = $"{info.access}[i]" }.SetupIsCell(), stream);
-            sink.indent--;
-            sink.content("}");
+                type = info.type,
+                baseAccess = $"{info.access}[i]",
+                canBeNull = !info.type.IsValueType
+            }.SetupIsCell(), stream);
             sink.indent--;
             sink.content($"}}");
         }
@@ -274,7 +258,10 @@ namespace ZergRush.CodeGen
 
             sink.content($"var size = {stream}.ReadInt32();");
             sink.SinkCountCheck("size");
-            sink.content($"{path}.Capacity = size;");
+            if (!listType.IsReactiveCollection())
+            {
+                sink.content($"{path}.Capacity = size;");
+            }
             sink.content($"for (int i = 0; i < size; i++)");
             sink.content($"{{");
             sink.indent++;

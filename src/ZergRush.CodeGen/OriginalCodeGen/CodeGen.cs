@@ -245,20 +245,21 @@ namespace ZergRush.CodeGen
         public static void RegisterTypeContext(Type type, Type requester)
         {
             if (contextsForTypes.ContainsKey(type)) return;
-            GenTargetFolder genTargetFolder = type.GetAttribute<GenTargetFolder>(f => f.inheritable);
+            var genTargetFolder = type.TargetFolder;
             if (genTargetFolder != null)
             {
-                if (genTargetFolder.folder == null)
+                if (genTargetFolder.Folder == null)
                 {
                     contextsForTypes[type] = defaultContext;
+                    return;
                 }
 
-                if (contexts.TryGetValue(genTargetFolder.folder, out var c) == false)
+                if (contexts.TryGetValue(genTargetFolder.Folder, out var c) == false)
                 {
-                    var generatorContext = new GeneratorContext(new GenInfo { sharpGenPath = genTargetFolder.folder });
-                    generatorContext.priority = genTargetFolder.priority;
-                    contexts[genTargetFolder.folder] = generatorContext;
-                    customContextFolders.Add(genTargetFolder.folder);
+                    var generatorContext = new GeneratorContext(new GenInfo { sharpGenPath = genTargetFolder.Folder });
+                    generatorContext.priority = genTargetFolder.Priority;
+                    contexts[genTargetFolder.Folder] = generatorContext;
+                    customContextFolders.Add(genTargetFolder.Folder);
                     c = generatorContext;
                 }
 

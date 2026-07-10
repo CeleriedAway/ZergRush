@@ -21,6 +21,20 @@ namespace ZergRush.CodeGen
         {
             var t = info.type;
             var name = info.access;
+
+            if (info.isValueWrapper == ValueVrapperType.Nullable)
+            {
+                var valueInfo = info.Copy();
+                valueInfo.baseAccess = name + ".Value";
+                valueInfo.accessPrefix = "";
+                valueInfo.realType = valueInfo.type;
+                valueInfo.WrapperTypes.Clear();
+                valueInfo.valueTransformer = access => access;
+                valueInfo.isValueWrapper = ValueVrapperType.None;
+                valueInfo.canBeNull = false;
+                return $"{name}.HasValue ? {HashExpr(valueInfo)} : {RandomHash()}";
+            }
+
             if (t.IsArray)
             {
             }
@@ -36,9 +50,13 @@ namespace ZergRush.CodeGen
             else if (t.IsPrimitive || t.IsEnum) return $"({HashType}){name}";
 
             string calcHash = $"{name}.CalculateHash({HelperName})";
-            if (t == typeof(string) || t == typeof(DateTime))
+            if (t == typeof(string))
             {
-                calcHash = $"({HashTypeName}){name}.CalculateHash()";
+                calcHash = $"CodeGenImplTools.CalculateStringHash({name})";
+            }
+            else if (t == typeof(DateTime))
+            {
+                calcHash = $"({HashTypeName}){name}.Ticks";
             }
             else if (t.IsLoadableConfig())
             {

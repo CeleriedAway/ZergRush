@@ -21,9 +21,43 @@ namespace ZergRush.CodeGen
             bool useTempVarThenAssign = false)
         {
             if (info.realType == null) info.SetupIsCell();
+
+            if (info.isValueWrapper == ValueVrapperType.Nullable)
+            {
+                var nullableAccess = info.access;
+                var nullableTempVar = "__" + info.baseAccess.Replace('.', '_').Replace('-', '_').Replace(' ', '_')
+                    .Replace('[', '_').Replace(']', '_');
+                sink.content($"if ({isNullReader}) {{");
+                sink.indent++;
+                sink.content($"{nullableAccess} = null;");
+                sink.indent--;
+                sink.content("}");
+                sink.content("else {");
+                sink.indent++;
+                sink.content($"var {nullableTempVar} = {nullableAccess}.GetValueOrDefault();");
+
+                var valueInfo = info.Copy();
+                valueInfo.baseAccess = nullableTempVar;
+                valueInfo.accessPrefix = "";
+                valueInfo.realType = valueInfo.type;
+                valueInfo.WrapperTypes.Clear();
+                valueInfo.valueTransformer = access => access;
+                valueInfo.isValueWrapper = ValueVrapperType.None;
+                valueInfo.canBeNull = false;
+                valueInfo.sureIsNull = false;
+
+                GeneralReadFrom(sink, valueInfo, baseReadCall, "false", classIdReader, directReader,
+                    refInst, pooled, configIdReader, false, false);
+                sink.content($"{nullableAccess} = {nullableTempVar};");
+                sink.indent--;
+                sink.content("}");
+                return;
+            }
             
             var t = info.type;
-            var canBeNull = info.canBeNull && (!t.IsValueType) || info.isValueWrapper == ValueVrapperType.Nullable;
+            var canBeNull = info.canBeNull && !t.IsValueType ||
+                            info.isValueWrapper == ValueVrapperType.Nullable ||
+                            t.IsNullable();
 
             var originalInfo = info;
             string tempVar = null; 
@@ -211,6 +245,31 @@ namespace ZergRush.CodeGen
                 }
                 return;
             }
+            else if (info.isValueWrapper == ValueVrapperType.Nullable)
+            {
+                var nullableAccess = info.access;
+                var tempVar = "__" + info.baseAccess.Replace('.', '_').Replace('-', '_').Replace(' ', '_')
+                    .Replace('[', '_').Replace(']', '_');
+                sink.content($"if ({other} == null) {{");
+                sink.indent++;
+                sink.content($"{nullableAccess} = null;");
+                sink.indent--;
+                sink.content("}");
+                sink.content("else {");
+                sink.indent++;
+                sink.content($"var {tempVar} = {nullableAccess}.GetValueOrDefault();");
+                GenUpdateValueFromInstance(sink, new ZRData
+                {
+                    type = info.type,
+                    realType = info.type,
+                    carrierType = info.carrierType,
+                    baseAccess = tempVar
+                }, $"{other}.Value", pooled, supportMultiRef: supportMultiRef);
+                sink.content($"{nullableAccess} = {tempVar};");
+                sink.indent--;
+                sink.content("}");
+                return;
+            }
             else if (t.IsArray)
             {
                 baseReadCall = (s, info1) =>
@@ -334,6 +393,75 @@ namespace ZergRush.CodeGen
             sink.content($"}}");
         }
 
+        public static void SinkUpdateFromDictionary(MethodBuilder sink, Type keyType, Type valueType,
+            string accessPrefix, string other, bool pooled)
+        {
+            // models are in different data trees and if reference is equials it means a really bad alert situation
+            // so basically we do not check those
+            // sink.content($"if (ReferenceEquals({accessPrefix}, {other})) return;");
+            sink.content($"if ({other}.Count == 0) {{ {accessPrefix}.Clear(); return; }}");
+
+            sink.content($"{keyType.RealName(true)}[] __keysToRemove = null;");
+            sink.content("int __removeCount = 0;");
+            sink.content($"foreach (var __pair in {accessPrefix})");
+            sink.content("{");
+            sink.indent++;
+            sink.content($"if (!{other}.ContainsKey(__pair.Key))");
+            sink.content("{");
+            sink.indent++;
+            sink.content($"__keysToRemove ??= new {keyType.RealName(true)}[{accessPrefix}.Count];");
+            sink.content("__keysToRemove[__removeCount++] = __pair.Key;");
+            sink.indent--;
+            sink.content("}");
+            sink.indent--;
+            sink.content("}");
+            sink.content("for (int __i = 0; __i < __removeCount; ++__i)");
+            sink.content("{");
+            sink.indent++;
+            sink.content($"{accessPrefix}.Remove(__keysToRemove[__i]);");
+            sink.indent--;
+            sink.content("}");
+
+            sink.content($"foreach (var __pair in {other})");
+            sink.content("{");
+            sink.indent++;
+
+            if (valueType.IsImmutableData())
+            {
+                sink.content($"{accessPrefix}[__pair.Key] = __pair.Value;");
+            }
+            else
+            {
+                var valueData = new ZRData
+                {
+                    type = valueType,
+                    baseAccess = "__value",
+                    canBeNull = !valueType.IsValueType
+                }.SetupIsCell();
+                var sourceValue = valueData.valueTransformer("__pair.Value");
+
+                sink.content($"if ({accessPrefix}.TryGetValue(__pair.Key, out var __value))");
+                sink.content("{");
+                sink.indent++;
+                GenUpdateValueFromInstance(sink, valueData, sourceValue, pooled,
+                    needTempVarThenAssign: valueType.IsValueType);
+                sink.indent--;
+                sink.content("}");
+                sink.content("else");
+                sink.content("{");
+                sink.indent++;
+                var newValueData = valueData.Copy();
+                newValueData.sureIsNull = true;
+                GenUpdateValueFromInstance(sink, newValueData, sourceValue, pooled);
+                sink.indent--;
+                sink.content("}");
+                sink.content($"{accessPrefix}[__pair.Key] = __value;");
+            }
+
+            sink.indent--;
+            sink.content("}");
+        }
+
         public static void GenUpdateFrom(Type type, bool pooled, string funcPrefix = "")
         {
             const string instanceCastedName = "otherConcrete";
@@ -377,7 +505,9 @@ namespace ZergRush.CodeGen
             }
             else if (type.IsDictionary())
             {
-                Error($"Update from for dictionary ({type}) is not supported");
+                var genericArguments = type.GenericTypeArguments;
+                SinkUpdateFromDictionary(sink, genericArguments[0], genericArguments[1],
+                    type.AccessPrefixInGeneratedFunction(), otherName, pooled);
             }
             else
             {

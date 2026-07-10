@@ -36,12 +36,13 @@ namespace ZergRush.CodeGen
             if (info.realType == null) info.SetupIsCell();
             
             var t = info.type;
-            bool isNullable = false;
+            bool isNullable = info.isValueWrapper == ValueVrapperType.Nullable;
             if (t.IsNullable())
             {
                 isNullable = true;
                 t = t.NullableUnderlyingType();
             }
+            var valueAccess = info.access + (isNullable ? ".Value" : "");
 
             if (t.IsConfig() == false) RequestGen(t, sink.classType, GenTaskFlags.JsonSerialization);
 
@@ -62,48 +63,48 @@ namespace ZergRush.CodeGen
 
             if (t.IsFix64())
             {
-                sink.content($"writer.WriteValue({info.access}{(isNullable ? ".Value" : "")}.RawValue);");
+                sink.content($"writer.WriteValue({valueAccess}.RawValue);");
                 //sink.content($"writer.WriteFixedPreview({info.access}, \"{info.access}\");");
             }
             else if (t == typeof(DateTime))
             {
-                sink.content($"writer.WriteValue({info.access}.Ticks);");
+                sink.content($"writer.WriteValue({valueAccess}.Ticks);");
             }
             else if (t == typeof(Guid))
             {
-                sink.content($"writer.WriteValue({info.access}.ToString());");
+                sink.content($"writer.WriteValue({valueAccess}.ToString());");
             }
             else if (t == typeof(byte[]))
             {
-                sink.content($"writer.WriteValue({info.access}.ToBase64());");
+                sink.content($"writer.WriteValue({valueAccess}.ToBase64());");
             }
             else if (t.IsConfig() && info.insideConfigStorage == false)
             {
-                sink.content($"writer.WriteValue({info.access}.{UIdFuncName}().ToString());");
+                sink.content($"writer.WriteValue({valueAccess}.{UIdFuncName}().ToString());");
             }
             else if (t == typeof(ulong))
             {
-                sink.content($"writer.WriteValue({info.access}.ToString());");
+                sink.content($"writer.WriteValue({valueAccess}.ToString());");
             }
             else if (t == typeof(Guid))
             {
-                sink.content($"writer.WriteValue({info.access}.ToString());");
+                sink.content($"writer.WriteValue({valueAccess}.ToString());");
             }
             else if (t.IsPrimitive || t.IsString())
             {
-                sink.content($"writer.WriteValue({info.access}{(isNullable ? ".Value" : "")});");
+                sink.content($"writer.WriteValue({valueAccess});");
             }
             else if (t.IsEnum)
             {
-                sink.content($"writer.WriteValue({info.access}.ToString());");
+                sink.content($"writer.WriteValue({valueAccess}.ToString());");
             }
             else if (t.IsMultipleReference())
             {
-                sink.content($"writer.WriteObjectWithRef({info.access});");
+                sink.content($"writer.WriteObjectWithRef({valueAccess});");
             }
             else
             {
-                sink.content($"{info.access}.{JsonWriteFuncName}(writer);");
+                sink.content($"{valueAccess}.{JsonWriteFuncName}(writer);");
             }
 
             if (info.canBeNull || isNullable)
@@ -175,7 +176,7 @@ namespace ZergRush.CodeGen
             if (t == typeof(DateTime))
                 return $"new DateTime((Int64)reader.Value)";
             if (t.IsEnum)
-                return $"((string)reader.Value).ParseEnum<{t.RealName(true)}>()";
+                return $"System.Enum.Parse<{t.RealName(true)}>((string)reader.Value)";
             if (t.Name == "Fix64")
                 return $"Fix64.FromRaw((Int64)reader.Value)";
             if (t == typeof(bool))

@@ -112,7 +112,12 @@ namespace ZergRush.CodeGen
 
         public static bool IsList(this ZRType? type)
         {
-            return type?.CommonConstruct == ZRCommonConstruct.List;
+            return type?.CommonConstruct == ZRCommonConstruct.List || type.IsReactiveCollection();
+        }
+
+        public static bool IsReactiveCollection(this ZRType? type)
+        {
+            return type?.Name.StartsWith("ReactiveCollection", StringComparison.Ordinal) == true;
         }
 
         public static bool IsDictionary(this ZRType? type)

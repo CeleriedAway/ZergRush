@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <GeneratedCodeDir>$(MSBuildProjectDirectory)\Generated</GeneratedCodeDir>
+    <SampleFile>$(MSBuildProjectDirectory)\DictionaryUpdateFromSample.cs</SampleFile>
+    <DefaultItemExcludes>$(DefaultItemExcludes);$(GeneratedCodeDir)\**</DefaultItemExcludes>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\ZergRush.CodeGen.Abstractions\ZergRush.CodeGen.Abstractions.csproj" />
+    <ProjectReference Include="..\..\src\ZergRush.CodeGen.Cli\ZergRush.CodeGen.Cli.csproj" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <Target Name="GenerateDictionarySamples" BeforeTargets="CoreCompile" DependsOnTargets="ResolveProjectReferences">
+    <RemoveDir Directories="$(GeneratedCodeDir)" />
+    <MakeDir Directories="$(GeneratedCodeDir)" />
+    <Exec Command="dotnet &quot;$(MSBuildProjectDirectory)\..\..\src\ZergRush.CodeGen.Cli\bin\$(Configuration)\net10.0\ZergRush.CodeGen.Cli.dll&quot; --generate &quot;$(GeneratedCodeDir)&quot; &quot;$(SampleFile)&quot;" />
+    <ItemGroup>
+      <Compile Include="$(GeneratedCodeDir)\**\*.cs" />
+    </ItemGroup>
+  </Target>
+</Project>

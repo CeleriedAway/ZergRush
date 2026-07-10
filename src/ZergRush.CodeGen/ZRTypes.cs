@@ -530,7 +530,7 @@ public class ZRType
     {
         if (type == typeof(void)) return ZRTypeKind.Void;
         if (type.IsEnum) return ZRTypeKind.Enum;
-        if (type.IsPrimitive || type == typeof(string) || type == typeof(decimal)) return ZRTypeKind.Primitive;
+        if (type.IsPrimitive || type == typeof(decimal)) return ZRTypeKind.Primitive;
         if (type.IsValueType) return ZRTypeKind.Struct;
         if (type.IsInterface) return ZRTypeKind.Interface;
         if (type.IsClass) return ZRTypeKind.Class;
@@ -677,7 +677,8 @@ public class ZRMember
             DefaultValue = DefaultValue,
             ArrayLengthConstraint = ArrayLengthConstraint,
             IsReadOnly = IsReadOnly,
-            IsPrivate = Visibility == ZRMemberVisibility.Private,
+            IsPrivate = Visibility is ZRMemberVisibility.Private or
+                ZRMemberVisibility.Protected or ZRMemberVisibility.PrivateProtected,
             Source = Source,
             ValueTransformer = BuildDataAccess
         };
@@ -840,16 +841,28 @@ public class ZRData
     public ZRData SetupIsCell()
     {
         RealType ??= DeclaredType ?? Type;
+        ValueTransformer = access =>
+        {
+            var result = access;
+            foreach (var wrapperType in WrapperTypes)
+            {
+                if (wrapperType is FieldWrapperType.Cell or FieldWrapperType.LivableSlot)
+                {
+                    result += ".value";
+                }
+            }
+
+            return result;
+        };
+
         foreach (var wrapperType in WrapperTypes)
         {
             switch (wrapperType)
             {
                 case FieldWrapperType.Cell:
-                    ValueTransformer = access => access + ".value";
                     ValueWrapper = CodeGen.ValueVrapperType.Cell;
                     break;
                 case FieldWrapperType.LivableSlot:
-                    ValueTransformer = access => access + ".value";
                     ValueWrapper = CodeGen.ValueVrapperType.LivableSlot;
                     CanBeNull = true;
                     InsideLivableContainer = true;
