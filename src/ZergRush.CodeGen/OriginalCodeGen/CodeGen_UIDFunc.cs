@@ -50,7 +50,6 @@ namespace ZergRush.CodeGen
                     else
                     {
                         var start = RandomHash().ToString();
-                        //var start = type.NeedsPolymorphRegistration() ? $"{PolymorphClassIdFunc}()" : RandomHash().ToString();
                         sink.content($"{HashType} hash = {start};");
                     }
                 },

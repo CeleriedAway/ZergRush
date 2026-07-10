@@ -306,8 +306,7 @@ namespace ZergRush.CodeGen
 
             typeGenRequested.Clear();
             tasks.Clear();
-            polymorphicMap.Clear();
-            baseClassMap.Clear();
+            genericInstances.Clear();
             extensionsSignaturesGenerated.Clear();
             classes.Clear();
             contexts.Clear();
@@ -321,11 +320,6 @@ namespace ZergRush.CodeGen
             defaultContext = new GeneratorContext(new GenInfo { sharpGenPath = defaultPath });
             contexts[defaultPath] = defaultContext;
             customContextFolders.Add(defaultPath);
-
-            foreach (var valueTuple in priorityList)
-            {
-                RegisterPolymorph(valueTuple.t);
-            }
 
             foreach (var typeAndPriority in priorityList)
             {
@@ -385,7 +379,6 @@ namespace ZergRush.CodeGen
             AddMultiRefInterfaces();
             GenerateFieldWrappers();
             GeneratePolimorphismSupport();
-            GeneratePolymorphicRootSupport();
             if (hasErrors)
             {
                 LogSink.errLog("error occured");
@@ -406,12 +399,6 @@ namespace ZergRush.CodeGen
                     file.Delete();
                 }
             });
-
-            foreach (var typeEnumTable in finalTypeEnum)
-            {
-                EnumTable.SaveEnumCache(typeEnumTable.Key.TypeTableFileName(),
-                    new EnumTable { records = typeEnumTable.Value });
-            }
 
             foreach (var context in contexts.Values)
             {

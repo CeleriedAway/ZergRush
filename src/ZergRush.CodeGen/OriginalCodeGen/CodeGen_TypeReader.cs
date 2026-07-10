@@ -176,8 +176,6 @@ namespace ZergRush.CodeGen
 
                 flags &= ~interfaceSupportFlags;
                 if (flags == 0) return;
-
-                RegisterPolymorph(t);
             }
             else if (t.IsAbstract)
             {

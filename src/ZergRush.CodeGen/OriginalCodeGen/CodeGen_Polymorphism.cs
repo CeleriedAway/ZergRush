@@ -29,57 +29,15 @@ namespace ZergRush.CodeGen
         const string TypeEnumName = "Types";
 
         static Dictionary<Type, HashSet<Type>> genericInstances = new Dictionary<Type, HashSet<Type>>();
-        static Dictionary<Type, HashSet<Type>> polymorphicMap = new Dictionary<Type, HashSet<Type>>();
-        static Dictionary<Type, Type> baseClassMap = new Dictionary<Type, Type>();
-        static HashSet<Type> normalPolymorphicConstructors = new HashSet<Type>();
-
-        static Dictionary<Type, Dictionary<string, int>> finalTypeEnum = new Dictionary<Type, Dictionary<string, int>>();
 
         public static string PolymorphicRootTypeEnumName(this Type t)
         {
             return t.UniqueName(false) + "Type";
         }
 
-        public static bool NeedsPolymorphRegistration(this Type t)
-        {
-            return (t.ReadGenFlags() & GenTaskFlags.PolymorphicConstruction) != 0;
-        }
-
         public static bool NeedsClassicPolymorphConstruction(this Type t)
         {
             return (t.ReadGenFlags() & GenTaskFlags.PolymorphicConstruction) != 0;
-        }
-
-        static void RegisterPolymorph(Type t)
-        {
-            if (t.NeedsPolymorphRegistration() == false) return;
-
-            if ((t.ReadGenFlags() & GenTaskFlags.PolymorphicConstruction) != 0)
-            {
-                normalPolymorphicConstructors.Add(t);
-            }
-
-            Type lastValidParent = null;
-            var parent = t.BaseType;
-            while (parent != null)
-            {
-                if (parent.NeedsPolymorphRegistration())
-                {
-                    lastValidParent = parent;
-                }
-
-                parent = parent.BaseType;
-            }
-
-            if (lastValidParent != null)
-            {
-                polymorphicMap.TryGetOrNew(lastValidParent).Add(t);
-                baseClassMap[t] = lastValidParent;
-            }
-            else if (t.IsClass)
-            {
-                polymorphicMap.TryGetOrNew(t);
-            }
         }
 
         public static bool CanBeAncestor(this Type t)
@@ -89,86 +47,55 @@ namespace ZergRush.CodeGen
         }
 
 
-        static void GeneratePolymorphicRootSupport()
+        static IEnumerable<Type> PolymorphicGenerationCandidates()
         {
-            foreach (var node in PolymorphicConstructionRoots())
-            {
-                if (!finalTypeEnum.TryGetValue(node, out var typeEnum)) continue;
-
-                var types = PolymorphicConstructionTypes(node)
-                    .Where(t => t.IsValidType())
-                    .Where(t => t.IsAbstract == false)
-                    .Select(t => t.UniqueName(false))
-                    .Where(typeEnum.ContainsKey);
-                var nodeClass = GenClassSink(node);
-                var enumName = node.PolymorphicRootTypeEnumName();
-
-                var module = nodeClass.module;
-                var c = new GeneratorContext(new GenInfo {sharpGenPath = module.path});
-                contexts.Add(enumName, c);
-                module = c.createSharpCustomModule($"{enumName}", "enum");
-                module.content("");
-                if (!string.IsNullOrEmpty(nodeClass.namespaceName))
-                {
-                    module.content($"namespace {nodeClass.namespaceName} {{");
-                    module.indent++;
-                }
-
-                EnumTable.PrintEnum(module, enumName, types, type => typeEnum[type]);
-                if (!string.IsNullOrEmpty(nodeClass.namespaceName))
-                {
-                    module.indent--;
-                    module.content($"}}");
-                }
-
-                module.content("");
-            }
-
-            GeneratePolymorphicCreatorFuncs();
-        }
-
-        static void GeneratePolymorphicCreatorFuncs()
-        {
-            foreach (var node in PolymorphicConstructionRoots())
-            {
-                if (!finalTypeEnum.ContainsKey(node)) continue;
-
-                var nodeClass = GenClassSink(node);
-                var enumName = node.PolymorphicRootTypeEnumName();
-
-                var creatorFunc = nodeClass.Method(PolymorphInstanceFuncName, node,
-                    MethodType.StaticFunction, node,
-                    $"{enumName} {CodeGenImplTools.ClassIdName}", "", "");
-                creatorFunc.content($"return {node.NewPolymorphicFromClassIdExpression(false)};");
-                nodeClass.content(
-                    $"public {node.PolymorphicRootTypeEnumName()} type => ({node.PolymorphicRootTypeEnumName()}) GetClassId();");
-            }
+            return allTypesInAssemblies
+                .Concat(typeGenRequested.Keys)
+                .Concat(genericInstances.Values.SelectMany(types => types))
+                .Where(t => t != null)
+                .Distinct();
         }
 
         static IEnumerable<Type> PolymorphicConstructionRoots()
         {
-            return allTypesInAssemblies
-                .Where(t => t.PolymorphicConstructionRoot() == t)
+            return PolymorphicGenerationCandidates()
+                .Select(t => t.PolymorphicConstructionRoot())
+                .Where(t => t != null)
+                .Distinct()
                 .OrderBy(t => t.Namespace)
                 .ThenBy(t => t.Name);
         }
 
         static IEnumerable<Type> PolymorphicConstructionTypes(Type root)
         {
-            return allTypesInAssemblies.Where(t => t.PolymorphicConstructionRoot() == root);
+            return PolymorphicGenerationCandidates()
+                .Where(t => t.PolymorphicConstructionRoot() == root)
+                .OrderBy(t => t.Namespace)
+                .ThenBy(t => t.Name);
         }
 
         static Type PolymorphicConstructionRoot(this Type t)
         {
-            return new[] { t }
-                .Concat(t.Parents())
-                .Where(type => (type.Flags & GenTaskFlags.PolymorphicConstruction) != 0)
-                .LastOrDefault();
+            Type root = null;
+            for (var current = t; current != null; current = current.BaseType)
+            {
+                if ((current.Flags & GenTaskFlags.PolymorphicConstruction) != 0)
+                {
+                    root = current;
+                }
+            }
+
+            return root;
         }
 
         static bool IsPolymorphicConstructionRoot(this Type t)
         {
             return t.PolymorphicConstructionRoot() == t;
+        }
+
+        static Type PolymorphicConstructionRootOrSelf(this Type t)
+        {
+            return t.PolymorphicConstructionRoot() ?? t;
         }
 
         static string NewPolymorphicFromClassIdExpression(this Type type, bool pooled)
@@ -231,13 +158,11 @@ namespace ZergRush.CodeGen
 
         static void GeneratePolimorphismSupport()
         {
-            foreach (var polymorphTask in polymorphicMap)
+            foreach (var baseClass in PolymorphicConstructionRoots())
             {
-                var baseClass = polymorphTask.Key;
-                var children = polymorphTask.Value;
                 var sink = GenClassSink(baseClass);
 
-                var typesToGenPolymorphMethods = new List<Type> {baseClass}.Concat(children).ToList();
+                var typesToGenPolymorphMethods = PolymorphicConstructionTypes(baseClass).ToList();
                 var typesThatCanBeConstructed = typesToGenPolymorphMethods.Where(t => t.IsValidType()).ToList();
 
                 var fileName = baseClass.TypeTableFileName();
@@ -246,7 +171,6 @@ namespace ZergRush.CodeGen
                 var validTypes = typesThatCanBeConstructed.Where(t => t.IsAbstract == false && t.IsValidType())
                     .ToList();
                 typeTable.UpdateWithNewTypes(validTypes.Select(t => t.UniqueName(false)));
-                finalTypeEnum[baseClass] = typeTable.records;
 
                 var finalTypeIndexedList = new List<Type>();
                 foreach (var type in validTypes)
@@ -268,6 +192,42 @@ namespace ZergRush.CodeGen
                     GenPolymorphicRootSetup(baseClass, sink, finalTypeIndexedList);
                     GenPolymorphMaps(baseClass, typesThatCanBeConstructed, typesToGenPolymorphMethods, sink);
                 }
+
+                var rootEnumName = baseClass.PolymorphicRootTypeEnumName();
+                var module = sink.module;
+                var c = new GeneratorContext(new GenInfo {sharpGenPath = module.path});
+                contexts.Add(rootEnumName, c);
+                module = c.createSharpCustomModule($"{rootEnumName}", "enum");
+                module.content("");
+                if (!string.IsNullOrEmpty(sink.namespaceName))
+                {
+                    module.content($"namespace {sink.namespaceName} {{");
+                    module.indent++;
+                }
+
+                EnumTable.PrintEnum(module, rootEnumName, validTypes.Select(t => t.UniqueName(false)),
+                    type => typeTable.records[type]);
+                if (!string.IsNullOrEmpty(sink.namespaceName))
+                {
+                    module.indent--;
+                    module.content($"}}");
+                }
+
+                module.content("");
+
+                var creatorFunc = sink.Method(PolymorphInstanceFuncName, baseClass,
+                    MethodType.StaticFunction, baseClass,
+                    $"{rootEnumName} {CodeGenImplTools.ClassIdName}", "", "");
+                creatorFunc.content($"return {baseClass.NewPolymorphicFromClassIdExpression(false)};");
+                sink.content(
+                    $"public {rootEnumName} type => ({rootEnumName}) GetClassId();");
+
+                var cacheDirectory = Path.GetDirectoryName(fileName);
+                if (!string.IsNullOrEmpty(cacheDirectory) && !Directory.Exists(cacheDirectory))
+                {
+                    Directory.CreateDirectory(cacheDirectory);
+                }
+                EnumTable.SaveEnumCache(fileName, typeTable);
             }
         }
 
