@@ -62,12 +62,12 @@ namespace ZergRush.CodeGen
                     }
                     else
                     {
-                        var staticTypeCreator = t.PolymorphicConstructionRootOrSelf().RealName(true);
+                        var staticTypeCreator = t.PolymorphicClassIdOwner().RealName(true);
                         if (t.IsGenericParameter)
                         {
                             if (t.GetGenericParameterConstraints().TryFind(par => !par.IsInterface, out var hardPar))
                             {
-                                staticTypeCreator = hardPar.PolymorphicConstructionRootOrSelf().RealName(true);
+                                staticTypeCreator = hardPar.PolymorphicClassIdOwner().RealName(true);
                             }
                             else
                             {

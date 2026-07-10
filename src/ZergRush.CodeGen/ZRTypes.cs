@@ -301,9 +301,54 @@ public class ZRType
 
     public bool MatchesSystemType(Type systemType)
     {
-        var zr = FromSystemType(systemType);
-        return string.Equals(ComparableFullName(this), ComparableFullName(zr), StringComparison.Ordinal) ||
-               string.Equals(this.RealName(), zr.RealName(), StringComparison.Ordinal);
+        if (systemType.IsArray)
+        {
+            return IsArray && GetArrayRank() == systemType.GetArrayRank() &&
+                   GetElementType()?.MatchesSystemType(systemType.GetElementType()!) == true;
+        }
+
+        var nullableType = Nullable.GetUnderlyingType(systemType);
+        if (nullableType != null)
+        {
+            return CommonConstruct == ZRCommonConstruct.Nullable &&
+                   (CommonConstructArgType ?? GenericArguments.FirstOrDefault())?.MatchesSystemType(nullableType) == true;
+        }
+
+        var knownName = KnownCSharpName(systemType);
+        if (knownName != null &&
+            (string.Equals(FullName, knownName, StringComparison.Ordinal) ||
+             string.Equals(WrittenName, knownName, StringComparison.Ordinal)))
+        {
+            return true;
+        }
+
+        if (systemType.IsGenericType)
+        {
+            var definition = GenericDefinition ?? this;
+            var systemDefinition = systemType.GetGenericTypeDefinition();
+            if (!MatchesSystemTypeIdentity(definition, systemDefinition)) return false;
+
+            var arguments = GetGenericArguments();
+            var systemArguments = systemType.GetGenericArguments();
+            return arguments.Length == systemArguments.Length &&
+                   arguments.Zip(systemArguments).All(pair => pair.First.MatchesSystemType(pair.Second));
+        }
+
+        return MatchesSystemTypeIdentity(this, systemType);
+    }
+
+    static bool MatchesSystemTypeIdentity(ZRType type, Type systemType)
+    {
+        var systemFullName = systemType.FullName ?? systemType.Name;
+        if (string.Equals(type.FullName, systemFullName, StringComparison.Ordinal) ||
+            string.Equals(type.WrittenName, systemFullName, StringComparison.Ordinal))
+        {
+            return true;
+        }
+
+        return string.Equals(type.Namespace, systemType.Namespace ?? "", StringComparison.Ordinal) &&
+               (string.Equals(type.Name, systemType.Name, StringComparison.Ordinal) ||
+                string.Equals(type.MetadataName, systemType.Name, StringComparison.Ordinal));
     }
 
     public static bool operator ==(ZRType? left, ZRType? right)
@@ -382,17 +427,37 @@ public class ZRType
                    .FirstOrDefault(type => type != null);
     }
 
+    static readonly Dictionary<Type, ZRType> systemTypeCache = new();
+
     public static ZRType FromSystemType(Type type)
+    {
+        lock (systemTypeCache)
+        {
+            if (systemTypeCache.TryGetValue(type, out var cached)) return cached;
+            return CreateSystemType(type);
+        }
+    }
+
+    static ZRType CreateSystemType(Type type)
     {
         if (type == typeof(void))
         {
-            return new ZRType { Name = "Void", FullName = "void", MetadataName = "Void", WrittenName = "void", Kind = ZRTypeKind.Void };
+            var voidType = new ZRType
+            {
+                Name = "Void",
+                FullName = "void",
+                MetadataName = "Void",
+                WrittenName = "void",
+                Kind = ZRTypeKind.Void
+            };
+            systemTypeCache[type] = voidType;
+            return voidType;
         }
 
         if (type.IsArray)
         {
             var element = FromSystemType(type.GetElementType()!);
-            return new ZRType
+            var arrayType = new ZRType
             {
                 Name = element.Name + "[]",
                 FullName = element.FullName + "[]",
@@ -404,13 +469,15 @@ public class ZRType
                 CommonConstructArgType = element,
                 ArrayRank = type.GetArrayRank()
             };
+            systemTypeCache[type] = arrayType;
+            return arrayType;
         }
 
         var nullable = Nullable.GetUnderlyingType(type);
         if (nullable != null)
         {
             var arg = FromSystemType(nullable);
-            return new ZRType
+            var nullableType = new ZRType
             {
                 Name = "Nullable`1",
                 Namespace = "System",
@@ -422,6 +489,8 @@ public class ZRType
                 CommonConstructArgType = arg,
                 GenericArguments = { arg }
             };
+            systemTypeCache[type] = nullableType;
+            return nullableType;
         }
 
         var result = new ZRType
@@ -437,6 +506,7 @@ public class ZRType
             HasDeclaredParameterlessConstructor = type.GetConstructor(Type.EmptyTypes) != null,
             HasDeclaredConstructors = type.GetConstructors().Length > 0
         };
+        systemTypeCache[type] = result;
 
         if (type.IsGenericType)
         {

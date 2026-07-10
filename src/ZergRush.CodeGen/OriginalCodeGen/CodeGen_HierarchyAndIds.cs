@@ -115,7 +115,7 @@ namespace ZergRush.CodeGen
                         var constructFull = GenClassSink(rootType).Method($"CreatePolymorphic{type.UniqueName(false)}", 
                             rootType, MethodType.Instance, type, sig, "", "");
                         constructFull.indent++;
-                        constructFull.content($"var inst = {type.NewPolymorphicFromClassIdExpression(false)};");
+                        constructFull.content($"var inst = {type.NewPolymorphicFromClassIdExpression()};");
                         fillCreateWithLivableSetup(constructFull);                       
                         constructFull.content($"inst.{methodInfo.Name}({call});");
                         constructFull.content($"return inst;");

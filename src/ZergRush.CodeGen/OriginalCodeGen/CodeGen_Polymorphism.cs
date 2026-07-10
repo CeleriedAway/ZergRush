@@ -35,51 +35,20 @@ namespace ZergRush.CodeGen
             return t.UniqueName(false) + "Type";
         }
 
-        public static bool NeedsClassicPolymorphConstruction(this Type t)
-        {
-            return (t.ReadGenFlags() & GenTaskFlags.PolymorphicConstruction) != 0;
-        }
-
         public static bool CanBeAncestor(this Type t)
         {
-            if (t.IsSealed) return false;
-            return t.ChildTypes.Count > 0;
-        }
-
-
-        static IEnumerable<Type> PolymorphicGenerationCandidates()
-        {
-            return allTypesInAssemblies
-                .Concat(typeGenRequested.Keys)
-                .Concat(genericInstances.Values.SelectMany(types => types))
-                .Where(t => t != null)
-                .Distinct();
-        }
-
-        static IEnumerable<Type> PolymorphicConstructionRoots()
-        {
-            return PolymorphicGenerationCandidates()
-                .Select(t => t.PolymorphicConstructionRoot())
-                .Where(t => t != null)
-                .Distinct()
-                .OrderBy(t => t.Namespace)
-                .ThenBy(t => t.Name);
-        }
-
-        static IEnumerable<Type> PolymorphicConstructionTypes(Type root)
-        {
-            return PolymorphicGenerationCandidates()
-                .Where(t => t.PolymorphicConstructionRoot() == root)
-                .OrderBy(t => t.Namespace)
-                .ThenBy(t => t.Name);
+            return !t.IsSealed && t.ChildTypes.Count > 0 && t.PolymorphicConstructionRoot() != null;
         }
 
         static Type PolymorphicConstructionRoot(this Type t)
         {
+            const GenTaskFlags flag = GenTaskFlags.PolymorphicConstruction;
+            if ((t.ReadGenFlags() & flag) == 0) return null;
+
             Type root = null;
             for (var current = t; current != null; current = current.BaseType)
             {
-                if ((current.Flags & GenTaskFlags.PolymorphicConstruction) != 0)
+                if ((current.ReadGenFlags() & flag) != 0 && (current.Flags & flag) != 0)
                 {
                     root = current;
                 }
@@ -93,12 +62,12 @@ namespace ZergRush.CodeGen
             return t.PolymorphicConstructionRoot() == t;
         }
 
-        static Type PolymorphicConstructionRootOrSelf(this Type t)
+        static Type PolymorphicClassIdOwner(this Type t)
         {
             return t.PolymorphicConstructionRoot() ?? t;
         }
 
-        static string NewPolymorphicFromClassIdExpression(this Type type, bool pooled)
+        static string NewPolymorphicFromClassIdExpression(this Type type)
         {
             return
                 $"({type.RealName(true)}){type.RealName(true)}.{PolymorphInstanceFuncName}(({PolymorphClassIdTypeName}) " +
@@ -156,48 +125,54 @@ namespace ZergRush.CodeGen
             });
         }
 
-        static void GeneratePolimorphismSupport()
+        static void GeneratePolymorphismSupport()
         {
-            foreach (var baseClass in PolymorphicConstructionRoots())
+            var groups = allTypesInAssemblies
+                .Concat(typeGenRequested.Keys)
+                .Concat(genericInstances.Values.SelectMany(types => types))
+                .Where(type => type != null)
+                .Distinct()
+                .Select(type => (type, root: type.PolymorphicConstructionRoot()))
+                .Where(pair => pair.root != null)
+                .GroupBy(pair => pair.root, pair => pair.type)
+                .OrderBy(group => group.Key.Namespace)
+                .ThenBy(group => group.Key.Name);
+
+            foreach (var group in groups)
             {
+                var baseClass = group.Key;
                 var sink = GenClassSink(baseClass);
-
-                var typesToGenPolymorphMethods = PolymorphicConstructionTypes(baseClass).ToList();
-                var typesThatCanBeConstructed = typesToGenPolymorphMethods.Where(t => t.IsValidType()).ToList();
-
-                var fileName = baseClass.TypeTableFileName();
-
-                var typeTable = EnumTable.Load(fileName);
-                var validTypes = typesThatCanBeConstructed.Where(t => t.IsAbstract == false && t.IsValidType())
+                var polymorphicTypes = new[] { baseClass }
+                    .Concat(group.Where(type => type != baseClass)
+                        .OrderBy(type => type.Namespace)
+                        .ThenBy(type => type.Name))
+                    .Distinct()
                     .ToList();
-                typeTable.UpdateWithNewTypes(validTypes.Select(t => t.UniqueName(false)));
+                var constructableTypes = polymorphicTypes.Where(type => type.IsValidType()).ToList();
+                var concreteTypes = constructableTypes.Where(type => !type.IsAbstract).ToList();
+                var typeNames = concreteTypes.Select(type => type.UniqueName(false)).ToList();
+                var fileName = baseClass.TypeTableFileName();
+                var typeTable = EnumTable.Load(fileName);
+                typeTable.UpdateWithNewTypes(typeNames);
 
-                var finalTypeIndexedList = new List<Type>();
-                foreach (var type in validTypes)
+                var indexedTypes = new List<Type>();
+                foreach (var type in concreteTypes)
                 {
                     var index = typeTable.records[type.UniqueName(false)];
-                    finalTypeIndexedList.EnsureSizeWithNulls(index + 1);
-                    finalTypeIndexedList[index] = type;
+                    indexedTypes.EnsureSizeWithNulls(index + 1);
+                    indexedTypes[index] = type;
                 }
 
-                EnumTable.PrintEnum(sink, TypeEnumName, typesThatCanBeConstructed.Where(t => t.IsValidType())
-                        .Where(t => t.IsAbstract == false).Select(t => t.UniqueName(false)),
-                    type => typeTable.records[type]);
-
-                GenClassIdFuncs(baseClass, typesToGenPolymorphMethods, sink);
-
-                if (baseClass.NeedsClassicPolymorphConstruction()
-                    || ((baseClass.ReadGenFlags() & (GenTaskFlags.UpdateFrom | GenTaskFlags.Serialization)) != 0))
-                {
-                    GenPolymorphicRootSetup(baseClass, sink, finalTypeIndexedList);
-                    GenPolymorphMaps(baseClass, typesThatCanBeConstructed, typesToGenPolymorphMethods, sink);
-                }
+                EnumTable.PrintEnum(sink, TypeEnumName, typeNames, type => typeTable.records[type]);
+                GenClassIdFuncs(baseClass, polymorphicTypes, sink);
+                GenPolymorphicRootSetup(baseClass, sink, indexedTypes);
+                GenPolymorphMaps(baseClass, polymorphicTypes, sink);
 
                 var rootEnumName = baseClass.PolymorphicRootTypeEnumName();
                 var module = sink.module;
                 var c = new GeneratorContext(new GenInfo {sharpGenPath = module.path});
-                contexts.Add(rootEnumName, c);
-                module = c.createSharpCustomModule($"{rootEnumName}", "enum");
+                contexts.Add($"polymorphic:{baseClass.FullName}", c);
+                module = c.createSharpCustomModule($"{baseClass.UniqueName()}Type", "enum");
                 module.content("");
                 if (!string.IsNullOrEmpty(sink.namespaceName))
                 {
@@ -205,7 +180,7 @@ namespace ZergRush.CodeGen
                     module.indent++;
                 }
 
-                EnumTable.PrintEnum(module, rootEnumName, validTypes.Select(t => t.UniqueName(false)),
+                EnumTable.PrintEnum(module, rootEnumName, typeNames,
                     type => typeTable.records[type]);
                 if (!string.IsNullOrEmpty(sink.namespaceName))
                 {
@@ -218,7 +193,7 @@ namespace ZergRush.CodeGen
                 var creatorFunc = sink.Method(PolymorphInstanceFuncName, baseClass,
                     MethodType.StaticFunction, baseClass,
                     $"{rootEnumName} {CodeGenImplTools.ClassIdName}", "", "");
-                creatorFunc.content($"return {baseClass.NewPolymorphicFromClassIdExpression(false)};");
+                creatorFunc.content($"return {baseClass.NewPolymorphicFromClassIdExpression()};");
                 sink.content(
                     $"public {rootEnumName} type => ({rootEnumName}) GetClassId();");
 
@@ -231,11 +206,11 @@ namespace ZergRush.CodeGen
             }
         }
 
-        static void GenClassIdFuncs(Type baseClass, List<Type> typesToGenPolymorphMethods, SharpClassBuilder sink)
+        static void GenClassIdFuncs(Type baseClass, List<Type> polymorphicTypes, SharpClassBuilder sink)
         {
-            foreach (var type in typesToGenPolymorphMethods)
+            foreach (var type in polymorphicTypes)
             {
-                if (type.ReadGenCustomFlags() == type.ReadGenFlags())
+                if ((type.ReadGenCustomFlags() & GenTaskFlags.PolymorphicConstruction) != 0)
                 {
                     continue;
                 }
@@ -306,13 +281,12 @@ namespace ZergRush.CodeGen
             sink.content($"}}");
         }
 
-        static void GenPolymorphMaps(Type baseClass, List<Type> typesThatCanBeConstructed,
-            List<Type> typesToGenPolymorphMethods, SharpClassBuilder sink)
+        static void GenPolymorphMaps(Type baseClass, List<Type> polymorphicTypes, SharpClassBuilder sink)
         {
             // Class id overloaded functions
-            foreach (var type in typesToGenPolymorphMethods)
+            foreach (var type in polymorphicTypes)
             {
-                if (type.ReadGenCustomFlags() == type.ReadGenFlags())
+                if ((type.ReadGenCustomFlags() & GenTaskFlags.PolymorphicConstruction) != 0)
                 {
                     continue;
                 }

@@ -378,7 +378,7 @@ namespace ZergRush.CodeGen
 
             AddMultiRefInterfaces();
             GenerateFieldWrappers();
-            GeneratePolimorphismSupport();
+            GeneratePolymorphismSupport();
             if (hasErrors)
             {
                 LogSink.errLog("error occured");

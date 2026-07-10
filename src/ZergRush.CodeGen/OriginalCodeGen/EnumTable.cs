@@ -89,7 +89,8 @@ namespace ZergRush.CodeGen
 
         public void UpdateWithNewTypes(IEnumerable<string> typesEnumerable)
         {
-            var types = new HashSet<string>(typesEnumerable);
+            var orderedTypes = typesEnumerable.Distinct().ToList();
+            var types = new HashSet<string>(orderedTypes);
             // remove old types
             var oldTypes = records.Keys.ToArray();
             foreach (var oldType in oldTypes)
@@ -115,7 +116,7 @@ namespace ZergRush.CodeGen
                 prevVal = slot;
             }
 
-            foreach (var type in types)
+            foreach (var type in orderedTypes)
             {
                 var name = type;
                 if (records.ContainsKey(name))
