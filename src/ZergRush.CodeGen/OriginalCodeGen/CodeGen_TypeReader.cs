@@ -8,14 +8,6 @@ namespace ZergRush.CodeGen
 {
     public static partial class CodeGen
     {
-        public enum ValueVrapperType
-        {
-            None,
-            Cell,
-            LivableSlot,
-            Nullable,
-        }
-
         static Mode GenMode(this Type t)
         {
             return t.IsControllable() ? Mode.PartialClass : Mode.ExtensionMethod;
@@ -210,65 +202,55 @@ namespace ZergRush.CodeGen
             return t;
         }
 
-        static Dictionary<Type, List<ZRData>> membersForCodegenCache = new Dictionary<Type, List<ZRData>>();
+        static Dictionary<Type, List<ZRMember>> membersForCodegenCache = new Dictionary<Type, List<ZRMember>>();
 
-        static Dictionary<Type, List<ZRData>> membersForCodegenInheretedCache = new Dictionary<Type, List<ZRData>>();
+        static Dictionary<Type, List<ZRMember>> membersForCodegenInheretedCache = new Dictionary<Type, List<ZRMember>>();
 
-        public static IEnumerable<ZRData> GetMembersForCodeGen(this Type type,
+        public static IEnumerable<ZRMember> GetMembersForCodeGen(this Type type,
             GenTaskFlags flagRestriction = GenTaskFlags.None, bool inheretedMembers = false, bool ignoreCheck = true)
         {
-            IEnumerable<ZRData> Filter(IEnumerable<ZRData> m)
+            IEnumerable<ZRMember> Filter(IEnumerable<ZRMember> members)
             {
-                return ignoreCheck ? m.Where(member => (member.ingoreFlags & flagRestriction) == 0) : m;
+                return ignoreCheck
+                    ? members.Where(member => (member.IgnoreFlags & flagRestriction) == 0)
+                    : members;
             }
 
             if (ignoreCheck && inheretedMembers &&
                 membersForCodegenInheretedCache.TryGetValue(type, out var resultCached))
-                return Filter(resultCached.Select(member => member.Copy()));
+                return Filter(resultCached);
             if (ignoreCheck && !inheretedMembers && membersForCodegenCache.TryGetValue(type, out resultCached))
-                return Filter(resultCached.Select(member => member.Copy()));
+                return Filter(resultCached);
 
-            var members = new List<ZRData>();
+            var members = new List<ZRMember>();
             if (inheretedMembers || !type.IsControllable())
             {
                 var baseType = type.BaseType;
                 if (baseType != null && baseType != typeof(object))
                 {
-                    members.AddRange(baseType.GetMembersForCodeGen(flagRestriction, true, ignoreCheck: false)
-                        .Select(member => member.Copy()));
+                    members.AddRange(baseType.GetMembersForCodeGen(flagRestriction, true, ignoreCheck: false));
                 }
             }
 
-            members.AddRange(type.DataMembers.Select(member => member.Copy()));
+            members.AddRange(type.Members);
 
             if (!type.IsControllable())
             {
-                members = members.Where(member => !member.isPrivate).ToList();
-            }
-
-            foreach (var member in members)
-            {
-                member.realType ??= member.DeclaredType ?? member.type;
-                member.insideConfigStorage = type.IsConfigStorage();
-
-                if (member.type.IsLivableSlot()) member.canBeNull = true;
-                if (member.type.IsNullable()) member.canBeNull = true;
-
-                member.SetupIsCell();
-
-                if (member.realType.IsLivableSlot()) member.insideLivableContainer = true;
-                if (type.IsTuple() && member.type.IsValueType == false) member.canBeNull = true;
+                members = members.Where(member => member.Visibility is not (
+                    ZRMemberVisibility.Private or
+                    ZRMemberVisibility.Protected or
+                    ZRMemberVisibility.PrivateProtected)).ToList();
             }
 
             if ((type.Options & ZRTypeOption.DoNotSortFields) == 0)
             {
-                members = members.OrderBy(m1 => m1.name).ToList();
+                members = members.OrderBy(member => member.Name).ToList();
             }
 
             if (ignoreCheck && inheretedMembers) membersForCodegenInheretedCache[type] = members;
             if (ignoreCheck && !inheretedMembers) membersForCodegenCache[type] = members;
 
-            return Filter(members.Select(member => member.Copy()));
+            return Filter(members);
         }
     }
 }

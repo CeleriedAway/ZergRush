@@ -432,13 +432,15 @@ public sealed class ZRCodeParser
             type.DataMembers = type.Members.Select(member =>
             {
                 var data = member.ToData();
-                data.InsideConfigStorage = (type.Options & ZRTypeOption.HasConfigRootType) != 0;
+                data = data.WithOption(
+                    ZRDataOption.InsideConfigStorage,
+                    (type.Options & ZRTypeOption.HasConfigRootType) != 0);
                 return data;
             }).ToList();
 
             if ((type.Options & ZRTypeOption.DoNotSortFields) == 0)
             {
-                type.DataMembers = type.DataMembers.OrderBy(member => member.Name, StringComparer.Ordinal).ToList();
+                type.DataMembers = type.DataMembers.OrderBy(data => data.Access, StringComparer.Ordinal).ToList();
             }
         }
     }

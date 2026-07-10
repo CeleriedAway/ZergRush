@@ -5,6 +5,29 @@ namespace ZergRush.CodeGen.Tests;
 public sealed class CodeGenSamplesParserTests
 {
     [Fact]
+    public void ZRData_stores_only_access_type_and_options()
+    {
+        var fields = typeof(ZRData).GetFields(
+            System.Reflection.BindingFlags.Instance |
+            System.Reflection.BindingFlags.Public |
+            System.Reflection.BindingFlags.NonPublic);
+
+        Assert.Equal(3, fields.Length);
+        Assert.Contains(fields, field => field.Name.Contains(nameof(ZRData.Access), StringComparison.Ordinal));
+        Assert.Contains(fields, field => field.Name.Contains(nameof(ZRData.Type), StringComparison.Ordinal));
+        Assert.Contains(fields, field => field.Name.Contains(nameof(ZRData.Options), StringComparison.Ordinal));
+
+        var nullable = ZRType.FromSystemType(typeof(int?)).ToData("value");
+        Assert.Equal("value", nullable.Access);
+        Assert.Equal("int", nullable.Type.FullName);
+        Assert.Equal(ZRDataOption.CanBeNull | ZRDataOption.IsNullable, nullable.Options);
+        Assert.Equal("value.Value", nullable.ReadAccess);
+        Assert.Equal("value.HasValue", nullable.HasValueExpression);
+        Assert.Equal("value.HasValue ? (ulong)value.Value : 345093625", CodeGen.HashExpr(nullable));
+        Assert.Equal("value.HasValue ? (ulong)value.Value : 345093625", CodeGen.UIdExpr(nullable));
+    }
+
+    [Fact]
     public void CodeGenSamples_parses_current_generator_input_model()
     {
         var types = ParseCodeGenSamples();
@@ -24,11 +47,15 @@ public sealed class CodeGenSamplesParserTests
 
         Assert.Null(FindMemberOrNull(sample, "stringPropWithoutTagNotIncluded"));
         Assert.Equal(GenTaskFlags.All, FindMember(sample, "someTempIgnoredField").IgnoreFlags);
-        Assert.Equal(ZRDataOption.CanBeNull, FindMember(sample, "stringFieldThatCanBeNull").Options);
+        Assert.Equal(ZRDataOption.CanBeNull, FindMember(sample, "stringFieldThatCanBeNull").ToData().Options);
 
         AssertMember(sample, "reactiveValue", "ZergRush.Samples.OtherData", "reactiveValue.value", FieldWrapperType.Cell);
         AssertMember(sample, "reactiveNullablePrimitive", "int", "reactiveNullablePrimitive.value", FieldWrapperType.Cell, FieldWrapperType.Nullable);
         AssertMember(sample, "nullablePrimitive", "int", "nullablePrimitive", FieldWrapperType.Nullable);
+        Assert.True(FindMember(sample, "reactiveNullablePrimitive").ToData().IsNullable);
+        Assert.True(FindMember(sample, "nullablePrimitive").ToData().IsNullable);
+        Assert.Equal("nullablePrimitive.Value", FindMember(sample, "nullablePrimitive").ToData().ReadAccess);
+        Assert.Equal("nullablePrimitive.HasValue", FindMember(sample, "nullablePrimitive").ToData().HasValueExpression);
         AssertMember(
             sample,
             "nestedReactiveNullablePrimitive",
@@ -213,23 +240,29 @@ public sealed class CodeGenSamplesParserTests
         return type;
     }
 
-    static ZRData FindMember(ZRType type, string name)
+    static ZRMember FindMember(ZRType type, string name)
     {
         var member = FindMemberOrNull(type, name);
         Assert.NotNull(member);
         return member;
     }
 
-    static ZRData? FindMemberOrNull(ZRType type, string name)
+    static ZRMember? FindMemberOrNull(ZRType type, string name)
     {
-        return type.DataMembers.SingleOrDefault(member => member.Name == name);
+        return type.Members.SingleOrDefault(member => member.Name == name);
     }
 
     static void AssertMember(ZRType type, string name, string fullTypeName, string access, params FieldWrapperType[] wrappers)
     {
         var member = FindMember(type, name);
-        Assert.Equal(fullTypeName, member.Type?.FullName);
-        Assert.Equal(access, member.Access);
+        var data = member.ToData();
+        Assert.Equal(fullTypeName, data.Type.FullName);
+        Assert.Equal(access, data.Access);
         Assert.Equal(wrappers, member.WrapperTypes);
+
+        var syntheticData = member.DeclaredType!.ToData("item");
+        Assert.Equal(fullTypeName, syntheticData.Type.FullName);
+        Assert.Equal("item" + access[name.Length..], syntheticData.Access);
+        Assert.Equal(data.IsNullable, syntheticData.IsNullable);
     }
 }

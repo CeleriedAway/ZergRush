@@ -19,19 +19,15 @@ namespace ZergRush.CodeGen
 
         public static string HashExpr(ZRData info)
         {
-            var t = info.type;
-            var name = info.access;
+            var t = info.Type;
+            var name = info.Access;
 
-            if (info.isValueWrapper == ValueVrapperType.Nullable)
+            if (info.IsNullable)
             {
-                var valueInfo = info.Copy();
-                valueInfo.baseAccess = name + ".Value";
-                valueInfo.accessPrefix = "";
-                valueInfo.realType = valueInfo.type;
-                valueInfo.WrapperTypes.Clear();
-                valueInfo.valueTransformer = access => access;
-                valueInfo.isValueWrapper = ValueVrapperType.None;
-                valueInfo.canBeNull = false;
+                var valueInfo = info
+                    .WithAccess(info.ReadAccess)
+                    .WithOption(ZRDataOption.IsNullable, false)
+                    .WithOption(ZRDataOption.CanBeNull, false);
                 return $"{name}.HasValue ? {HashExpr(valueInfo)} : {RandomHash()}";
             }
 
@@ -67,13 +63,9 @@ namespace ZergRush.CodeGen
                 calcHash = $"{HelperName}.{nameof(ZRHashHelper.CalculateHash)}({name})";
             }
 
-            if (info.canBeNull && !info.type.IsValueType)
+            if (info.CanBeNull && !info.Type.IsValueType)
             {
                 return $"{name} != null ? {calcHash} : {RandomHash()}";
-            }
-            else if (info.type.IsNullable())
-            {
-                return $"{name}.HasValue ? (ulong){name}.Value.GetHashCode() : {RandomHash()}";
             }
             else
             {
@@ -136,7 +128,6 @@ namespace ZergRush.CodeGen
                 {
                     sink.content($"hash += {HashExpr(info)};");
                     sink.content(HashMixStatement("hash"));
-                    //sink.content($"UnityEngine.Debug.Log($\"hash after {info.access} {info.type.RealName()} = \" + hash);");
                 },
                 finish = sink => sink.content("return hash;"),
                 funcReturnType = HashType
@@ -154,8 +145,9 @@ namespace ZergRush.CodeGen
 
             // method, elem type, elem name, 
             public Action<MethodBuilder, ZRData> elemProcess;
+            public Action<MethodBuilder, ZRMember, ZRData, string> memberProcess;
             public bool needDictKeyTraverse;
-            public Func<ZRData, bool> memberPredicate;
+            public Func<ZRMember, ZRData, bool> memberPredicate;
             public Action<MethodBuilder> finish;
             public Type interfaceType;
             public string funcArgs;
@@ -171,7 +163,8 @@ namespace ZergRush.CodeGen
             sink.content($"for (int i = 0; i < size; i++)");
             sink.content($"{{");
             sink.indent++;
-            strategy.elemProcess(sink, new ZRData { type = elemType, baseAccess = $"{prefix}[i]", canBeNull = true });
+            strategy.elemProcess(sink,
+                elemType.ToData($"{prefix}[i]", ZRDataOption.CanBeNull));
             sink.indent--;
             sink.content($"}}");
             strategy.finish?.Invoke(sink);
@@ -185,8 +178,8 @@ namespace ZergRush.CodeGen
             sink.content($"{{");
             sink.indent++;
             if (strategy.needDictKeyTraverse)
-                strategy.elemProcess(sink, new ZRData { type = keyType, baseAccess = "item.Key", canBeNull = true });
-            strategy.elemProcess(sink, new ZRData { type = valType, baseAccess = "item.Value" });
+                strategy.elemProcess(sink, keyType.ToData("item.Key", ZRDataOption.CanBeNull));
+            strategy.elemProcess(sink, valType.ToData("item.Value"));
             sink.indent--;
             sink.content($"}}");
             strategy.finish?.Invoke(sink);
@@ -219,10 +212,15 @@ namespace ZergRush.CodeGen
                 }
 
                 strategy.start?.Invoke(sink, type.NeedBaseCallForFlag(strategy.flag));
-                type.ProcessMembers(strategy.flag, strategy.needMembersGenRequest, member =>
+                type.ProcessMembers(strategy.flag, strategy.needMembersGenRequest, (member, data, declaredAccess) =>
                 {
-                    if (strategy.memberPredicate == null || strategy.memberPredicate(member))
-                        strategy.elemProcess(sink, member);
+                    if (strategy.memberPredicate == null || strategy.memberPredicate(member, data))
+                    {
+                        if (strategy.memberProcess != null)
+                            strategy.memberProcess(sink, member, data, declaredAccess);
+                        else
+                            strategy.elemProcess(sink, data);
+                    }
                 }, GenericMembers(sink));
                 strategy.finish?.Invoke(sink);
             }

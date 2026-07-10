@@ -18,20 +18,18 @@ namespace ZergRush.CodeGen
             var setupHierarchy =
                 MakeGenMethod(type, GenTaskFlags.OwnershipHierarchy, SetupHierarchyFuncName, Void, $"");
             
-            type.ProcessMembers(GenTaskFlags.OwnershipHierarchy, false, info =>
+            type.ProcessMembers(GenTaskFlags.OwnershipHierarchy, false, (member, info, declaredAccess) =>
             {
-                if (info.justData) return;
-                if (info.type.IsRootNeededEvent())
+                if (info.JustData) return;
+                if (info.Type.IsRootNeededEvent())
                 {
-                    setupHierarchy.content($"{info.access}.root = root;");
+                    setupHierarchy.content($"{info.Access}.root = root;");
                 }
 
-                if (info.realType.NeedsHierarchy())
+                if ((member.DeclaredType ?? info.Type).NeedsHierarchy())
                 {
-                    setupHierarchy.content($"{info.realAccess}.{nameof(Livable.SetRootAndCarrier)}(root, this);");
-                    //if (info.type.IsLivableContainer() || info.isValueWrapper == ValueVrapperType.LivableSlot || info.type.HasChildrenThatNeedsRootSetup())
-                    //if (info.type.HasChildrenThatNeedsRootSetup() || info.type.IsLivableList() || info.type.IsLivableSlot())
-                    setupHierarchy.content($"{info.realAccess}.{SetupHierarchyFuncName}();");
+                    setupHierarchy.content($"{declaredAccess}.{nameof(Livable.SetRootAndCarrier)}(root, this);");
+                    setupHierarchy.content($"{declaredAccess}.{SetupHierarchyFuncName}();");
                 }
             }, GenericMembers(setupHierarchy));
             
@@ -64,7 +62,7 @@ namespace ZergRush.CodeGen
                         // ctor mwthod found
                         var constructFull = GenClassSink(rootType).Method(type.CreateLivableInRootFunc(), rootType, MethodType.Instance, type, sig, "", "");
                         constructFull.indent++;
-                        CreateNewInstance(constructFull, new ZRData{type = type, baseAccess = "inst", sureIsNull = true}, "", "", true);
+                        CreateNewInstance(constructFull, type, "inst", "", "", true, carrierType: rootType);
                         fillCreateWithLivableSetup(constructFull);
                         
                         constructFull.content($"inst.{methodInfo.Name}({call});");
@@ -77,7 +75,7 @@ namespace ZergRush.CodeGen
                 {
                     var createWithSetup = GenClassSink(rootType).Method(type.CreateLivableInRootFunc(), rootType, MethodType.Instance, type, "", "", "");
                     createWithSetup.indent++;
-                    CreateNewInstance(createWithSetup, new ZRData{type = type, baseAccess = "inst", sureIsNull = true}, "", "", true);
+                    CreateNewInstance(createWithSetup, type, "inst", "", "", true, carrierType: rootType);
                     fillCreateWithLivableSetup(createWithSetup);
                     createWithSetup.content($"return inst;");
                 }
@@ -89,11 +87,12 @@ namespace ZergRush.CodeGen
             {
                 var createFromProrotype = GenClassSink(rootType).Method(type.CreateLivableInRootFunc(), rootType, MethodType.Instance, type, $"{type.RealName(true)} prototype", "", "");
                 createFromProrotype.indent++;
-                //CreateNewInstance(createFromProrotype, new ZRData{type = type, baseAccess = "inst", sureIsNull = true}, "", true, "", true );
                 //createFromProrotype.content($"var inst = ({type.RealName(true)})prototype.NewInst();");
                 
                 createFromProrotype.content($"var {HelperName} = new {UpdateFromHelperClassName}();");
-                GenUpdateValueFromInstance(createFromProrotype, new ZRData {type = type, baseAccess = $"inst", sureIsNull = true}, "prototype", false, needCreateVar: true, supportMultiRef: false);
+                GenUpdateValueFromInstance(createFromProrotype,
+                    new ZRData("inst", type, ZRDataOption.SureIsNull), type, "inst", rootType,
+                    "prototype", false, needCreateVar: true, supportMultiRef: false);
                 fillCreateWithLivableSetup(createFromProrotype);
                 createFromProrotype.content($"return inst;");
             }
@@ -150,7 +149,8 @@ namespace ZergRush.CodeGen
         static bool HasChildrenThatNeedsRootSetup(this Type t)
         {
             return t.GetMembersForCodeGen(GenTaskFlags.LifeSupport, true)
-                .Any(v => v.type.IsLivableCustomType() || v.type.IsRootNeededEvent() || v.type.IsLivableContainer());
+                .Any(member => member.MemberType.IsLivableCustomType() ||
+                    member.MemberType.IsRootNeededEvent() || member.MemberType.IsLivableContainer());
         }
 
         static bool IsOneOfThose(this string self, params string[] strs)

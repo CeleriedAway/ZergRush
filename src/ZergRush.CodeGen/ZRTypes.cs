@@ -87,20 +87,6 @@ public enum ZRMemberVisibility
     Public
 }
 
-public enum ZRDataKind
-{
-    Unknown,
-    Member,
-    Local,
-    Temporary,
-    Parameter,
-    ArrayElement,
-    ListElement,
-    DictionaryKey,
-    DictionaryValue,
-    This
-}
-
 [Flags]
 public enum ZRDataOption
 {
@@ -113,6 +99,7 @@ public enum ZRDataOption
     JustData = 1 << 5,
     CantBeAncestor = 1 << 6,
     Immutable = 1 << 7,
+    IsNullable = 1 << 8,
 }
 
 public enum FieldWrapperType
@@ -187,7 +174,7 @@ public class ZRType
     public List<ZRType> GenericArguments = new();
     public List<ZRGenericParameter> GenericParameters = new();
     public List<ZRMember> Members = new();
-    public List<ZRData> DataMembers = new();
+    public IReadOnlyList<ZRData> DataMembers { get; internal set; } = Array.Empty<ZRData>();
     public List<ZRMethod> Methods = new();
     public List<ZRAttributeInfo> Attributes = new();
     public List<ZRCustomImplInfo> CustomImplementations = new();
@@ -236,6 +223,40 @@ public class ZRType
                 Attributes = parameter.Attributes
             } }
         }).ToArray();
+    }
+
+    public ZRData ToData(string access, ZRDataOption options = ZRDataOption.None)
+    {
+        var valueType = this;
+        while (valueType.CommonConstruct is ZRCommonConstruct.Cell or
+               ZRCommonConstruct.LivableSlot or ZRCommonConstruct.Nullable)
+        {
+            switch (valueType.CommonConstruct)
+            {
+                case ZRCommonConstruct.Cell:
+                    access += ".value";
+                    break;
+                case ZRCommonConstruct.LivableSlot:
+                    access += ".value";
+                    options |= ZRDataOption.CanBeNull | ZRDataOption.InsideLivableContainer;
+                    break;
+                case ZRCommonConstruct.Nullable:
+                    options |= ZRDataOption.CanBeNull | ZRDataOption.IsNullable;
+                    break;
+            }
+
+            var innerType = valueType.CommonConstructArgType ?? valueType.GenericArguments.FirstOrDefault();
+            if (innerType == null || ReferenceEquals(innerType, valueType)) break;
+            valueType = innerType;
+        }
+
+        return new ZRData(access, valueType, options);
+    }
+
+    public bool HasDataWrapper()
+    {
+        return CommonConstruct is ZRCommonConstruct.Cell or
+            ZRCommonConstruct.LivableSlot or ZRCommonConstruct.Nullable;
     }
 
     public ZRType? GetElementType()
@@ -625,7 +646,7 @@ public class ZRMember
     public ZRSourceLocation? Source;
     public List<ZRAttributeInfo> Attributes = new();
 
-    public ZRData ToData(string? access = null, ZRDataKind kind = ZRDataKind.Member)
+    public ZRData ToData(string? access = null)
     {
         var options = ZRDataOption.None;
 
@@ -661,27 +682,17 @@ public class ZRMember
             options |= ZRDataOption.HasRefAccess;
         }
 
-        return new ZRData
+        if (WrapperTypes.Contains(FieldWrapperType.Nullable))
         {
-            BaseAccess = access ?? Name,
-            Kind = kind,
-            Options = options,
-            Type = MemberType,
-            RealType = DeclaredType,
-            DeclaredType = DeclaredType,
-            ParentType = ParentType,
-            Member = this,
-            WrapperTypes = new List<FieldWrapperType>(WrapperTypes),
-            IgnoreFlags = IgnoreFlags,
-            IncludeFlags = IncludeFlags,
-            DefaultValue = DefaultValue,
-            ArrayLengthConstraint = ArrayLengthConstraint,
-            IsReadOnly = IsReadOnly,
-            IsPrivate = Visibility is ZRMemberVisibility.Private or
-                ZRMemberVisibility.Protected or ZRMemberVisibility.PrivateProtected,
-            Source = Source,
-            ValueTransformer = BuildDataAccess
-        };
+            options |= ZRDataOption.IsNullable;
+        }
+
+        if (MemberType == null)
+        {
+            throw new InvalidOperationException($"Cannot create data access for unresolved member {Name}.");
+        }
+
+        return new ZRData(BuildDataAccess(access ?? Name), MemberType, options);
     }
 
     public string BuildDataAccess(string? access = null)
@@ -702,200 +713,28 @@ public class ZRMember
     }
 }
 
-public class ZRData
+public readonly record struct ZRData(string Access, ZRType Type, ZRDataOption Options = ZRDataOption.None)
 {
-    public string BaseAccess = "";
-    public string AccessPrefix = "";
-    public string PathLog = "";
+    public bool CanBeNull => HasOption(ZRDataOption.CanBeNull);
+    public bool SureIsNull => HasOption(ZRDataOption.SureIsNull);
+    public bool IsNullable => HasOption(ZRDataOption.IsNullable);
+    public bool Immutable => HasOption(ZRDataOption.Immutable);
+    public bool CantBeAncestor => HasOption(ZRDataOption.CantBeAncestor);
+    public bool InsideConfigStorage => HasOption(ZRDataOption.InsideConfigStorage);
+    public bool InsideLivableContainer => HasOption(ZRDataOption.InsideLivableContainer);
+    public bool JustData => HasOption(ZRDataOption.JustData);
 
-    public ZRDataKind Kind;
-    public ZRDataOption Options;
+    public string ReadAccess => IsNullable ? $"{Access}.Value" : Access;
+    public string HasValueExpression => IsNullable ? $"{Access}.HasValue" : $"{Access} != null";
 
-    public ZRType? Type;
-    public ZRType? RealType;
-    public ZRType? DeclaredType;
-    public ZRType? ParentType;
-    public ZRType? CarrierType;
-    public ZRMember? Member;
-    public ZRSourceLocation? Source;
-    public List<FieldWrapperType> WrapperTypes = new();
+    public bool HasOption(ZRDataOption option) => (Options & option) != 0;
 
-    public GenTaskFlags IgnoreFlags;
-    public GenTaskFlags IncludeFlags = GenTaskFlags.All;
-
-    public object? DefaultValue;
-    public int? ArrayLengthConstraint;
-
-    public bool IsReadOnly;
-    public bool SureIsNull;
-    public bool IsPrivate;
-
-    public Func<string, string> ValueTransformer = access => access;
-    public CodeGen.ValueVrapperType ValueWrapper = CodeGen.ValueVrapperType.None;
-
-    public string Name => BaseAccess;
-    public string Access => (!string.IsNullOrEmpty(AccessPrefix) ? AccessPrefix + "." : "") + ValueTransformer(BaseAccess);
-    public string RealAccess => (!string.IsNullOrEmpty(AccessPrefix) ? AccessPrefix + "." : "") + BaseAccess;
-    public string PathName => string.IsNullOrEmpty(PathLog) ? $"\"{BaseAccess}\"" : PathLog;
-
-    public bool CanBeNull
+    public ZRData WithOption(ZRDataOption option, bool enabled = true)
     {
-        get => HasOption(ZRDataOption.CanBeNull);
-        set => SetOption(ZRDataOption.CanBeNull, value);
+        return this with { Options = enabled ? Options | option : Options & ~option };
     }
 
-    public bool ImmutableData
-    {
-        get => HasOption(ZRDataOption.Immutable);
-        set => SetOption(ZRDataOption.Immutable, value);
-    }
+    public ZRData WithAccess(string access) => this with { Access = access };
 
-    public bool CantBeAncestor
-    {
-        get => HasOption(ZRDataOption.CantBeAncestor);
-        set => SetOption(ZRDataOption.CantBeAncestor, value);
-    }
-
-    public bool InsideConfigStorage
-    {
-        get => HasOption(ZRDataOption.InsideConfigStorage);
-        set => SetOption(ZRDataOption.InsideConfigStorage, value);
-    }
-
-    public bool InsideLivableContainer
-    {
-        get => HasOption(ZRDataOption.InsideLivableContainer);
-        set => SetOption(ZRDataOption.InsideLivableContainer, value);
-    }
-
-    public bool JustData
-    {
-        get => HasOption(ZRDataOption.JustData);
-        set => SetOption(ZRDataOption.JustData, value);
-    }
-
-    public bool SureIsNullOption
-    {
-        get => HasOption(ZRDataOption.SureIsNull);
-        set => SetOption(ZRDataOption.SureIsNull, value);
-    }
-
-    public string name => Name;
-    public string baseAccess { get => BaseAccess; set => BaseAccess = value; }
-    public string accessPrefix { get => AccessPrefix; set => AccessPrefix = value; }
-    public string access => Access;
-    public string realAccess => RealAccess;
-    public string pathName => PathName;
-    public string pathLog { get => PathLog; set => PathLog = value; }
-    public ZRType? type { get => Type; set => Type = value; }
-    public ZRType? realType { get => RealType; set => RealType = value; }
-    public ZRType? carrierType { get => CarrierType; set => CarrierType = value; }
-    public bool canBeNull { get => CanBeNull; set => CanBeNull = value; }
-    public bool immutableData { get => ImmutableData; set => ImmutableData = value; }
-    public GenTaskFlags ingoreFlags { get => IgnoreFlags; set => IgnoreFlags = value; }
-    public bool isReadOnly { get => IsReadOnly; set => IsReadOnly = value; }
-    public bool sureIsNull { get => SureIsNull; set { SureIsNull = value; SureIsNullOption = value; } }
-    public bool isPrivate { get => IsPrivate; set => IsPrivate = value; }
-    public bool cantBeAncestor { get => CantBeAncestor; set => CantBeAncestor = value; }
-    public bool insideConfigStorage { get => InsideConfigStorage; set => InsideConfigStorage = value; }
-    public bool insideLivableContainer { get => InsideLivableContainer; set => InsideLivableContainer = value; }
-    public bool justData { get => JustData; set => JustData = value; }
-    public object? defaultValue { get => DefaultValue; set => DefaultValue = value; }
-    public Func<string, string> valueTransformer { get => ValueTransformer; set => ValueTransformer = value; }
-    public CodeGen.ValueVrapperType isValueWrapper { get => ValueWrapper; set => ValueWrapper = value; }
-
-    public static ZRData WithTypeAndName(ZRType? type, string name)
-    {
-        return new ZRData { Type = type, BaseAccess = name };
-    }
-
-    public ZRData Copy()
-    {
-        return new ZRData
-        {
-            BaseAccess = BaseAccess,
-            AccessPrefix = AccessPrefix,
-            PathLog = PathLog,
-            Kind = Kind,
-            Options = Options,
-            Type = Type,
-            RealType = RealType,
-            DeclaredType = DeclaredType,
-            ParentType = ParentType,
-            CarrierType = CarrierType,
-            Member = Member,
-            Source = Source,
-            WrapperTypes = new List<FieldWrapperType>(WrapperTypes),
-            IgnoreFlags = IgnoreFlags,
-            IncludeFlags = IncludeFlags,
-            DefaultValue = DefaultValue,
-            ArrayLengthConstraint = ArrayLengthConstraint,
-            IsReadOnly = IsReadOnly,
-            SureIsNull = SureIsNull,
-            IsPrivate = IsPrivate,
-            ValueTransformer = ValueTransformer,
-            ValueWrapper = ValueWrapper
-        };
-    }
-
-    public ZRData SetupIsCell()
-    {
-        RealType ??= DeclaredType ?? Type;
-        ValueTransformer = access =>
-        {
-            var result = access;
-            foreach (var wrapperType in WrapperTypes)
-            {
-                if (wrapperType is FieldWrapperType.Cell or FieldWrapperType.LivableSlot)
-                {
-                    result += ".value";
-                }
-            }
-
-            return result;
-        };
-
-        foreach (var wrapperType in WrapperTypes)
-        {
-            switch (wrapperType)
-            {
-                case FieldWrapperType.Cell:
-                    ValueWrapper = CodeGen.ValueVrapperType.Cell;
-                    break;
-                case FieldWrapperType.LivableSlot:
-                    ValueWrapper = CodeGen.ValueVrapperType.LivableSlot;
-                    CanBeNull = true;
-                    InsideLivableContainer = true;
-                    break;
-                case FieldWrapperType.Nullable:
-                    ValueWrapper = CodeGen.ValueVrapperType.Nullable;
-                    CanBeNull = true;
-                    break;
-            }
-        }
-
-        return this;
-    }
-
-    public override string ToString()
-    {
-        return $"{nameof(BaseAccess)}: {BaseAccess}, {nameof(Type)}: {Type?.FullName ?? "<unknown>"}";
-    }
-
-    bool HasOption(ZRDataOption option)
-    {
-        return (Options & option) != 0;
-    }
-
-    void SetOption(ZRDataOption option, bool value)
-    {
-        if (value)
-        {
-            Options |= option;
-        }
-        else
-        {
-            Options &= ~option;
-        }
-    }
+    public override string ToString() => $"{nameof(Access)}: {Access}, {nameof(Type)}: {Type.FullName}";
 }

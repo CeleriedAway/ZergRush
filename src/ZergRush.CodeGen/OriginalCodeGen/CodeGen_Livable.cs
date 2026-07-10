@@ -51,7 +51,8 @@ namespace ZergRush.CodeGen
         static bool HasNestedLivableChildren(this Type t)
         {
             return t.GetMembersForCodeGen(GenTaskFlags.LifeSupport, true)
-                .Any(v => v.isReadOnly && v.type.IsLivableCustomType() || v.type.IsLivableList());
+                .Any(member => member.IsReadOnly && member.MemberType.IsLivableCustomType() ||
+                    member.MemberType.IsLivableList());
         }
 
         static void GenerateLivable(Type type, string funcPrefix)
@@ -83,31 +84,31 @@ namespace ZergRush.CodeGen
             var sinkMortifyChildren = MakeGenMethod(type, GenTaskFlags.LifeSupport, funcPrefix + LivableGeneratedMortifyChildrenName, Void, "");
             sinkMortifyChildren.access = MethodAccess.Protected;
             
-            type.ProcessMembers(GenTaskFlags.LifeSupport, false, info =>
+            type.ProcessMembers(GenTaskFlags.LifeSupport, false, (member, info, declaredAccess) =>
             {
-                if (info.justData) return;
-                if ((info.type.IsArray || info.type.IsList()) && !info.type.IsHierarchySupportContainer() && info.type.FirstGenericArg().IsLivableGen())
+                if (info.JustData) return;
+                if ((info.Type.IsArray || info.Type.IsList()) && !info.Type.IsHierarchySupportContainer() && info.Type.FirstGenericArg().IsLivableGen())
                 {
-                    Error($"field {info.access} in type {type} is list of livable values which is not allowed. " +
+                    Error($"field {info.Access} in type {type} is list of livable values which is not allowed. " +
                           $"Use LivableList to store livable values");
                     return;
                 }
-                if (info.isValueWrapper == ValueVrapperType.Cell && info.type.IsLivableGen())
+                if (member.WrapperTypes.FirstOrDefault() == FieldWrapperType.Cell && info.Type.IsLivableGen())
                 {
-                    Error($"field {info.access} in type {type} is cell of livable value which is not allowed. " +
+                    Error($"field {info.Access} in type {type} is cell of livable value which is not allowed. " +
                           $"Use LivableSlot to dynamically store livable value");
                     return;
                 }
-                if (info.type.IsLivableGen() == false) return;
-                if (info.isValueWrapper == ValueVrapperType.None && info.type.CanBeAncestor() && info.cantBeAncestor == false)
+                if (!info.Type.IsLivableGen()) return;
+                if (member.WrapperTypes.Count == 0 && info.Type.CanBeAncestor() && !info.CantBeAncestor)
                 {
-                    Error($"field {info.access} in type {type} is polymorphic and readonly livable, " +
+                    Error($"field {info.Access} in type {type} is polymorphic and readonly livable, " +
                           $"use [CantBeAscestor] tag to guarantee its type");
                     return;
                 }
                 
-                sinkEnliveChildren.content($"{info.realAccess}.{LivableEntryEnliveName}();");
-                sinkMortifyChildren.content($"{info.realAccess}.{LivableEntryMortifyName}();");
+                sinkEnliveChildren.content($"{declaredAccess}.{LivableEntryEnliveName}();");
+                sinkMortifyChildren.content($"{declaredAccess}.{LivableEntryMortifyName}();");
             }, GenericMembers(sinkEnliveChildren, sinkMortifyChildren));
 
             TraverseGenCustomType(new TraversStrategy
@@ -116,12 +117,11 @@ namespace ZergRush.CodeGen
                 funcArgs = "Action<object> action",
                 interfaceType = null,
                 needMembersGenRequest = false,
-                memberPredicate = info => !info.justData && (info.type.IsLivableNode() || info.type.IsLivableContainer() || info.type.IsLivableList()),
-                elemProcess = (sink, info) => {
-                    // if (info.type.IsHierarchySupportContainer() == false)
-                    //     sink.content($"action({info.baseAccess});");
-                    sink.content($"{info.realAccess}.VisitNode(action);");
-                },
+                memberPredicate = (_, info) => !info.JustData &&
+                    (info.Type.IsLivableNode() || info.Type.IsLivableContainer() || info.Type.IsLivableList()),
+                memberProcess = (sink, _, _, declaredAccess) =>
+                    sink.content($"{declaredAccess}.VisitNode(action);"),
+                elemProcess = (sink, info) => sink.content($"{info.Access}.VisitNode(action);"),
                 flag = GenTaskFlags.OwnershipHierarchy
             }, type, funcPrefix);
 

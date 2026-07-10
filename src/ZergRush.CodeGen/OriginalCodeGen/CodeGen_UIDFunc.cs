@@ -33,7 +33,7 @@ namespace ZergRush.CodeGen
                 funcName = UIdFuncName,
                 needDictKeyTraverse = false,
                 interfaceType = typeof(IUniquelyIdentifiable),
-                memberPredicate = info => info.Member.HasAttribute<UIDComponent>(),
+                memberPredicate = (member, _) => member.HasAttribute<UIDComponent>(),
                 needMembersGenRequest = false,
                 start = (sink, baseCall) =>
                 {
@@ -65,8 +65,17 @@ namespace ZergRush.CodeGen
 
         public static string UIdExpr(ZRData info)
         {
-            var t = info.type;
-            var name = info.access;
+            var t = info.Type;
+            var name = info.Access;
+            if (info.IsNullable)
+            {
+                var valueInfo = info
+                    .WithAccess(info.ReadAccess)
+                    .WithOption(ZRDataOption.IsNullable, false)
+                    .WithOption(ZRDataOption.CanBeNull, false);
+                return $"{info.HasValueExpression} ? {UIdExpr(valueInfo)} : {RandomHash()}";
+            }
+
             if (t == typeof(bool)) return $"{name} ? 1u : 0u";
             if (t.IsPrimitive || t.IsEnum) return $"({HashType}){name}";
 
@@ -76,7 +85,7 @@ namespace ZergRush.CodeGen
                 calcHash = $"({HashTypeName}){name}.CalculateHash()";
             }
 
-            if (info.canBeNull)
+            if (info.CanBeNull)
             {
                 return $"{name} != null ? {calcHash} : {RandomHash()}";
             }
@@ -105,17 +114,18 @@ namespace ZergRush.CodeGen
                 //needMembersGenRequest = true,
                 elemProcess = (sink, info) =>
                 {
-                    if (info.type.IsLoadableConfig())
+                    if (info.Type.IsLoadableConfig())
                     {
-                        sink.content($"_collection.AddConfigToRegister({info.access});");
+                        sink.content($"_collection.AddConfigToRegister({info.Access});");
                     }
-                    if (info.type.IsCollectableConfigType())
+                    if (info.Type.IsCollectableConfigType())
                     {
-                        RequestGen(info.type, sink.classType, GenTaskFlags.CollectConfigs);
-                        sink.content($"{info.access}{(info.canBeNull ? "?" : "")}.{collectConfigFuncName}(_collection);");
+                        RequestGen(info.Type, sink.classType, GenTaskFlags.CollectConfigs);
+                        sink.content($"{info.Access}{(info.CanBeNull ? "?" : "")}.{collectConfigFuncName}(_collection);");
                     }
                 },
-                memberPredicate = info => info.type.IsList() || info.type.IsDictionary() || (info.type.ReadGenFlags() & GenTaskFlags.CollectConfigs) != 0,
+                memberPredicate = (_, info) => info.Type.IsList() || info.Type.IsDictionary() ||
+                    (info.Type.ReadGenFlags() & GenTaskFlags.CollectConfigs) != 0,
                 funcArgs = $"{ConfigRegister} _collection"
             }, type, funcPrefix);
         }

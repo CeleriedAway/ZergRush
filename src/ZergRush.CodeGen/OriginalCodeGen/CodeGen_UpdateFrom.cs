@@ -15,18 +15,30 @@ namespace ZergRush.CodeGen
         public static string UpdateStaticsFuncName = "UpdateStaticFieldsFrom";
         public static string UpdateDynamicsFields = "UpdateInstaceFieldsFrom";
         
-        public static void GeneralReadFrom(MethodBuilder sink, ZRData info,
+        public static void GeneralReadFrom(MethodBuilder sink, ZRData info, Type declaredType,
+            string declaredAccess, Type carrierType,
             Action<MethodBuilder, ZRData> baseReadCall, string isNullReader, string classIdReader,
             string directReader, string refInst, bool pooled, Func<Type, string> configIdReader = null,  bool needCreateVar = false,
             bool useTempVarThenAssign = false)
         {
-            if (info.realType == null) info.SetupIsCell();
-
-            if (info.isValueWrapper == ValueVrapperType.Nullable)
+            if (needCreateVar)
             {
-                var nullableAccess = info.access;
-                var nullableTempVar = "__" + info.baseAccess.Replace('.', '_').Replace('-', '_').Replace(' ', '_')
-                    .Replace('[', '_').Replace(']', '_');
+                if (!declaredType.HasDataWrapper() || declaredType.IsNullable())
+                {
+                    sink.content($"{declaredType.RealName(true)} {declaredAccess} = default;");
+                }
+                else
+                {
+                    sink.content($"{declaredType.RealName(true)} {declaredAccess} = {NewInstExpr(declaredType, false)};");
+                }
+
+                needCreateVar = false;
+            }
+
+            if (info.IsNullable)
+            {
+                var nullableAccess = info.Access;
+                var nullableTempVar = TempNameFor(info.Access);
                 sink.content($"if ({isNullReader}) {{");
                 sink.indent++;
                 sink.content($"{nullableAccess} = null;");
@@ -36,17 +48,11 @@ namespace ZergRush.CodeGen
                 sink.indent++;
                 sink.content($"var {nullableTempVar} = {nullableAccess}.GetValueOrDefault();");
 
-                var valueInfo = info.Copy();
-                valueInfo.baseAccess = nullableTempVar;
-                valueInfo.accessPrefix = "";
-                valueInfo.realType = valueInfo.type;
-                valueInfo.WrapperTypes.Clear();
-                valueInfo.valueTransformer = access => access;
-                valueInfo.isValueWrapper = ValueVrapperType.None;
-                valueInfo.canBeNull = false;
-                valueInfo.sureIsNull = false;
+                var valueInfo = new ZRData(nullableTempVar, info.Type,
+                    info.Options & ~(ZRDataOption.IsNullable | ZRDataOption.CanBeNull | ZRDataOption.SureIsNull));
 
-                GeneralReadFrom(sink, valueInfo, baseReadCall, "false", classIdReader, directReader,
+                GeneralReadFrom(sink, valueInfo, info.Type, nullableTempVar, carrierType,
+                    baseReadCall, "false", classIdReader, directReader,
                     refInst, pooled, configIdReader, false, false);
                 sink.content($"{nullableAccess} = {nullableTempVar};");
                 sink.indent--;
@@ -54,52 +60,29 @@ namespace ZergRush.CodeGen
                 return;
             }
             
-            var t = info.type;
-            var canBeNull = info.canBeNull && !t.IsValueType ||
-                            info.isValueWrapper == ValueVrapperType.Nullable ||
-                            t.IsNullable();
+            var t = info.Type;
+            var canBeNull = info.CanBeNull && !t.IsValueType;
 
             var originalInfo = info;
+            var originalDeclaredType = declaredType;
+            var originalDeclaredAccess = declaredAccess;
             string tempVar = null; 
             if (useTempVarThenAssign)
             {
-                tempVar = "__" + originalInfo.baseAccess.Replace('.', '_').Replace('-', '_').Replace(' ', '_').Replace('[', '_').Replace(']', '_');
-                if (info.isValueWrapper == ValueVrapperType.Nullable)
-                {
-                    sink.content($"var {tempVar} = default({originalInfo.type.RealName()});");
-                }
-                else
-                {
-                    sink.content($"var {tempVar} = {(originalInfo.access)};");
-                }
-                info = new ZRData
-                {
-                    type = originalInfo.type,
-                    baseAccess = tempVar,
-                    sureIsNull = info.sureIsNull,
-                    carrierType = info.carrierType,
-                };
+                tempVar = TempNameFor(originalInfo.Access);
+                sink.content($"var {tempVar} = {originalInfo.Access};");
+                info = originalInfo.WithAccess(tempVar);
+                declaredType = info.Type;
+                declaredAccess = tempVar;
             }
             
-            if (originalInfo.realType.IsLivableSlot())
+            if (originalDeclaredType.IsLivableSlot())
             {
-                sink.content($"{originalInfo.realAccess}.{updatemod} = true;");
+                sink.content($"{originalDeclaredAccess}.{updatemod} = true;");
             }
 
-            var name = info.access;
+            var name = info.Access;
 
-            if (needCreateVar)
-            {
-                if (info.isValueWrapper == ValueVrapperType.None || info.isValueWrapper == ValueVrapperType.Nullable)
-                {
-                    sink.content($"{info.realType.RealName(true)} {info.name} = default;");
-                }
-                else
-                {
-                    sink.content($"{info.realType.RealName(true)} {info.name} = {NewInstExpr(info.realType, false)};");
-                }
-            }
-            
             if (t.IsImmutableValueType() && !canBeNull)
             {
                 sink.content($"{name} = {directReader};");
@@ -111,14 +94,7 @@ namespace ZergRush.CodeGen
                     sink.content($"if ({isNullReader}) {{");
                     sink.indent++;
                     SinkRemovePostProcess(sink, info, pooled);
-                    if (originalInfo.isValueWrapper == ValueVrapperType.Nullable)
-                    {
-                        sink.content($"{originalInfo.access} = null;");
-                    }
-                    else
-                    {
-                        sink.content($"{name} = null;");
-                    }
+                    sink.content($"{name} = null;");
                     sink.indent--;
                     sink.content($"}}");
                     sink.content($"else {{ ");
@@ -126,38 +102,40 @@ namespace ZergRush.CodeGen
                 }
 
                 bool fromExternalSource = false;
-                if (t.IsConfig() && info.insideConfigStorage == false)
+                if (t.IsConfig() && !info.InsideConfigStorage)
                 {
-                    ConfigFromId(sink, info, configIdReader, false);
+                    ConfigFromId(sink, info, carrierType, configIdReader, false);
                     fromExternalSource = true;
                 }
                 else
                 {
-                    if (info.sureIsNull && !info.type.IsValueType)
+                    if (info.SureIsNull && !info.Type.IsValueType)
                     {
-                        CreateNewInstance(sink, info, classIdReader, refInst, false);
+                        CreateNewInstance(sink, info.Type, info.Access, classIdReader, refInst, false,
+                            info.CantBeAncestor, carrierType: carrierType);
                     }
                     else
                     {
                         string createNewCondition = "";
-                        if (canBeNull || info.CanBeNullAfterConstruction())
+                        if (canBeNull || CanBeNullAfterConstruction(info.Type, info.CantBeAncestor))
                         {
                             createNewCondition = $"{name} == null";
                         }
 
                         string classIdVarName = $"{name.Replace('[', '_').Replace(']', '_').Replace('.', '_')}ClassId";
-                        if (t.CanBeAncestor() && info.cantBeAncestor == false)
+                        if (t.CanBeAncestor() && !info.CantBeAncestor)
                         {
                             sink.content($"var {classIdVarName} = {classIdReader};");
                             createNewCondition = AddOrCondition(createNewCondition,
                                 $"{name}.{PolymorphClassIdGetter} != {classIdVarName}");
                         }
-                        if (info.type.IsImmutableType() == false && createNewCondition.Valid())
+                        if (!info.Type.IsImmutableType() && createNewCondition.Valid())
                         {
                             sink.content($"if ({createNewCondition}) {{");
                             sink.indent++;
                             SinkRemovePostProcess(sink, info, pooled);
-                            CreateNewInstance(sink, info, classIdVarName, refInst, false);
+                            CreateNewInstance(sink, info.Type, info.Access, classIdVarName, refInst, false,
+                                info.CantBeAncestor, carrierType: carrierType);
                             sink.indent--;
                             sink.content($"}}");
                         }
@@ -171,7 +149,7 @@ namespace ZergRush.CodeGen
                 
                 if (t.IsConfig() && !fromExternalSource)
                 {
-                    sink.content($"{t.ConfigRootType().RealName(true)}.Instance.RegisterConfig({info.access});");
+                    sink.content($"{t.ConfigRootType().RealName(true)}.Instance.RegisterConfig({info.Access});");
                 }
 
                 if (canBeNull)
@@ -183,13 +161,19 @@ namespace ZergRush.CodeGen
 
             if (useTempVarThenAssign)
             {
-                sink.content($"{originalInfo.access} = {tempVar};");
+                sink.content($"{originalInfo.Access} = {tempVar};");
             }
             
-            if (originalInfo.realType.IsLivableSlot())
+            if (originalDeclaredType.IsLivableSlot())
             {
-                sink.content($"{originalInfo.realAccess}.{updatemod} = false;");
+                sink.content($"{originalDeclaredAccess}.{updatemod} = false;");
             }
+        }
+
+        static string TempNameFor(string access)
+        {
+            return "__" + access.Replace('.', '_').Replace('-', '_').Replace(' ', '_')
+                .Replace('[', '_').Replace(']', '_');
         }
 
         static string OptVar(bool needOne)
@@ -197,30 +181,29 @@ namespace ZergRush.CodeGen
             return needOne ? "var " : "";
         }
 
-        public static void GenUpdateValueFromInstance(MethodBuilder sink, ZRData info, string other, bool pooled,
+        public static void GenUpdateValueFromInstance(MethodBuilder sink, ZRData info, Type declaredType,
+            string declaredAccess, Type carrierType, string other, bool pooled,
             bool needCreateVar = false, bool needTempVarThenAssign = false, bool supportMultiRef = true)
         {
-            if (info.realType == null) info.SetupIsCell();
-            
-            var t = info.type;
+            var t = info.Type;
             // info can be transformed because read from can do temp value wrapping for it
-            if (supportMultiRef && info.type.IsMultipleReference() && !needCreateVar)
+            if (supportMultiRef && info.Type.IsMultipleReference() && !needCreateVar)
             {
                 needTempVarThenAssign = true;
             }
             Func<ZRData, string> defaultContent = info1 =>
             {
-                var baseCall = $"{info1.access}.{UpdateFuncName}({other}, {HelperName});";
-                if (supportMultiRef && info1.type.IsMultipleReference())
+                var baseCall = $"{info1.Access}.{UpdateFuncName}({other}, {HelperName});";
+                if (supportMultiRef && info1.Type.IsMultipleReference())
                 {
-                    if (info1.type.IsLivableNode() && info1.type.IsLivableRoot() == false)
+                    if (info1.Type.IsLivableNode() && !info1.Type.IsLivableRoot())
                     {
-                        baseCall = $"if (!{HelperName}.TryLoadAlreadyUpdatedLivable({other}, ref {info1.access}," +
-                                   $" {(info.insideLivableContainer ? "true" : "false")})) {baseCall}";
+                        baseCall = $"if (!{HelperName}.TryLoadAlreadyUpdatedLivable({other}, ref {info1.Access}," +
+                                   $" {(info.InsideLivableContainer ? "true" : "false")})) {baseCall}";
                     }
                     else
                     {
-                        baseCall = $"if (!{HelperName}.TryLoadAlreadyUpdated({other}, ref {info1.access})) {baseCall}";
+                        baseCall = $"if (!{HelperName}.TryLoadAlreadyUpdated({other}, ref {info1.Access})) {baseCall}";
                     }
                 }
                 
@@ -228,28 +211,22 @@ namespace ZergRush.CodeGen
             };
             Action<MethodBuilder, ZRData> baseReadCall = (s, info1) => s.content(defaultContent(info1));
 
-            // if (info.realType.IsLivableSlot())
-            // {
-            //     sink.content($"{info.realAccess}.{updatemod} = true;");
-            // }
-            
-            if (info.immutableData || info.type.IsImmutableData())
+            if (info.Immutable || info.Type.IsImmutableData())
             {
-                if (needCreateVar && info.isValueWrapper == ValueVrapperType.Cell)
+                if (needCreateVar && declaredType.IsCell())
                 {
-                    sink.content($"{OptVar(needCreateVar)}{info.baseAccess} = {info.realType.NewInstExpr(other, true) };");
+                    sink.content($"{OptVar(needCreateVar)}{declaredAccess} = {declaredType.NewInstExpr(other, true)};");
                 }
                 else
                 {
-                    sink.content($"{OptVar(needCreateVar)}{info.access} = {other};");
+                    sink.content($"{OptVar(needCreateVar)}{info.Access} = {other};");
                 }
                 return;
             }
-            else if (info.isValueWrapper == ValueVrapperType.Nullable)
+            else if (info.IsNullable)
             {
-                var nullableAccess = info.access;
-                var tempVar = "__" + info.baseAccess.Replace('.', '_').Replace('-', '_').Replace(' ', '_')
-                    .Replace('[', '_').Replace(']', '_');
+                var nullableAccess = info.Access;
+                var tempVar = TempNameFor(info.Access);
                 sink.content($"if ({other} == null) {{");
                 sink.indent++;
                 sink.content($"{nullableAccess} = null;");
@@ -258,13 +235,10 @@ namespace ZergRush.CodeGen
                 sink.content("else {");
                 sink.indent++;
                 sink.content($"var {tempVar} = {nullableAccess}.GetValueOrDefault();");
-                GenUpdateValueFromInstance(sink, new ZRData
-                {
-                    type = info.type,
-                    realType = info.type,
-                    carrierType = info.carrierType,
-                    baseAccess = tempVar
-                }, $"{other}.Value", pooled, supportMultiRef: supportMultiRef);
+                var valueInfo = new ZRData(tempVar, info.Type,
+                    info.Options & ~(ZRDataOption.IsNullable | ZRDataOption.CanBeNull));
+                GenUpdateValueFromInstance(sink, valueInfo, info.Type, tempVar, carrierType,
+                    $"{other}.Value", pooled, supportMultiRef: supportMultiRef);
                 sink.content($"{nullableAccess} = {tempVar};");
                 sink.indent--;
                 sink.content("}");
@@ -274,20 +248,20 @@ namespace ZergRush.CodeGen
             {
                 baseReadCall = (s, info1) =>
                 {
-                    string name = info1.name;
+                    string name = info1.Access;
                     string newCountName = $"{name.Replace('[', '_').Replace(']', '_')}Count";
                     string tempVarName = $"{name.Replace('[', '_').Replace(']', '_')}Temp";
                     s.content($"var {newCountName} = {other}.Length;");
-                    s.content($"var {tempVarName} = {info1.access};");
+                    s.content($"var {tempVarName} = {info1.Access};");
                     s.content($"Array.Resize(ref {tempVarName}, {newCountName});");
-                    s.content($"{info1.access} = {tempVarName};");
+                    s.content($"{info1.Access} = {tempVarName};");
                     s.content(defaultContent(info1));
                 };
             }
 
-            RequestGen(info.realType, sink.classType, GenTaskFlags.UpdateFrom);
+            RequestGen(declaredType, sink.classType, GenTaskFlags.UpdateFrom);
 
-            GeneralReadFrom(sink, info,
+            GeneralReadFrom(sink, info, declaredType, declaredAccess, carrierType,
                 baseReadCall: baseReadCall,
                 //arrayLengthReader: $"{other}.Length",
                 isNullReader: $"{other} == null",
@@ -326,8 +300,11 @@ namespace ZergRush.CodeGen
             sink.indent++;
             // if (!type.IsValueType)
             //     sink.content($"if ({other}[i] == null) {{ {prefix}[i] = null; continue; }}");
-            GenUpdateValueFromInstance(sink, new ZRData {type = type, baseAccess = $"{prefix}[i]", canBeNull = !type.IsValueType},
-                $"{other}[i]{(type.IsCell()?".value":"")}", pooled);
+            var options = type.IsValueType ? ZRDataOption.None : ZRDataOption.CanBeNull;
+            var target = type.ToData($"{prefix}[i]", options);
+            var source = type.ToData($"{other}[i]").Access;
+            GenUpdateValueFromInstance(sink, target, type, $"{prefix}[i]", sink.classType,
+                source, pooled);
             sink.indent--;
             sink.content($"}}");
         }
@@ -343,22 +320,19 @@ namespace ZergRush.CodeGen
                 return;
             }
             
-            var ZRData = new ZRData {
-                type = elementType,
-                baseAccess = $"{accessPrefix}[i]",
-                canBeNull = !elementType.IsValueType,
-                insideLivableContainer = useAddCopyFunc
-            }.SetupIsCell();
+            var options = elementType.IsValueType ? ZRDataOption.None : ZRDataOption.CanBeNull;
+            if (useAddCopyFunc) options |= ZRDataOption.InsideLivableContainer;
+            var elementData = elementType.ToData($"{accessPrefix}[i]", options);
             
-            var refInst = ZRData.valueTransformer($"{other}[i]");
+            var refInst = elementType.ToData($"{other}[i]").Access;
             sink.content($"int i = 0;");
             sink.content($"int oldCount = {accessPrefix}.Count;");
             sink.content($"int crossCount = Math.Min(oldCount, {other}.Count);");
             sink.content($"for (; i < crossCount; ++i)");
             sink.content($"{{");
             sink.indent++;
-            GenUpdateValueFromInstance(sink, ZRData, refInst,
-                    pooled,
+            GenUpdateValueFromInstance(sink, elementData, elementType, $"{accessPrefix}[i]",
+                    sink.classType, refInst, pooled,
                     needTempVarThenAssign: elementType.IsValueType);
                 sink.indent--;
             sink.content($"}}");
@@ -367,17 +341,17 @@ namespace ZergRush.CodeGen
             sink.indent++;
                 if (useAddCopyFunc)
                 {
-                    CreateNewInstance(sink, ZRData.WithTypeAndName(elementType, "inst"), $"{refInst}.{CodeGen.PolymorphClassIdGetter}", refInst, true);
+                    CreateNewInstance(sink, elementType, "inst", $"{refInst}.{CodeGen.PolymorphClassIdGetter}",
+                        refInst, true, carrierType: sink.classType);
                     sink.content($"self.AddCopy(inst, {refInst}, {HelperName});");
     //                sink.content($"self.Add(null);");
-    //                GenUpdateValueFromInstance(sink, new ZRData {type = elementType, baseAccess = $"self[i]", sureIsNull = true},
-    //                    refInst, pooled: pooled);
                 }
                 else
                 {
-                    GenUpdateValueFromInstance(sink, new ZRData {type = elementType,
-                            baseAccess = $"inst", canBeNull = true, sureIsNull = true, insideLivableContainer = useAddCopyFunc},
-                        refInst, needCreateVar: true,
+                    var newOptions = ZRDataOption.CanBeNull | ZRDataOption.SureIsNull;
+                    if (useAddCopyFunc) newOptions |= ZRDataOption.InsideLivableContainer;
+                    GenUpdateValueFromInstance(sink, elementType.ToData("inst", newOptions), elementType,
+                        "inst", sink.classType, refInst, needCreateVar: true,
                         pooled: pooled);
                     sink.content($"self.Add(inst);");
                 }
@@ -387,7 +361,7 @@ namespace ZergRush.CodeGen
             sink.content($"{{");
             sink.indent++;
                 SinkRemovePostProcess(sink,
-                    new ZRData {type = elementType, baseAccess = $"self[{accessPrefix}.Count - 1]"}, pooled);
+                    elementType.ToData($"self[{accessPrefix}.Count - 1]"), pooled);
                 sink.content($"self.RemoveAt({accessPrefix}.Count - 1);");
             sink.indent--;
             sink.content($"}}");
@@ -432,27 +406,24 @@ namespace ZergRush.CodeGen
             }
             else
             {
-                var valueData = new ZRData
-                {
-                    type = valueType,
-                    baseAccess = "__value",
-                    canBeNull = !valueType.IsValueType
-                }.SetupIsCell();
-                var sourceValue = valueData.valueTransformer("__pair.Value");
+                var valueOptions = valueType.IsValueType ? ZRDataOption.None : ZRDataOption.CanBeNull;
+                var valueData = valueType.ToData("__value", valueOptions);
+                var sourceValue = valueType.ToData("__pair.Value").Access;
 
                 sink.content($"if ({accessPrefix}.TryGetValue(__pair.Key, out var __value))");
                 sink.content("{");
                 sink.indent++;
-                GenUpdateValueFromInstance(sink, valueData, sourceValue, pooled,
+                GenUpdateValueFromInstance(sink, valueData, valueType, "__value", sink.classType,
+                    sourceValue, pooled,
                     needTempVarThenAssign: valueType.IsValueType);
                 sink.indent--;
                 sink.content("}");
                 sink.content("else");
                 sink.content("{");
                 sink.indent++;
-                var newValueData = valueData.Copy();
-                newValueData.sureIsNull = true;
-                GenUpdateValueFromInstance(sink, newValueData, sourceValue, pooled);
+                var newValueData = valueData.WithOption(ZRDataOption.SureIsNull);
+                GenUpdateValueFromInstance(sink, newValueData, valueType, "__value", sink.classType,
+                    sourceValue, pooled);
                 sink.indent--;
                 sink.content("}");
                 sink.content($"{accessPrefix}[__pair.Key] = __value;");
@@ -536,11 +507,13 @@ namespace ZergRush.CodeGen
                     sink.content($"var {genericOtherName} = ({branch.instance.RealName(true)})(object){otherName};");
                 };
                 type.ProcessMembers(flag, true,
-                    memberInfo =>
+                    (member, memberInfo, declaredAccess) =>
                     {
                         GenUpdateValueFromInstance(sink, memberInfo,
-                            memberInfo.valueTransformer($"{genericOtherName}.{memberInfo.baseAccess}"), pooled,
-                            needTempVarThenAssign: memberInfo.Member?.Kind == ZRMemberKind.Property || memberInfo.realType.IsCell() || memberInfo.realType.IsLivableSlot());
+                            member.DeclaredType ?? memberInfo.Type, declaredAccess, type,
+                            member.ToData($"{genericOtherName}.{member.Name}").Access, pooled,
+                            needTempVarThenAssign: member.Kind == ZRMemberKind.Property ||
+                                member.DeclaredType.IsCell() || member.DeclaredType.IsLivableSlot());
                     }, genericOptions);
             }
         }

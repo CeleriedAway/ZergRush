@@ -143,12 +143,12 @@ namespace ZergRush.CodeGen
         }
 
         static bool ProcessMembers(this Type type, GenTaskFlags currFlag, bool needMembersGen,
-            Action<ZRData> strategy, MemberProcessingOptions options = null)
+            Action<ZRMember, ZRData, string> strategy, MemberProcessingOptions options = null)
         {
             var members = type.GetMembersForCodeGen(currFlag).ToList();
             var genericMembers = type.IsGenericTypeDecl()
                 ? members.Where(MemberDependsOnGenericParameter).ToList()
-                : new List<ZRData>();
+                : new List<ZRMember>();
             var ordinaryMembers = genericMembers.Count == 0
                 ? members
                 : members.Where(member => !MemberDependsOnGenericParameter(member)).ToList();
@@ -190,12 +190,12 @@ namespace ZergRush.CodeGen
                 options.beginGenericBranch?.Invoke(branch);
 
                 var specializedMembers = instance.GetMembersForCodeGen(currFlag)
-                    .ToDictionary(member => member.name, StringComparer.Ordinal);
+                    .ToDictionary(member => member.Name, StringComparer.Ordinal);
                 foreach (var genericMember in genericMembers)
                 {
-                    if (!specializedMembers.TryGetValue(genericMember.name, out var specializedMember))
+                    if (!specializedMembers.TryGetValue(genericMember.Name, out var specializedMember))
                     {
-                        Error($"Could not find member {genericMember.name} on registered generic instance {instance}.");
+                        Error($"Could not find member {genericMember.Name} on registered generic instance {instance}.");
                         continue;
                     }
 
@@ -224,19 +224,26 @@ namespace ZergRush.CodeGen
             return members.Count > 0;
         }
 
-        static void ProcessMember(Type carrierType, ZRData member, string accessPrefix, GenTaskFlags currFlag,
-            bool needMembersGen, Action<ZRData> strategy)
+        static void ProcessMember(Type carrierType, ZRMember member, string accessPrefix, GenTaskFlags currFlag,
+            bool needMembersGen, Action<ZRMember, ZRData, string> strategy)
         {
-            member.carrierType = carrierType;
-            if (needMembersGen && !member.type.IsLoadableConfig()) RequestGen(member.type, carrierType, currFlag);
-            member.accessPrefix = accessPrefix;
-            strategy(member);
+            var declaredAccess = string.IsNullOrEmpty(accessPrefix)
+                ? member.Name
+                : $"{accessPrefix}.{member.Name}";
+            var data = member.ToData(declaredAccess)
+                .WithOption(ZRDataOption.InsideConfigStorage, carrierType.IsConfigStorage());
+            if (carrierType.IsTuple() && !data.Type.IsValueType)
+            {
+                data = data.WithOption(ZRDataOption.CanBeNull);
+            }
+
+            if (needMembersGen && !data.Type.IsLoadableConfig()) RequestGen(data.Type, carrierType, currFlag);
+            strategy(member, data, declaredAccess);
         }
 
-        static bool MemberDependsOnGenericParameter(ZRData member)
+        static bool MemberDependsOnGenericParameter(ZRMember member)
         {
-            return TypeDependsOnGenericParameter(member.type) ||
-                   TypeDependsOnGenericParameter(member.realType) ||
+            return TypeDependsOnGenericParameter(member.MemberType) ||
                    TypeDependsOnGenericParameter(member.DeclaredType);
         }
 

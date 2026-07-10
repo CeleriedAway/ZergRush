@@ -23,30 +23,26 @@ namespace ZergRush.CodeGen
             return type.IsAssignableTo(typeof(Livable));
         }
         
-        static bool CanBeNullAfterConstruction(this ZRData info)
+        static bool CanBeNullAfterConstruction(Type type, bool cantBeAncestor)
         {
-            return info.type.CanBeAncestor() && info.cantBeAncestor == false;
+            return type.CanBeAncestor() && !cantBeAncestor;
         }
         
-        public static void CreateNewInstance(MethodBuilder sink, ZRData info, string classIdReader,
-            string refInst, bool needCreateVar, bool wrapType = false)
+        public static void CreateNewInstance(MethodBuilder sink, Type type, string access, string classIdReader,
+            string refInst, bool needCreateVar, bool cantBeAncestor = false, object defaultValue = null,
+            Type carrierType = null)
         {
-            // Some bullshit logic here
-            // All of this because of value wrapper concept that should be reconsidered
-            var t = wrapType ? info.realType : info.type;
-            var name = wrapType ? info.realAccess : info.access;
-            
             string newExpr = "";
             bool needCast = false;
-            if (t == typeof(string))
+            if (type == typeof(string))
             {
                 newExpr = "string.Empty";
             }
-            else if (t.IsArray)
+            else if (type.IsArray)
             {
-                newExpr = $"Array.Empty<{t.RealName(true).Remove(t.RealName(true).Length - 2)}>()";
+                newExpr = $"Array.Empty<{type.RealName(true).Remove(type.RealName(true).Length - 2)}>()";
             }
-            else if (t.CanBeAncestor() && info.cantBeAncestor == false)
+            else if (type.CanBeAncestor() && !cantBeAncestor)
             {
                 needCast = true;
                 if (refInst.Valid())
@@ -57,21 +53,21 @@ namespace ZergRush.CodeGen
                 {
                     if (classIdReader.Valid() == false)
                     {
-                        if (t.IsAbstract) { return; }
-                        newExpr = NewInstExpr(t);
+                        if (type.IsAbstract) { return; }
+                        newExpr = NewInstExpr(type);
                     }
                     else
                     {
-                        var staticTypeCreator = t.PolymorphicClassIdOwner().RealName(true);
-                        if (t.IsGenericParameter)
+                        var staticTypeCreator = type.PolymorphicClassIdOwner().RealName(true);
+                        if (type.IsGenericParameter)
                         {
-                            if (t.GetGenericParameterConstraints().TryFind(par => !par.IsInterface, out var hardPar))
+                            if (type.GetGenericParameterConstraints().TryFind(par => !par.IsInterface, out var hardPar))
                             {
                                 staticTypeCreator = hardPar.PolymorphicClassIdOwner().RealName(true);
                             }
                             else
                             {
-                                Error($"can't generate new instance construction for unknown type {t} in {info.carrierType}, constrain this type with some base class like Livable");
+                                Error($"can't generate new instance construction for unknown type {type} in {carrierType}, constrain this type with some base class like Livable");
                             }
                         }
                         newExpr = $"{staticTypeCreator}.{PolymorphInstanceFuncName}({classIdReader})";
@@ -80,15 +76,15 @@ namespace ZergRush.CodeGen
             }
             else
             {
-                if (t.IsAbstract)
+                if (type.IsAbstract)
                 {
-                    Error($"Type {t} is abstract but required to have constructor during {sink.classBuilder.name} generation");
+                    Error($"Type {type} is abstract but required to have constructor during {sink.classBuilder.name} generation");
                     return;
                 }
-                newExpr = NewInstExpr(t, info.defaultValue);
+                newExpr = NewInstExpr(type, defaultValue);
             }
 
-            sink.content($"{(needCreateVar ? "var " : "")}{name} = {(needCast ? $"({t.RealName(true)})" : "")}{newExpr};");
+            sink.content($"{(needCreateVar ? "var " : "")}{access} = {(needCast ? $"({type.RealName(true)})" : "")}{newExpr};");
         }
 
         public static void GenerateConstructor(Type t, string funcPrefix)
@@ -109,30 +105,33 @@ namespace ZergRush.CodeGen
             
             constructor.type = MethodType.Instance;
 
-            t.ProcessMembers(GenTaskFlags.DefaultConstructor, false, info =>
+            t.ProcessMembers(GenTaskFlags.DefaultConstructor, false, (member, info, declaredAccess) =>
             {
-                if (info.type.IsValueType && info.isValueWrapper == ValueVrapperType.None) return;
-                if (info.type.IsEnum && info.isValueWrapper == ValueVrapperType.None) return;
-                if (info.type.IsConfig() && info.isValueWrapper == ValueVrapperType.None && info.insideConfigStorage == false) return;
+                var hasWrapper = member.WrapperTypes.Count > 0;
+                if (info.Type.IsValueType && !hasWrapper) return;
+                if (info.Type.IsEnum && !hasWrapper) return;
+                if (info.Type.IsConfig() && !hasWrapper && !info.InsideConfigStorage) return;
                 
                 // Livable slot can be readonly and kind of can be null at the same time due to value transformer.
-                if (info.canBeNull && info.isReadOnly && info.isValueWrapper == ValueVrapperType.None)
+                if (info.CanBeNull && member.IsReadOnly && !hasWrapper)
                 {
                     Error($"{info} in type {t} can't be marked readonly and have CanBeNull tag at the same time");
                     return;
                 }
 
-                if (info.justData == false && !info.isReadOnly && info.type.IsLivableCustomType())
+                if (!info.JustData && !member.IsReadOnly && info.Type.IsLivableCustomType())
                 {
                     Error($"{info} in type {t} is livable and can be presented only as readonly field, If you want to change this field runtime use LivableSlot, may be you need to use [JustData] attribute");
                     return;
                 }
-                if (info.isValueWrapper == ValueVrapperType.None && info.canBeNull) return;
-                //if (info.type.IsLivableContainer()) return;
+                if (!hasWrapper && info.CanBeNull) return;
                 // For livables all configs should be set in Prepare method thats why its unnesseseary to generate default config values
-                if (info.isValueWrapper == ValueVrapperType.None && info.type.IsLoadableConfig() && t.IsLivableCustomType()) return;
-                CreateNewInstance(constructor, info, null, null, false, wrapType: true);
-                InitializeWrappedValues(constructor, info);
+                if (!hasWrapper && info.Type.IsLoadableConfig() && t.IsLivableCustomType()) return;
+
+                var declaredType = member.DeclaredType ?? info.Type;
+                CreateNewInstance(constructor, declaredType, declaredAccess, null, null, false,
+                    info.CantBeAncestor, member.DefaultValue, t);
+                InitializeWrappedValues(constructor, member, declaredAccess, info);
             }, GenericMembers(constructor));
             
             if (t.HasAttribute<GenModelRootSetup>())
@@ -167,22 +166,23 @@ namespace ZergRush.CodeGen
         {
         }
 
-        static void InitializeWrappedValues(MethodBuilder constructor, ZRData info)
+        static void InitializeWrappedValues(MethodBuilder constructor, ZRMember member, string declaredAccess,
+            ZRData info)
         {
-            if (info.WrapperTypes.Count == 0) return;
+            if (member.WrapperTypes.Count == 0) return;
 
-            var declaredType = info.realType;
-            var access = info.realAccess;
-            for (var i = 0; i < info.WrapperTypes.Count; ++i)
+            var declaredType = member.DeclaredType;
+            var access = declaredAccess;
+            for (var i = 0; i < member.WrapperTypes.Count; ++i)
             {
-                var wrapper = info.WrapperTypes[i];
+                var wrapper = member.WrapperTypes[i];
                 if (wrapper is not (FieldWrapperType.Cell or FieldWrapperType.LivableSlot)) continue;
 
                 var innerType = declaredType?.FirstGenericArg();
                 if (innerType == null) return;
 
-                var nextWrapper = i + 1 < info.WrapperTypes.Count
-                    ? info.WrapperTypes[i + 1]
+                var nextWrapper = i + 1 < member.WrapperTypes.Count
+                    ? member.WrapperTypes[i + 1]
                     : FieldWrapperType.None;
                 if (nextWrapper is FieldWrapperType.Cell or FieldWrapperType.LivableSlot)
                 {
@@ -193,9 +193,9 @@ namespace ZergRush.CodeGen
                 }
 
                 if (nextWrapper == FieldWrapperType.Nullable) return;
-                if (!info.canBeNull && !info.type.IsValueType)
+                if (!info.CanBeNull && !info.Type.IsValueType)
                 {
-                    constructor.content($"{access}.value = {info.type.NewInstExpr()};");
+                    constructor.content($"{access}.value = {info.Type.NewInstExpr()};");
                 }
                 return;
             }

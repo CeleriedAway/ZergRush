@@ -17,22 +17,23 @@ namespace ZergRush.CodeGen
         public static string PrinterName = "printer";
         public static string CCHelper = nameof(ZRCompareCheckHelper);
 
-        public static void CompareCheckValue(MethodBuilder sink, ZRData info, string otherValueReader)
+        public static void CompareCheckValue(MethodBuilder sink, ZRData info, string otherValueReader,
+            string pathExpression)
         {
-            if (info.type.IsAlmostPrimitive() || info.type.IsEnum || info.type.IsString() || info.immutableData)
+            if (info.Type.IsAlmostPrimitive() || info.Type.IsEnum || info.Type.IsString() || info.Immutable)
             {
                 sink.content(
-                    $"if ({info.access} != {otherValueReader}) {CompErrorFunc}({HelperName}, {info.pathName}, {PrinterName}, {otherValueReader}, {info.access});");
+                    $"if ({info.Access} != {otherValueReader}) {CompErrorFunc}({HelperName}, {pathExpression}, {PrinterName}, {otherValueReader}, {info.Access});");
             }
             else
             {
                 string accessSuffix = "";
-                if (info.canBeNull)
+                if (info.CanBeNull)
                 {
-                    var nullableValue = info.type.IsNullable() || info.isValueWrapper == ValueVrapperType.Nullable;
+                    var nullableValue = info.IsNullable;
                     var compNull = nullableValue ? CompNullableFunc : CompNullComp;
                     sink.content(
-                        $"if ({compNull}({HelperName}, {info.pathName}, {PrinterName}, {info.access}, {otherValueReader})) {{");
+                        $"if ({compNull}({HelperName}, {pathExpression}, {PrinterName}, {info.Access}, {otherValueReader})) {{");
                     sink.indent++;
                     if (nullableValue)
                     {
@@ -40,45 +41,45 @@ namespace ZergRush.CodeGen
                     }
                 }
 
-                if (info.type.CanBeAncestor())
+                if (info.Type.CanBeAncestor())
                 {
                     sink.content(
-                        $"if ({CompClassId}({HelperName}, {info.pathName}, {PrinterName}, {info.access}, {otherValueReader})) {{");
+                        $"if ({CompClassId}({HelperName}, {pathExpression}, {PrinterName}, {info.Access}, {otherValueReader})) {{");
                     sink.indent++;
                 }
 
-                if (info.type.IsMultipleReference())
+                if (info.Type.IsMultipleReference())
                 {
-                    sink.content($"if ({HelperName}.{nameof(ZRCompareCheckHelper.NeedCompareCheck)}({info.pathName}," +
-                                 $" {PrinterName}, {info.access}, {otherValueReader})) {{");
+                    sink.content($"if ({HelperName}.{nameof(ZRCompareCheckHelper.NeedCompareCheck)}({pathExpression}," +
+                                 $" {PrinterName}, {info.Access}, {otherValueReader})) {{");
                     sink.indent++;
                 }
 
-                sink.content($"{HelperName}.Push({info.pathName});");
-                if (info.type.IsLoadableConfig())
+                sink.content($"{HelperName}.Push({pathExpression});");
+                if (info.Type.IsLoadableConfig())
                 {
                     sink.content(
-                        $"if ({info.access}{accessSuffix}.id != {otherValueReader}{accessSuffix}.id) {CompErrorFunc}({HelperName}, {info.pathName}, {PrinterName}, {otherValueReader}.id, {info.access}.id);");
+                        $"if ({info.Access}{accessSuffix}.id != {otherValueReader}{accessSuffix}.id) {CompErrorFunc}({HelperName}, {pathExpression}, {PrinterName}, {otherValueReader}.id, {info.Access}.id);");
                 }
                 else
                 {
-                    RequestGen(info.type, sink.classType, GenTaskFlags.CompareChech);
+                    RequestGen(info.Type, sink.classType, GenTaskFlags.CompareChech);
                     sink.content(
-                        $"{info.access}{accessSuffix}.{CompareFuncName}({otherValueReader}{accessSuffix}, {HelperName}, {PrinterName});");
+                        $"{info.Access}{accessSuffix}.{CompareFuncName}({otherValueReader}{accessSuffix}, {HelperName}, {PrinterName});");
                 }
 
                 sink.content($"{HelperName}.Pop();");
-                if (info.canBeNull)
+                if (info.CanBeNull)
                 {
                     sink.indent--;
                     sink.content($"}}");
                 }
-                if (info.type.IsMultipleReference())
+                if (info.Type.IsMultipleReference())
                 {
                     sink.indent--;
                     sink.content($"}}");
                 }
-                if (info.type.CanBeAncestor())
+                if (info.Type.CanBeAncestor())
                 {
                     sink.indent--;
                     sink.content($"}}");
@@ -103,20 +104,16 @@ namespace ZergRush.CodeGen
                 {
                     var countName = !type.IsArray ? "Count" : "Length";
                     var elemType = type.FirstGenericArg();
-                    CompareCheckValue(sink, new ZRData
-                    {
-                        type = typeof(int), pathLog = $"\"{countName}\"",
-                        baseAccess = $"self.{countName}"
-                    }, $"{otherName}.{countName}");
+                    CompareCheckValue(sink,
+                        new ZRData($"self.{countName}", typeof(int)),
+                        $"{otherName}.{countName}", $"\"{countName}\"");
                     sink.content($"var count = Math.Min(self.{countName}, {otherName}.{countName});");
                     sink.content($"for (int i = 0; i < count; i++)");
                     sink.content($"{{");
                     sink.indent++;
-                    CompareCheckValue(sink, new ZRData
-                    {
-                        type = elemType, canBeNull = !elemType.IsValueType,
-                        baseAccess = $"self[i]", pathLog = $"i.ToString()"
-                    }, $"{otherName}[i]");
+                    CompareCheckValue(sink,
+                        elemType.ToData("self[i]", elemType.IsValueType ? ZRDataOption.None : ZRDataOption.CanBeNull),
+                        $"{otherName}[i]", "i.ToString()");
                     sink.indent--;
                     sink.content($"}}");
                 }
@@ -142,10 +139,11 @@ namespace ZergRush.CodeGen
                         sink.content($"var {genericOtherName} = ({branch.instance.RealName(true)})(object){otherName};");
                     };
                     var hasMembers = type.ProcessMembers(GenTaskFlags.CompareChech, true,
-                        memberInfo =>
+                        (member, memberInfo, _) =>
                         {
                             CompareCheckValue(sink, memberInfo,
-                                memberInfo.valueTransformer($"{genericOtherName}.{memberInfo.baseAccess}"));
+                                member.ToData($"{genericOtherName}.{member.Name}").Access,
+                                $"\"{member.Name}\"");
                         }, genericOptions);
                     if (!hasMembers && sink.type == MethodType.Override)
                     {

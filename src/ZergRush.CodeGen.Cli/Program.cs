@@ -66,11 +66,12 @@ foreach (var type in types)
         Console.WriteLine($"  ChildTypes: {string.Join(", ", type.ChildTypes.Select(child => child.FullName))}");
     }
     Console.WriteLine($"  DataMembers: {type.DataMembers.Count}");
-    foreach (var data in type.DataMembers)
+    foreach (var member in type.Members)
     {
-        var wrappers = data.WrapperTypes.Count == 0 ? "None" : string.Join(" -> ", data.WrapperTypes);
-        Console.WriteLine($"    {data.Kind} {data.Name}: {data.Type?.FullName ?? "<unknown>"} access={data.Access}");
-        Console.WriteLine($"      Declared: {data.DeclaredType?.WrittenName ?? data.DeclaredType?.FullName ?? "<unknown>"} wrappers={wrappers}");
-        Console.WriteLine($"      Include={data.IncludeFlags} Ignore={data.IgnoreFlags} Options={data.Options} ReadOnly={data.IsReadOnly}");
+        var data = member.ToData();
+        var wrappers = member.WrapperTypes.Count == 0 ? "None" : string.Join(" -> ", member.WrapperTypes);
+        Console.WriteLine($"    {member.Kind} {member.Name}: {data.Type.FullName} access={data.Access}");
+        Console.WriteLine($"      Declared: {member.DeclaredType?.WrittenName ?? member.DeclaredType?.FullName ?? "<unknown>"} wrappers={wrappers}");
+        Console.WriteLine($"      Include={member.IncludeFlags} Ignore={member.IgnoreFlags} Options={data.Options} ReadOnly={member.IsReadOnly}");
     }
 }
