@@ -134,4 +134,13 @@ public partial class CodeGenSamples
     internal OtherData OtherData2ForTests => otherData2;
     internal OtherData ReactiveValueForTests => reactiveValue.value;
     internal TestGeneric<int> GenericPrimitiveForTests => genericWithPrimitive;
+
+    internal int IgnoredFieldForTests => someTempIgnoredField;
+    internal string ExcludedPropertyForTests => stringPropWithoutTagNotIncluded;
+
+    internal void SetIgnoredAndExcludedMembersForTests(int ignored, string excluded)
+    {
+        someTempIgnoredField = ignored;
+        stringPropWithoutTagNotIncluded = excluded;
+    }
 }

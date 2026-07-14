@@ -7,6 +7,7 @@
     <IsPackable>false</IsPackable>
     <GeneratedCodeDir>$(MSBuildProjectDirectory)\Generated</GeneratedCodeDir>
     <CodeGenSamplesFile>$(MSBuildProjectDirectory)\..\..\packages\com.celeriedaway.zergrush\Samples~\CodeGenBasics\CodeGenSamples.cs</CodeGenSamplesFile>
+    <CoverageSamplesFile>$(MSBuildProjectDirectory)\CodeGenCoverageSamples.cs</CoverageSamplesFile>
     <DictionarySamplesFile>$(MSBuildProjectDirectory)\DictionaryUpdateFromSample.cs</DictionarySamplesFile>
     <UnityStubsFile>$(MSBuildProjectDirectory)\UnityEngineStubs.cs</UnityStubsFile>
     <DefaultItemExcludes>$(DefaultItemExcludes);$(GeneratedCodeDir)\**</DefaultItemExcludes>
@@ -35,7 +36,7 @@
   <Target Name="GenerateCodeGenSamples" BeforeTargets="CoreCompile" DependsOnTargets="ResolveProjectReferences">
     <RemoveDir Directories="$(GeneratedCodeDir)" />
     <MakeDir Directories="$(GeneratedCodeDir)" />
-    <Exec Command="dotnet &quot;$(MSBuildProjectDirectory)\..\..\src\ZergRush.CodeGen.Cli\bin\$(Configuration)\net10.0\ZergRush.CodeGen.Cli.dll&quot; --generate &quot;$(GeneratedCodeDir)&quot; &quot;$(CodeGenSamplesFile)&quot; &quot;$(DictionarySamplesFile)&quot; &quot;$(UnityStubsFile)&quot;" />
+    <Exec Command="dotnet &quot;$(MSBuildProjectDirectory)\..\..\src\ZergRush.CodeGen.Cli\bin\$(Configuration)\net10.0\ZergRush.CodeGen.Cli.dll&quot; --generate &quot;$(GeneratedCodeDir)&quot; &quot;$(CodeGenSamplesFile)&quot; &quot;$(CoverageSamplesFile)&quot; &quot;$(DictionarySamplesFile)&quot; &quot;$(UnityStubsFile)&quot;" />
     <ItemGroup>
       <Compile Include="$(GeneratedCodeDir)\**\*.cs" />
     </ItemGroup>

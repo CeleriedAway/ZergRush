@@ -43,6 +43,9 @@ namespace ZergRush.CodeGen
                     return $"({HashType}){name}.RawValue";
             }
             else if (t == typeof(bool)) return $"{name} ? 1u : 0u";
+            else if (t == typeof(float)) return $"(ulong)BitConverter.SingleToInt32Bits({name})";
+            else if (t == typeof(double)) return $"(ulong)BitConverter.DoubleToInt64Bits({name})";
+            else if (t == typeof(decimal)) return $"(ulong){name}.GetHashCode()";
             else if (t.IsPrimitive || t.IsEnum) return $"({HashType}){name}";
 
             string calcHash = $"{name}.CalculateHash({HelperName})";

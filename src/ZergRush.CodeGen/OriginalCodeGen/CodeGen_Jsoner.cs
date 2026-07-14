@@ -78,6 +78,10 @@ namespace ZergRush.CodeGen
             {
                 sink.content($"writer.WriteValue({valueAccess}.ToString());");
             }
+            else if (t == typeof(decimal))
+            {
+                sink.content($"writer.WriteValue({valueAccess}.ToString(System.Globalization.CultureInfo.InvariantCulture));");
+            }
             else if (t == typeof(Guid))
             {
                 sink.content($"writer.WriteValue({valueAccess}.ToString());");
@@ -165,6 +169,10 @@ namespace ZergRush.CodeGen
                 return $"Guid.Parse((string)reader.Value)";
             if (t == typeof(DateTime))
                 return $"new DateTime((Int64)reader.Value)";
+            if (t == typeof(char))
+                return "char.Parse((string)reader.Value)";
+            if (t == typeof(decimal))
+                return "Convert.ToDecimal(reader.Value, System.Globalization.CultureInfo.InvariantCulture)";
             if (t.IsEnum)
                 return $"System.Enum.Parse<{t.RealName(true)}>((string)reader.Value)";
             if (t.Name == "Fix64")

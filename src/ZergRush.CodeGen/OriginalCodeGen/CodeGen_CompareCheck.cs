@@ -117,6 +117,38 @@ namespace ZergRush.CodeGen
                     sink.indent--;
                     sink.content($"}}");
                 }
+                else if (type.IsDictionary())
+                {
+                    var genericArguments = type.GetGenericArguments();
+                    var valueType = genericArguments[1];
+                    CompareCheckValue(
+                        sink,
+                        new ZRData("self.Count", typeof(int)),
+                        $"{otherName}.Count",
+                        "\"Count\"");
+                    sink.content("foreach (var item in self)");
+                    sink.openBrace();
+                    sink.content($"if (!{otherName}.TryGetValue(item.Key, out var otherValue))");
+                    sink.openBrace();
+                    sink.content($"{CompErrorFunc}({HelperName}, item.Key.ToString(), {PrinterName}, (object)\"missing\", (object)item.Value);");
+                    sink.closeBrace();
+                    sink.content("else");
+                    sink.openBrace();
+                    CompareCheckValue(
+                        sink,
+                        valueType.ToData("item.Value", valueType.IsValueType ? ZRDataOption.None : ZRDataOption.CanBeNull),
+                        "otherValue",
+                        "item.Key.ToString()");
+                    sink.closeBrace();
+                    sink.closeBrace();
+                    sink.content($"foreach (var item in {otherName})");
+                    sink.openBrace();
+                    sink.content("if (!self.ContainsKey(item.Key))");
+                    sink.openBrace();
+                    sink.content($"{CompErrorFunc}({HelperName}, item.Key.ToString(), {PrinterName}, (object)item.Value, (object)\"missing\");");
+                    sink.closeBrace();
+                    sink.closeBrace();
+                }
                 else
                 {
                     if (type.IsControllable())
