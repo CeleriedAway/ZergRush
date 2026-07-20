@@ -3,6 +3,7 @@
     "rootNamespace": "",
   "references": [
     "ZergRush.Reactive",
+    "ZergRush.CodeGen",
     "ZergRush.CodeGen.Abstractions",
     "ZergRush.Unity"
     ],
