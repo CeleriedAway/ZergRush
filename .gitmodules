@@ -1,0 +1,6 @@
+[submodule "packages/com.celeriedaway.zergrush/Runtime/ZergRush.Reactive"]
+	path = packages/com.celeriedaway.zergrush/Runtime/ZergRush.Reactive
+	url = https://github.com/CeleriedAway/ZergRush.Reactive.git
+[submodule "packages/com.celeriedaway.zergrush/Runtime/ZergRush.CodeGen"]
+	path = packages/com.celeriedaway.zergrush/Runtime/ZergRush.CodeGen
+	url = https://github.com/CeleriedAway/ZergRush.CodeGen.git

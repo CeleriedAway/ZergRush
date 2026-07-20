@@ -1,9 +1,10 @@
 {
     "name": "ZergRush.Unity",
     "rootNamespace": "",
-    "references": [
-        "Unity.TextMeshPro",
-        "ZergRush.Core"
+  "references": [
+    "Unity.TextMeshPro",
+    "ZergRush.Reactive",
+    "ZergRush.CodeGen.Abstractions"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

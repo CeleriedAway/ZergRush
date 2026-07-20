@@ -1,9 +1,10 @@
 {
     "name": "CodeGen.Editor",
     "rootNamespace": "",
-    "references": [
-        "ZergRush.CodeGen",
-        "ZergRush.Core"
+  "references": [
+    "ZergRush.Reactive",
+    "ZergRush.CodeGen.Abstractions",
+    "ZergRush.Unity"
     ],
     "includePlatforms": [
         "Editor"

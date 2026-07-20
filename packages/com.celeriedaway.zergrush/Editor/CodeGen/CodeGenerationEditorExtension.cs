@@ -1,269 +1,161 @@
-﻿#if UNITY_EDITOR
-
+#if UNITY_EDITOR
 using System;
-using UnityEditor;
-using System.Collections.Generic;
-using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using UnityEditor;
 using UnityEditor.Compilation;
+using UnityEditor.PackageManager;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
 
 namespace ZergRush.CodeGen
 {
+    /// <summary>
+    /// Unity-side bridge for the source-local CodeGen CLI.
+    /// The generator itself stays in Tools~ so Unity never imports its Roslyn dependencies.
+    /// </summary>
     public static class CodeGenerationEditorExtension
     {
-        private static readonly List<string> includeAssemblies = new List<string>
+        const string packageName = "com.celeriedaway.zergrush";
+        const string cliProjectPath = "Runtime/ZergRush.CodeGen/src/ZergRush.CodeGen.Cli/ZergRush.CodeGen.Cli.csproj";
+        const string reactiveProjectPath = "Runtime/ZergRush.Reactive/src/ZergRush.Reactive/ZergRush.Reactive.csproj";
+        const string buildPath = "Runtime/ZergRush.CodeGen/Tools~/.build";
+
+        [MenuItem("Code Gen/Build Local CLI")]
+        public static void BuildLocalCli()
         {
-            "ZergRush.Core",
-            "ZergRush.Unity",
-            "ClientServerShared",
-            "SharedCode",
-            "AGameServerShared",
-            "Assembly-CSharp",
-            "Assembly-CSharp-Editor",
-        };
-
-        public static readonly bool IsWindows = Application.platform == RuntimePlatform.WindowsEditor;
-
-        // No need to look for it on Mac - assuming we got it through `brew install dotnet-sdk` - @ micktu
-        public static readonly string DotnetExecutablePath = IsWindows ? "dotnet" : TryGetPathToDotnetMac(out var path) ? path : "/usr/local/bin/dotnet";
-
-        static bool hasErrors;
-        
-        [InitializeOnLoadMethod]
-        static void CodeGenerationEditorExtensionInit()
-        {
-            CompilationPipeline.assemblyCompilationFinished += (s, messages) =>
-            {
-                hasErrors = messages.Any(m => m.type == CompilerMessageType.Error);
-            };
-        }
-
-        [MenuItem("Code Gen/Run CodeGen #&c")]
-        public static void GenCode()
-        {
-            if (hasErrors) GenCodeConsole();
-            else GenCodeClassic();
-            AssetDatabase.Refresh();
-        }
-
-        [MenuItem("Code Gen/Force CodeGen Classic")]
-        public static void GenCodeClassic()
-        {
-            EditorUtility.DisplayProgressBar(CCDTitle, "Running CodeGen...", 0.0f);
             try
             {
-                GenerateInner(includeAssemblies);
-                EditorUtility.DisplayProgressBar(CCDTitle, "Finishing...", 1f);
+                var cli = BuildCli();
+                Debug.Log($"CodeGen CLI built at {cli}");
             }
             catch (Exception e)
             {
-                Debug.LogError("Codegen failed with exception: " + e.ToError());
-            }
-            finally
-            {
-                EditorUtility.ClearProgressBar();
-                AssetDatabase.Refresh();
+                Debug.LogException(e);
             }
         }
 
-        // [MenuItem("Code Gen/Run CodeGen Stub #&s")]
-        // public static void GenCodeStubs()
-        // {
-        //     GenerateInner(includeAssemblies, true);
-        //     AssetDatabase.Refresh();
-        // }
-
-        static string CCDTitle = "Console Codegen";
-
-        [MenuItem("Code Gen/Force CodeGen Console")]
-        public static void GenCodeConsole()
+        [MenuItem("Code Gen/Run Source CodeGen")]
+        public static void RunSourceCodeGen()
         {
             try
             {
-                EditorUtility.DisplayProgressBar(CCDTitle, "Compiling CodeGen solution...", 0f);
-                var path = ExePath();
-                RunCompilation();
-                EditorUtility.DisplayProgressBar(CCDTitle, "Running CodeGen...", 0.5f);
-                RunProcessAndReadLogs(path, $" {includeAssemblies.PrintCollection(" ")}", Path.GetDirectoryName(path));
-                EditorUtility.DisplayProgressBar(CCDTitle, "Finishing...", 1f);
-                if (File.Exists(path) == false)
+                var cli = BuildCli();
+                var outputDirectory = Path.Combine(Application.dataPath, "ZergRushGenerated");
+                var sourceFiles = GetProjectSourceFiles(outputDirectory).ToArray();
+                if (sourceFiles.Length == 0)
+                    throw new InvalidOperationException("No C# source files were found under Assets.");
+
+                Directory.CreateDirectory(outputDirectory);
+                var arguments = new StringBuilder();
+                arguments.Append(Quote(cli));
+                arguments.Append(" --generate ");
+                arguments.Append(Quote(outputDirectory));
+                foreach (var sourceFile in sourceFiles)
                 {
-                    Debug.LogError("compilation did not produce exe");
+                    arguments.Append(' ');
+                    arguments.Append(Quote(sourceFile));
                 }
+
+                RunProcess("dotnet", arguments.ToString(), Application.dataPath);
+                AssetDatabase.Refresh();
+                Debug.Log($"CodeGen generated source into {outputDirectory}");
             }
             catch (Exception e)
             {
-                Debug.LogError("Codegen console failed with exception: " + e.ToError());
+                Debug.LogException(e);
             }
             finally
             {
                 EditorUtility.ClearProgressBar();
-                AssetDatabase.Refresh();
             }
         }
 
-        static bool TryGetPathToDotnetMac(out string path)
+        static string BuildCli()
         {
-            try
+            var packageRoot = GetPackageRoot();
+            var cliProject = Path.Combine(packageRoot, cliProjectPath);
+            var reactiveProject = Path.Combine(packageRoot, reactiveProjectPath);
+            var buildRoot = Path.Combine(packageRoot, buildPath);
+
+            if (!File.Exists(cliProject))
+                throw new FileNotFoundException("The local CodeGen CLI project was not found.", cliProject);
+            if (!File.Exists(reactiveProject))
+                throw new FileNotFoundException("The local Reactive project was not found.", reactiveProject);
+
+            EditorUtility.DisplayProgressBar("ZergRush CodeGen", "Building local CLI", 0.25f);
+            Directory.CreateDirectory(buildRoot);
+            var arguments = string.Join(" ", new[]
             {
-                path = GetPathToDotnetMac();
-                return true;
+                "build",
+                Quote(cliProject),
+                "-c Debug",
+                "-p:ZergRushReactiveProjectPath=" + Quote(reactiveProject),
+                "-p:ZergRushUnityBuildRoot=" + Quote(buildRoot)
+            });
+            RunProcess("dotnet", arguments, packageRoot);
+
+            var cliAssembly = Path.Combine(buildRoot, "bin", "ZergRush.CodeGen.Cli", "Debug", "net10.0", "ZergRush.CodeGen.Cli.dll");
+            if (!File.Exists(cliAssembly))
+                throw new FileNotFoundException("The local CodeGen CLI build completed without producing its assembly.", cliAssembly);
+
+            return cliAssembly;
+        }
+
+        static string GetPackageRoot()
+        {
+            var package = PackageInfo.GetAllRegisteredPackages().FirstOrDefault(p => p.name == packageName);
+            if (package == null || string.IsNullOrEmpty(package.resolvedPath))
+                throw new InvalidOperationException($"Unity package '{packageName}' is not installed.");
+
+            return package.resolvedPath;
+        }
+
+        static System.Collections.Generic.IEnumerable<string> GetProjectSourceFiles(string generatedDirectory)
+        {
+            var normalizedGeneratedDirectory = Path.GetFullPath(generatedDirectory)
+                .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
+
+            return CompilationPipeline.GetAssemblies()
+                .SelectMany(assembly => assembly.sourceFiles)
+                .Where(File.Exists)
+                .Select(Path.GetFullPath)
+                .Where(path => path.StartsWith(Application.dataPath, StringComparison.OrdinalIgnoreCase))
+                .Where(path => !path.StartsWith(normalizedGeneratedDirectory, StringComparison.OrdinalIgnoreCase))
+                .Distinct(StringComparer.OrdinalIgnoreCase);
+        }
+
+        static void RunProcess(string fileName, string arguments, string workingDirectory)
+        {
+            using (var process = new Process())
+            {
+                process.StartInfo = new ProcessStartInfo
+                {
+                    FileName = fileName,
+                    Arguments = arguments,
+                    WorkingDirectory = workingDirectory,
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    CreateNoWindow = true
+                };
+                process.Start();
+                var output = process.StandardOutput.ReadToEnd();
+                var error = process.StandardError.ReadToEnd();
+                process.WaitForExit();
+
+                if (!string.IsNullOrWhiteSpace(output))
+                    Debug.Log(output);
+                if (!string.IsNullOrWhiteSpace(error))
+                    Debug.LogWarning(error);
+                if (process.ExitCode != 0)
+                    throw new InvalidOperationException($"'{fileName} {arguments}' failed with exit code {process.ExitCode}.");
             }
-            catch (Exception e)
-            {
-                path = "";
-                return false;
-            }
-        }
-        
-        static string GetPathToDotnetMac()
-        {
-            string res = "error";
-            var p = new System.Diagnostics.Process();
-            p.StartInfo.FileName = "which";
-            p.StartInfo.Arguments = "dotnet";
-            p.StartInfo.CreateNoWindow = true;
-            p.StartInfo.RedirectStandardError = true;
-            p.StartInfo.RedirectStandardOutput = true;
-            p.StartInfo.RedirectStandardInput = false;
-            p.StartInfo.UseShellExecute = false;
-            p.OutputDataReceived += (a, b) =>
-            {
-                if (b.Data == null) return;
-                res = b.Data;
-                Debug.Log(b.Data);
-            };
-            p.ErrorDataReceived += (a, b) =>
-            {
-                if (b.Data == null) return;
-                Debug.LogError(b.Data);
-            };
-            p.Start();
-            p.BeginErrorReadLine();
-            p.BeginOutputReadLine();
-            p.WaitForExit();
-            
-            if (res == "error" || !File.Exists(res))
-                throw new ZergRushException("Install dotnet");
-            return res;
-        }
-        
-        static void RunProcessAndReadLogs(string fileName, string args, [JetBrains.Annotations.CanBeNull] string dir)
-        {
-            Process p = new Process();
-            var si = p.StartInfo;
-            si.UseShellExecute = false;
-            si.CreateNoWindow = true;
-            si.RedirectStandardOutput = true;
-            si.RedirectStandardError = true;
-            si.FileName = fileName;
-            si.Arguments = args;
-            if (dir != null)
-                si.WorkingDirectory = Path.GetFullPath(dir);
-
-            p.ErrorDataReceived += (_, e) =>
-            {
-                if (e.Data != null) Debug.LogError(e.Data);
-            };
-            p.OutputDataReceived += (_, e) =>
-            {
-                if (e.Data != null) Debug.Log(e.Data);
-            };
-
-            p.Start();
-            p.BeginErrorReadLine();
-            p.BeginOutputReadLine();
-            p.WaitForExit();
         }
 
-        public static void GenerateInner(List<string> assemblies, bool onlyStubs = false)
-        {
-            Debug.Log("GenCode called");
-            CodeGen.Gen(assemblies, onlyStubs);
-        }
-
-        static string SearchSolution(string path)
-        {
-            foreach (var enumerateFile in Directory.GetFiles(path, "ConsoleGen.sln", SearchOption.AllDirectories))
-            {
-                return enumerateFile;
-            }
-
-            throw new ZergRushException($"cant find zergrush solution file at path {path}");
-        }
-
-        private static string GetSolutionFilePath()
-        {
-            string solutionFolder;
-            var packagePath = Path.Combine("Packages", "ZergRush", "Assets", "ZergRush", "UnityTools", "CodeGen");
-            if (Directory.Exists(packagePath))
-            {
-                solutionFolder = SearchSolution(packagePath);
-            }
-            else
-            {
-                solutionFolder = SearchSolution("Assets");
-            }
-
-            return Path.GetFullPath(solutionFolder);
-        }
-
-        static string ExePath()
-        {
-            string path = Path.GetDirectoryName(GetSolutionFilePath());
-            path = Path.GetFullPath(path);
-            path = Path.Combine(path, "bin", "Debug", "net6.0-windows", "ConsoleGen");
-            
-            if (IsWindows) path += ".exe";
-            
-            return path;
-        }
-
-        [MenuItem("Code Gen/Compile Run")]
-        public static void RunCompilation()
-        {
-            var solution = GetSolutionFilePath();
-
-            // var path = "";
-            // var p = new Process();
-            // p.StartInfo.FileName = "cmd.exe";
-            // p.StartInfo.Arguments =
-            //     @"/c """"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe"""" -latest -prerelease -products * -requires Microsoft.Component.MSBuild -find MSBuild\**\Bin\MSBuild.exe";
-            // Debug.Log("args-----=> " + p.StartInfo.Arguments);
-            // p.StartInfo.CreateNoWindow = true;
-            // p.StartInfo.RedirectStandardError = true;
-            // p.StartInfo.RedirectStandardOutput = true;
-            // p.StartInfo.RedirectStandardInput = false;
-            // p.StartInfo.UseShellExecute = false;
-            // p.OutputDataReceived += (a, b) =>
-            // {
-            //     if (b.Data == null) return;
-            //     if (File.Exists(b.Data))
-            //     {
-            //         path = b.Data;
-            //     }
-            //
-            //     Debug.Log(b.Data);
-            // };
-            // p.ErrorDataReceived += (a, b) =>
-            // {
-            //     if (b.Data == null) return;
-            //     Debug.LogError(b.Data);
-            // };
-            // p.Start();
-            // p.BeginErrorReadLine();
-            // p.BeginOutputReadLine();
-            // p.WaitForExit();
-
-            RunProcessAndReadLogs(DotnetExecutablePath, $"msbuild -t:restore \"{solution}\"", null);
-            RunProcessAndReadLogs(DotnetExecutablePath, $"msbuild \"{solution}\"", null);
-        }
+        static string Quote(string value) => "\"" + value.Replace("\"", "\\\"") + "\"";
     }
 }
-
 #endif
