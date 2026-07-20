@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using UnityEditor;
+using Debug = UnityEngine.Debug;
 
 namespace ZergRush.CodeGen
 {
