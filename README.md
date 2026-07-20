@@ -1,18 +1,38 @@
-# ZergRush Workspace
+# ZergRush Unity Tools
 
-This repository is now organized as a workspace for the ZergRush libraries.
+This repository is the Unity wrapper for the ZergRush libraries. Core C# source lives in independent repositories and is pinned here as Git submodules.
 
-## Projects
+## Source repositories
 
-- `src/ZergRush.Reactive` - clean C# reactive library. It should stay focused on reactive primitives and their required infrastructure.
-- `src/ZergRush.CodeGen.Abstractions` - shared codegen attributes, flags, interfaces, and runtime contracts.
-- `src/ZergRush.CodeGen` - codegen parser and generator library.
-  - `OriginalCodeGen` contains the old Unity-editor-era generator implementation moved out of the Unity package.
-- `src/ZergRush.CodeGen.Cli` - command line wrapper for the codegen library.
-- `packages/com.celeriedaway.zergrush` - Unity package containing Unity tools, editor integration, reactive UI, and samples.
-  - `Runtime/UnityTools/Utils/Tools` contains useful general-purpose helpers that are not required by the clean reactive library.
-- `legacy` - preserved old harnesses, generated references, Unity metadata, and source copies that should not be part of the clean project surface yet.
+- [ZergRush.Reactive](https://github.com/CeleriedAway/ZergRush.Reactive) owns the reactive runtime.
+- [ZergRush.CodeGen](https://github.com/CeleriedAway/ZergRush.CodeGen) owns CodeGen abstractions, the generator, CLI, tests, and CodeGen samples.
+- `packages/com.celeriedaway.zergrush` owns Unity editor integration, reactive UI, Unity-only utilities, and Unity samples.
 
-## Notes
+## Clone for development
 
-This pass is structural only. The moved projects are intentionally not treated as compile-clean yet.
+```sh
+git clone --branch rework --recurse-submodules https://github.com/CeleriedAway/ZergRush.git
+```
+
+For an existing checkout:
+
+```sh
+git submodule update --init --recursive
+```
+
+## Layout
+
+```text
+packages/com.celeriedaway.zergrush/
+├── Runtime/ZergRush.Reactive   -> ZergRush.Reactive submodule
+├── Runtime/ZergRush.CodeGen    -> ZergRush.CodeGen submodule
+├── Runtime/UnityTools          -> Unity-specific runtime integration
+├── Editor                      -> Unity editor integration and local CLI bridge
+└── Samples~                    -> Unity-specific samples
+```
+
+## Development workflow
+
+Make core changes inside the relevant submodule, commit and push them there, then commit the updated submodule pointer in this repository. Do not copy core source back into the wrapper.
+
+The Unity editor bridge builds the CodeGen CLI from the CodeGen submodule into its ignored `Tools~/.build` directory. NuGet and OpenUPM publishing remain deferred while the source/submodule workflow is being validated.

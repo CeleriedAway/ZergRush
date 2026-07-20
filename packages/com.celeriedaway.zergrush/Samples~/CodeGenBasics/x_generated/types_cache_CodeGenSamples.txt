@@ -1,2 +1,0 @@
-CodeGenSamples 1
-Ancestor 2

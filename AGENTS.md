@@ -17,29 +17,22 @@ ALWAYS prefer MCP graph tools over grep/glob/file-search for code discovery.
 - When MCP tools return insufficient results
 <!-- codebase-memory-mcp:end -->
 
-# ZergRush Workspace Notes
+# ZergRush Unity Wrapper Notes
 
-The workspace is being reshaped into three publishable parts:
+This repository owns only the Unity wrapper package at `packages/com.celeriedaway.zergrush`.
 
-- `ZergRush.Reactive` is the clean C# reactive library.
-- `ZergRush.CodeGen` is the generator library, with `ZergRush.CodeGen.Cli` as the dotnet tool entrypoint.
-- `packages/com.celeriedaway.zergrush` is the Unity package for Unity tools, editor integration, reactive UI, and samples.
+Canonical source ownership:
 
-`ZergRush.CodeGen.Abstractions` is a supporting library for attributes, flags, interfaces, and runtime contracts that generated user code can reference without depending on the full generator.
+- `Runtime/ZergRush.Reactive` is the `ZergRush.Reactive` Git submodule and owns the reactive runtime.
+- `Runtime/ZergRush.CodeGen` is the `ZergRush.CodeGen` Git submodule and owns CodeGen abstractions, generator/CLI source, tests, and CodeGen samples.
+- `Runtime/UnityTools` owns Unity-only runtime integration, reactive UI, and general Unity helpers.
+- `Editor` owns Unity editor integration and the source-local CodeGen CLI bridge.
+- Root `Samples~` contains only Unity-specific samples. Do not duplicate samples already owned by a submodule.
 
-`src/ZergRush.CodeGen/OriginalCodeGen` contains the original `CodeGen*.cs`, `ConsoleGen`, `EnumTable`, and context builder implementation that used to live in the Unity package editor folder. The newer refactor parser/model files (`ZRCodeParser.cs`, `ZRTypes.cs`) remain directly under `src/ZergRush.CodeGen`.
+Do not recreate top-level `src`, `tests`, or `legacy` folders in this wrapper repository.
 
-The current restructure is intentionally folder-first. Do not assume these projects compile until a later cleanup pass fixes references, namespaces, asmdefs, and package dependencies.
+For core work, edit the appropriate submodule, run that repository's tests, commit and push the child repository, then commit the updated gitlink here. Preserve unrelated changes in both the wrapper and submodule worktrees.
 
-Generated `*.gen.cs` files are reference material unless the user explicitly asks to modify or regenerate them.
+The CodeGen engine and CLI stay under the CodeGen submodule's `Tools~` folder so Unity does not import Roslyn dependencies. Generated `*.gen.cs` files are reference material unless the user explicitly asks to modify or regenerate them.
 
-Keep `src/ZergRush.Reactive` focused on the required reactive API and infrastructure. General-purpose helpers such as container extensions, CSV parsing, random helpers, cycle buffers, and smoothing filters live in the Unity package under `packages/com.celeriedaway.zergrush/Runtime/UnityTools/Utils/Tools`.
-
-Legacy material is preserved under `legacy/`:
-
-- `OldCodeGenConsole` is the old console launcher from the Unity package.
-- `OldPureCSharpCodeGenCore` is the previous `Assets/ZergRush/PureCSharp/CodeGenCore` copy.
-- `GeneratedReference` contains generated folders moved out of clean C# source projects.
-- `UnityMeta` contains Unity metadata moved out of clean C# source projects.
-- `ZRRefactorHarness` is the old temporary linked-file harness.
-- `ZRNewCodeGenOriginalProject` preserves the old standalone project file and build artifacts from the refactor checkout.
+NuGet and OpenUPM publishing are deferred until the source/submodule workflow is validated.

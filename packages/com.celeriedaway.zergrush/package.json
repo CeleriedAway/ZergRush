@@ -2,7 +2,7 @@
   "name": "com.celeriedaway.zergrush",
   "version": "1.0.0",
   "displayName": "Zerg Rush",
-  "description": "Reactive library and code generation tools",
+  "description": "Unity tools and editor integration for ZergRush Reactive and CodeGen",
   "unity": "2021.3",
   "documentationUrl": "https://github.com/CeleriedAway/ZergRush",
   "licensesUrl": "https://github.com/CeleriedAway/ZergRush",
@@ -33,11 +33,6 @@
       "displayName": "Reactive basics",
       "description": "API and basic usacases for reactive library",
       "path": "Samples~/ReactiveBasics"
-    },
-    {
-      "displayName": "CodeGen basics",
-      "description": "Basic guide on how to use codegen",
-      "path": "Samples~/CodeGenBasics"
     },
     {
       "displayName": "Reactive game data",

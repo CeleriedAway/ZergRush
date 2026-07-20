@@ -3,4 +3,3 @@ bin/
 obj/
 .vs/
 .DS_Store
-tests/*/Generated/
