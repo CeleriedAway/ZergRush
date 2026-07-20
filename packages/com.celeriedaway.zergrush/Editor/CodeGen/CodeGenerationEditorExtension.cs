@@ -106,7 +106,8 @@ namespace ZergRush.CodeGen
 
         static string GetPackageRoot()
         {
-            var package = PackageInfo.GetAllRegisteredPackages().FirstOrDefault(p => p.name == packageName);
+            var package = UnityEditor.PackageManager.PackageInfo.GetAllRegisteredPackages()
+                .FirstOrDefault(p => p.name == packageName);
             if (package == null || string.IsNullOrEmpty(package.resolvedPath))
                 throw new InvalidOperationException($"Unity package '{packageName}' is not installed.");
 
