@@ -17,14 +17,18 @@ namespace ZergRush.CodeGen
         const string packageName = "com.celeriedaway.zergrush";
         const string cliProjectPath = "Runtime/ZergRush.CodeGen/src/ZergRush.CodeGen.Cli/ZergRush.CodeGen.Cli.csproj";
         const string reactiveProjectPath = "Runtime/ZergRush.Reactive/src/ZergRush.Reactive/ZergRush.Reactive.csproj";
-        const string buildPath = "Runtime/ZergRush.CodeGen/Tools~/.build";
+        const string buildDirectoryName = "ZergRush.CodeGen.Cli";
 
         public static string BuildCli()
         {
             var packageRoot = GetPackageRoot();
             var cliProject = Path.Combine(packageRoot, cliProjectPath);
             var reactiveProject = Path.Combine(packageRoot, reactiveProjectPath);
-            var buildRoot = Path.Combine(packageRoot, buildPath);
+            // Keep generated MSBuild sources outside the package. Some CodeGen projects
+            // intentionally compile broad source globs, so an obj folder below the
+            // CodeGen checkout can be discovered as input on the next build.
+            var projectRoot = Path.GetFullPath(Path.Combine(UnityEngine.Application.dataPath, ".."));
+            var buildRoot = Path.Combine(projectRoot, "Temp", buildDirectoryName);
 
             if (!File.Exists(cliProject))
                 throw new FileNotFoundException("The local CodeGen CLI project was not found.", cliProject);
@@ -91,8 +95,19 @@ namespace ZergRush.CodeGen
                 if (!string.IsNullOrWhiteSpace(error))
                     Debug.LogWarning(error);
                 if (process.ExitCode != 0)
-                    throw new InvalidOperationException($"'{fileName} {arguments}' failed with exit code {process.ExitCode}.");
+                {
+                    var details = string.IsNullOrWhiteSpace(error) ? output : error;
+                    throw new InvalidOperationException(
+                        $"'{fileName} {arguments}' failed with exit code {process.ExitCode}.\n{Tail(details, 8000)}");
+                }
             }
+        }
+
+        static string Tail(string value, int maxLength)
+        {
+            if (string.IsNullOrEmpty(value) || value.Length <= maxLength)
+                return value;
+            return "...\n" + value.Substring(value.Length - maxLength);
         }
 
         static string Quote(string value) => "\"" + value.Replace("\"", "\\\"") + "\"";
