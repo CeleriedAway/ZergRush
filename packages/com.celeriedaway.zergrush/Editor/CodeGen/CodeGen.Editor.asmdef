@@ -4,7 +4,7 @@
   "references": [
     "ZergRush.Reactive",
     "ZergRush.CodeGen",
-    "ZergRush.CodeGen.Abstractions",
+    "ZergRush.CodeGen.Core",
     "ZergRush.Unity"
     ],
     "includePlatforms": [

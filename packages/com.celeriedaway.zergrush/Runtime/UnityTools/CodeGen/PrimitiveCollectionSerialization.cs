@@ -2,6 +2,10 @@ using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 
+#if ZERGRUSH_LEGACY_PRIMITIVE_COLLECTION_SERIALIZATION
+// Compatibility implementation for projects that do not run the current CodeGen CLI.
+// The CLI now generates these collection serializers and enabling both produces
+// ambiguous extension-method calls.
 public static partial class SerializationExtensions
 {
     public static void UpdateFrom(this int[] self, int[] other, ZergRush.ZRUpdateFromHelper helper)
@@ -140,3 +144,4 @@ public static partial class SerializationExtensions
         writer.WriteEndArray();
     }
 }
+#endif

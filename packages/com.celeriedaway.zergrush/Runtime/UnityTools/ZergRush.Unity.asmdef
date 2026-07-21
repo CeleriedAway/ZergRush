@@ -4,7 +4,7 @@
   "references": [
     "Unity.TextMeshPro",
     "ZergRush.Reactive",
-    "ZergRush.CodeGen.Abstractions"
+    "ZergRush.CodeGen.Core"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
