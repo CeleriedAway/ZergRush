@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 
 namespace ZergRush
 {
@@ -65,11 +64,8 @@ namespace ZergRush
             return (T)vals.GetValue(random.Range(0, vals.Length));
         }
 
-        [MustUseReturnValue]
         public static List<T> Shuffle<T>(this IEnumerable<T> list, ZergRandom random) => list.ToList().RandomOrder(random);
-        [MustUseReturnValue]
         public static List<T> Shuffle<T>(this IReadOnlyList<T> list, ZergRandom random) => list.RandomOrder(random);
-        [MustUseReturnValue]
         public static List<T> RandomOrder<T>(this IReadOnlyList<T> list, ZergRandom random)
         {
             var indexes = RandomNonoverlappedIndices(random, list.Count, list.Count);

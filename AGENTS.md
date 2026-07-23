@@ -25,7 +25,8 @@ Canonical source ownership:
 
 - `Runtime/ZergRush.Reactive` is the `ZergRush.Reactive` Git submodule and owns the reactive runtime.
 - `Runtime/ZergRush.CodeGen` is the `ZergRush.CodeGen` Git submodule and owns CodeGen abstractions, generator/CLI source, tests, and CodeGen samples.
-- `Runtime/UnityTools` owns Unity-only runtime integration, reactive UI, and general Unity helpers.
+- `Runtime/Core` owns general-purpose C# helpers that have no Unity dependency and exposes the local backend project `ZergRush.Core.csproj`.
+- `Runtime/Unity` owns Unity-only runtime integration and reactive UI.
 - `Editor` owns Unity editor integration and the source-local CodeGen CLI bridge.
 - Root `Samples~` contains only Unity-specific samples. Do not duplicate samples already owned by a submodule.
 

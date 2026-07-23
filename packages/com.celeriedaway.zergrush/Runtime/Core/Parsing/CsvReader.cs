@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
-using JetBrains.Annotations;
 
 namespace ZergRush
 {
@@ -184,7 +183,7 @@ namespace ZergRush
         {
         }
 
-        public CsvReader([NotNull] string[] sourceArray)
+        public CsvReader(string[] sourceArray)
         {
             if (sourceArray == null) throw new ArgumentNullException(nameof(sourceArray));
             if (sourceArray.Length == 0)

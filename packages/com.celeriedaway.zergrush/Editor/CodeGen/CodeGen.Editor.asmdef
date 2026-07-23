@@ -5,6 +5,7 @@
     "ZergRush.Reactive",
     "ZergRush.CodeGen",
     "ZergRush.CodeGen.Core",
+    "ZergRush.Core",
     "ZergRush.Unity"
     ],
     "includePlatforms": [

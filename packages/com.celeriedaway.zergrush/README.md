@@ -1,5 +1,14 @@
 # ZergRush
-Unity package that represents C# reactive library and set of tools for Unity development.
+
+Reusable C# foundations and Unity integration for the ZergRush Reactive and CodeGen libraries.
+
+## Repository layout
+
+- `Runtime/Core` contains pure C# utilities with no Unity dependency. Unity compiles it as `ZergRush.Core`; backend projects can reference `ZergRush.Core.csproj` directly.
+- `Runtime/Unity` contains Unity-only runtime helpers, reactive UI, serialization file integration, and spreadsheet tools.
+- `Runtime/ZergRush.Reactive` contains the Reactive library submodule.
+- `Runtime/ZergRush.CodeGen` contains the CodeGen library and CLI submodule.
+- `Editor` contains Unity editor integration and the local CodeGen bridge.
 
 This toolset consists of several parts:
 
@@ -18,7 +27,9 @@ This toolset consists of several parts:
 	* Default constructor generation
 	* Advanced tools that allow to create complex game models with ids, config integration, hierarchy propagation ect..
 
-3. ZergRush.Utils collections of variuos tools for common gamedev tasks and extensions for above libraries.
+3. ZergRush.Core contains reusable collections, parsing, filtering, random, diagnostics, and serialization helpers for ordinary C# applications.
+
+4. ZergRush.Unity contains Unity-specific UI, file, math, spreadsheet, and editor integration.
 
 # Installation
 
