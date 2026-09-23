@@ -1,3 +1,4 @@
+// Historical consumer output, intentionally retained to test upgrade compatibility.
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -9,14 +10,14 @@ using Newtonsoft.Json;
 
 public static partial class SerializationExtensions
 {
-    public static void UpdateFrom(this int[] self, int[] other, ZRUpdateFromHelper __helper) 
+    public static void UpdateFrom(this int[] self, int[] other, ZRUpdateFromHelper __helper)
     {
         for (int i = 0; i < self.Length; i++)
         {
             self[i] = other[i];
         }
     }
-    public static int[] ReadSystem_Int32_Array(this ZRBinaryReader reader) 
+    public static int[] ReadSystem_Int32_Array(this ZRBinaryReader reader)
     {
         var size = reader.ReadInt32();
         if(size > 100000) throw new ZergRushCorruptedOrInvalidDataLayout();
@@ -27,7 +28,7 @@ public static partial class SerializationExtensions
         }
         return array;
     }
-    public static void Serialize(this int[] self, ZRBinaryWriter writer) 
+    public static void Serialize(this int[] self, ZRBinaryWriter writer)
     {
         writer.Write(self.Length);
         for (int i = 0; i < self.Length; i++)
@@ -35,7 +36,7 @@ public static partial class SerializationExtensions
             writer.Write(self[i]);
         }
     }
-    public static ulong CalculateHash(this int[] self, ZRHashHelper __helper) 
+    public static ulong CalculateHash(this int[] self, ZRHashHelper __helper)
     {
         ulong hash = 345093625;
         hash ^= (ulong)677530667;
@@ -48,7 +49,7 @@ public static partial class SerializationExtensions
         }
         return hash;
     }
-    public static void CompareCheck(this int[] self, int[] other, ZRCompareCheckHelper __helper, Action<string> printer) 
+    public static void CompareCheck(this int[] self, int[] other, ZRCompareCheckHelper __helper, Action<string> printer)
     {
         if (self.Length != other.Length) CodeGenImplTools.LogCompError(__helper, "Length", printer, other.Length, self.Length);
         var count = Math.Min(self.Length, other.Length);
@@ -57,7 +58,7 @@ public static partial class SerializationExtensions
             if (self[i] != other[i]) CodeGenImplTools.LogCompError(__helper, i.ToString(), printer, other[i], self[i]);
         }
     }
-    public static int[] ReadFromJson(this int[] self, ZRJsonTextReader reader) 
+    public static int[] ReadFromJson(this int[] self, ZRJsonTextReader reader)
     {
         if (reader.TokenType != JsonToken.StartArray) throw new JsonSerializationException("Bad Json Format");
         if(self == null || self.Length > 0) self = Array.Empty<int>();
@@ -71,7 +72,7 @@ public static partial class SerializationExtensions
         }
         return self;
     }
-    public static void WriteJson(this int[] self, ZRJsonTextWriter writer) 
+    public static void WriteJson(this int[] self, ZRJsonTextWriter writer)
     {
         writer.WriteStartArray();
         for (int i = 0; i < self.Length; i++)

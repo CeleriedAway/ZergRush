@@ -1,3 +1,4 @@
+// ZergRush serialization schema: 2 (logical collections, replacement reads, strict JSON)
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -18,19 +19,19 @@ namespace ZergRush {
             var __SeedArrayTemp = SeedArray;
             Array.Resize(ref __SeedArrayTemp, __SeedArrayCount);
             SeedArray = __SeedArrayTemp;
-            SeedArray.UpdateFrom(other.SeedArray, __helper);
+            global::ZergRush.Int32ArraySerialization.UpdateFrom(SeedArray, other.SeedArray, __helper);
         }
         public virtual void Deserialize(ZRBinaryReader reader) 
         {
             inext = reader.ReadInt32();
             inextp = reader.ReadInt32();
-            SeedArray = reader.ReadSystem_Int32_Array();
+            SeedArray = global::ZergRush.Int32ArraySerialization.ReadSystem_Int32_Array(reader);
         }
         public virtual void Serialize(ZRBinaryWriter writer) 
         {
             writer.Write(inext);
             writer.Write(inextp);
-            SeedArray.Serialize(writer);
+            global::ZergRush.Int32ArraySerialization.Serialize(SeedArray, writer);
         }
         public virtual ulong CalculateHash(ZRHashHelper __helper) 
         {
@@ -41,7 +42,7 @@ namespace ZergRush {
             hash += hash << 11; hash ^= hash >> 7;
             hash += (ulong)inextp;
             hash += hash << 11; hash ^= hash >> 7;
-            hash += SeedArray.CalculateHash(__helper);
+            hash += global::ZergRush.Int32ArraySerialization.CalculateHash(SeedArray, __helper);
             hash += hash << 11; hash ^= hash >> 7;
             return hash;
         }
@@ -50,7 +51,7 @@ namespace ZergRush {
             if (inext != other.inext) CodeGenImplTools.LogCompError(__helper, "inext", printer, other.inext, inext);
             if (inextp != other.inextp) CodeGenImplTools.LogCompError(__helper, "inextp", printer, other.inextp, inextp);
             __helper.Push("SeedArray");
-            SeedArray.CompareCheck(other.SeedArray, __helper, printer);
+            global::ZergRush.Int32ArraySerialization.CompareCheck(SeedArray, other.SeedArray, __helper, printer);
             __helper.Pop();
         }
         public virtual bool ReadFromJsonField(ZRJsonTextReader reader, string __name) 
@@ -64,7 +65,7 @@ namespace ZergRush {
                 inextp = (int)(Int64)reader.Value;
                 break;
                 case "SeedArray":
-                SeedArray = SeedArray.ReadFromJson(reader);
+                SeedArray = global::ZergRush.Int32ArraySerialization.ReadFromJson(SeedArray, reader);
                 break;
                 default: return false; break;
             }
@@ -77,7 +78,7 @@ namespace ZergRush {
             writer.WritePropertyName("inextp");
             writer.WriteValue(inextp);
             writer.WritePropertyName("SeedArray");
-            SeedArray.WriteJson(writer);
+            global::ZergRush.Int32ArraySerialization.WriteJson(SeedArray, writer);
         }
     }
 }

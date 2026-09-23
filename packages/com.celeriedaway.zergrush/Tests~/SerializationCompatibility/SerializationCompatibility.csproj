@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework><OutputType>Exe</OutputType><ImplicitUsings>enable</ImplicitUsings>
+    <ZergRushCodeGenProjectPath>$(MSBuildThisFileDirectory)../../Runtime/ZergRush.CodeGen/src/ZergRush.CodeGen.Core/ZergRush.CodeGen.Core.csproj</ZergRushCodeGenProjectPath>
+    <DefaultItemExcludes>$(DefaultItemExcludes);Generated/**</DefaultItemExcludes>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="$(ZergRushCodeGenProjectPath)" />
+    <ProjectReference Include="../../Runtime/ZergRush.CodeGen/src/ZergRush.CodeGen.Cli/ZergRush.CodeGen.Cli.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="../../Runtime/Core/ZergRush.Core.csproj" AdditionalProperties="ZergRushCodeGenProjectPath=$(ZergRushCodeGenProjectPath)" Condition="'$(CombineCoreSources)' != 'true'" />
+    <Compile Include="../../Runtime/Core/**/*.cs" Exclude="../../Runtime/Core/bin/**;../../Runtime/Core/obj/**;../../Runtime/Core/bin~/**;../../Runtime/Core/obj~/**" Condition="'$(CombineCoreSources)' == 'true'" />
+  </ItemGroup>
+  <Target Name="GenerateConsumer" BeforeTargets="CoreCompile" DependsOnTargets="ResolveProjectReferences">
+    <Exec Command="dotnet &quot;$(MSBuildThisFileDirectory)../../Runtime/ZergRush.CodeGen/src/ZergRush.CodeGen.Cli/bin~/$(Configuration)/net10.0/ZergRush.CodeGen.Cli.dll&quot; -f &quot;$(MSBuildThisFileDirectory)Consumer.cs&quot; --generate &quot;$(MSBuildThisFileDirectory)Generated&quot; --single-output-folder" />
+    <ItemGroup><Compile Include="Generated/*.cs" /></ItemGroup>
+  </Target>
+</Project>
